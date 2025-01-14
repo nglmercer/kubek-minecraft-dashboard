@@ -1,10 +1,11 @@
-const fs = require("fs");
-const path = require("path");
-const colors = require("colors");
+import fs from "fs";
+import path from "path";
+import colors from "colors";
+import * as PREDEFINED from "./predefined.js";
+import * as COMMONS from "./commons.js";
+import * as SECURITY from "./security.js";
+import * as SERVERS_CONTROLLER from "./serversController.js";
 
-const PREDEFINED = require("./predefined");
-const COMMONS = require("./commons");
-const SECURITY = require("./security");
 const SERVERS_CONTROLLER = require("./serversController");
 
 global.autoStartedServers = [];

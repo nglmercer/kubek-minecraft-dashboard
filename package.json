@@ -10,6 +10,7 @@
     "dockerBuild": "docker build -t seeroy/kubek-minecraft-dashboard .",
     "dockerPush": "docker push seeroy/kubek-minecraft-dashboard"
   },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Seeroy/kubek-minecraft-dashboard"

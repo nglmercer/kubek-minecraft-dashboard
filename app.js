@@ -1,5 +1,5 @@
 // Загружаем нужные самописные модули
-const COMMONS = require("./modules/commons");
+import * as COMMONS from "./modules/commons.js";
 const CONFIGURATION = require("./modules/configuration");
 
 // Создаём нужные папки (если их не существует)

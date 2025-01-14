@@ -1,24 +1,21 @@
-const PREDEFINED = require("./predefined");
-const COMMONS = require("./commons");
-const SERVERS_MANAGER = require("./serversManager");
-const FILE_MANAGER = require("./fileManager");
-const MULTILANG = require("./multiLanguage");
-const ERRORS_PARSER = require("./minecraftErrorsParser");
-
-const fs = require("fs");
-const path = require("path");
-const treekill = require("tree-kill");
-const spParser = require("minecraft-server-properties");
-const {spawn} = require("node:child_process");
-const mcs = require("node-mcstatus");
-
+import * as PREDEFINED from "./predefined.js";
+import * as COMMONS from "./commons.js";
+import * as SERVERS_MANAGER from "./serversManager.js";
+import * as FILE_MANAGER from "./fileManager.js";
+import * as MULTILANG from "./multiLanguage.js";
+import * as ERRORS_PARSER from "./minecraftErrorsParser.js";
+import fs from "fs";
+import path from "path";
+import treekill from "tree-kill";
+import spParser from "minecraft-server-properties";
+import {spawn} from "node:child_process";
+import mcs from "node-mcstatus";
 global.serversInstances = {};
 global.instancesLogs = {};
 global.restartAttempts = {};
 global.serversToManualRestart = [];
 
-// Проверить готовность сервера к запуску
-exports.isServerReadyToStart = (serverName) => {
+export const isServerReadyToStart = (serverName) => {
     let serverStarterPath = this.getStartFilePath(serverName);
     if (serverStarterPath === false) {
         return false;
@@ -26,22 +23,19 @@ exports.isServerReadyToStart = (serverName) => {
     return Object.keys(serversConfig).includes(serverName) && serversConfig[serverName].status === PREDEFINED.SERVER_STATUSES.STOPPED && fs.existsSync(serverStarterPath);
 };
 
-// Получить кол-во строк из лога сервера
-exports.getServerLog = (serverName, linesCountMinus = -100) => {
+export const getServerLog = (serverName, linesCountMinus = -100) => {
     if (COMMONS.isObjectsValid(instancesLogs[serverName])) {
         return instancesLogs[serverName].split(/\r?\n/).slice(linesCountMinus).join("\r\n").replaceAll(/\</gim, "&lt;").replaceAll(/\>/gim, "&gt;");
     }
     return "";
 };
 
-// Добавить текст в лог сервера
-exports.writeServerLog = (serverName, data) => {
+export const writeServerLog = (serverName, data) => {
     instancesLogs[serverName] = instancesLogs[serverName] + data;
     return true;
 };
 
-// Провести обрезку логов серверов в памяти до определённого количества строк
-exports.doServersLogsCleanup = () => {
+export const doServersLogsCleanup = () => {
     Object.keys(instancesLogs).forEach(serverName => {
         instancesLogs[serverName] = instancesLogs[serverName].split(/\r?\n/)
             .slice(PREDEFINED.MAX_SERVER_LOGS_LENGTH_MINUS)
@@ -50,8 +44,7 @@ exports.doServersLogsCleanup = () => {
     return true;
 };
 
-// Подготовить сервер к запуску (возвращает параметры запуска для сервера)
-exports.prepareServerToStart = (serverName) => {
+export const prepareServerToStart = (serverName) => {
     instancesLogs[serverName] = "";
     let serverStarterPath = this.getStartFilePath(serverName);
     if (serverStarterPath === false) {
@@ -74,8 +67,7 @@ exports.prepareServerToStart = (serverName) => {
     };
 };
 
-// Остановить сервер
-exports.stopServer = (serverName) => {
+export const stopServer = (serverName) => {
     if (SERVERS_MANAGER.isServerExists(serverName) && SERVERS_MANAGER.getServerStatus(serverName) === PREDEFINED.SERVER_STATUSES.RUNNING) {
         this.writeToStdin(serverName, SERVERS_MANAGER.getServerInfo(serverName).stopCommand);
         return true;
@@ -83,8 +75,7 @@ exports.stopServer = (serverName) => {
     return false;
 }
 
-// Запустить сервер
-exports.startServer = (serverName) => {
+export const startServer = (serverName) => {
     if (this.isServerReadyToStart(serverName)) {
         // Получаем параметры запуска и производим запуск
         let startProps = this.prepareServerToStart(serverName);
@@ -105,15 +96,13 @@ exports.startServer = (serverName) => {
     return false;
 };
 
-// Перезапустить сервер
-exports.restartServer = (serverName) => {
+export const restartServer = (serverName) => {
     serversToManualRestart.push(serverName);
     this.stopServer(serverName);
     return true;
 };
 
-// Добавить handler для закрытия на instance
-exports.addInstanceCloseEventHandler = (serverName) => {
+export const addInstanceCloseEventHandler = (serverName) => {
     serversInstances[serverName].on("close", (code) => {
         SERVERS_MANAGER.setServerStatus(serverName, PREDEFINED.SERVER_STATUSES.STOPPED);
         if (code != null && code > 1 && code !== 127) {
@@ -148,8 +137,7 @@ exports.addInstanceCloseEventHandler = (serverName) => {
     });
 };
 
-// Обрабатываем выходные потоки сервера
-exports.handleServerStd = (serverName, data) => {
+export const handleServerStd = (serverName, data) => {
     //data = iconvlite.decode(data, "utf-8").toString();
     data = data.toString();
     this.writeServerLog(serverName, data);
@@ -169,8 +157,7 @@ exports.handleServerStd = (serverName, data) => {
     });
 };
 
-// Добавить хэндлер на stdout и stderr сервера
-exports.addInstanceStdEventHandler = (serverName) => {
+export const addInstanceStdEventHandler = (serverName) => {
     serversInstances[serverName].stdout.on("data", (data) => {
         this.handleServerStd(serverName, data);
     });
@@ -179,8 +166,7 @@ exports.addInstanceStdEventHandler = (serverName) => {
     });
 };
 
-// Отправить текст в stdin сервера (в консоль)
-exports.writeToStdin = (serverName, data) => {
+export const writeToStdin = (serverName, data) => {
     if (COMMONS.isObjectsValid(serversInstances[serverName])) {
         data = Buffer.from(data, "utf-8").toString();
         this.writeServerLog(serverName, data + "\n");
@@ -190,8 +176,7 @@ exports.writeToStdin = (serverName, data) => {
     return false;
 };
 
-// Принудительно завершить сервер
-exports.killServer = (serverName) => {
+export const killServer = (serverName) => { 
     if (COMMONS.isObjectsValid(serversInstances[serverName], serversInstances[serverName].pid)) {
         treekill(serversInstances[serverName].pid, () => {
         });
@@ -200,8 +185,7 @@ exports.killServer = (serverName) => {
     return false;
 };
 
-// Получить скрипт запуска сервера
-exports.getStartScript = (serverName) => {
+export const getStartScript = (serverName) => {
     let startFileData, startFilePath;
     if (SERVERS_MANAGER.isServerExists(serverName)) {
         startFilePath = this.getStartFilePath(serverName);
@@ -212,8 +196,7 @@ exports.getStartScript = (serverName) => {
     return false;
 };
 
-// Записать скрипт запуска сервера
-exports.setStartScript = (serverName, data) => {
+export const setStartScript = (serverName, data) => {
     let startFileData, startFilePath;
     if (SERVERS_MANAGER.isServerExists(serverName)) {
         startFilePath = this.getStartFilePath(serverName);
@@ -226,8 +209,7 @@ exports.setStartScript = (serverName, data) => {
     return false;
 };
 
-// Сгенерировать путь к файлу запуска сервера
-exports.getStartFilePath = (serverName) => {
+export const getStartFilePath = (serverName) => {
     if (process.platform === "win32") {
         return "./servers/" + serverName + "/start.bat";
     } else if (process.platform === "linux") {
@@ -237,8 +219,7 @@ exports.getStartFilePath = (serverName) => {
     }
 };
 
-// Получить файл server.properties (после парсинга)
-exports.getServerProperties = (serverName) => {
+export const getServerProperties = (serverName) => {
     let spFilePath = "./servers/" + serverName + "/server.properties";
     if (fs.existsSync(spFilePath)) {
         let spFileData = fs.readFileSync(spFilePath).toString();
@@ -251,8 +232,7 @@ exports.getServerProperties = (serverName) => {
     return false;
 };
 
-// Сохранить файл server.properties
-exports.saveServerProperties = (serverName, data) => {
+export const saveServerProperties = (serverName, data) => {
     let parsed = JSON.parse(data);
     let result = "";
     for (const [key, value] of Object.entries(parsed)) {
@@ -262,8 +242,7 @@ exports.saveServerProperties = (serverName, data) => {
     return true;
 };
 
-// Получить информацию о сервере
-exports.queryServer = (serverName, cb) => {
+export const queryServer = (serverName, cb) => {
     let spData = this.getServerProperties(serverName);
     if (COMMONS.isObjectsValid(spData['server-port']) && COMMONS.isObjectsValid(serversInstances[serverName])) {
         let chkPort = spData['server-port'];

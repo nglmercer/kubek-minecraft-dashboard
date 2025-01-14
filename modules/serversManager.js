@@ -1,27 +1,23 @@
-const PREDEFINED = require("./predefined");
-const CONFIGURATION = require("./configuration");
-const COMMONS = require("./commons");
-const TASKMANAGER = require("./taskManager");
+import * as PREDEFINED from "./predefined.js";
+import * as CONFIGURATION from "./configuration.js";
+import * as COMMONS from "./commons.js";
+import * as TASKMANAGER from "./taskManager.js";
+import fs from "fs";
+import * as TASK_MANAGER from "./taskManager.js";
+import path from "path";
 
-const fs = require("fs");
-const TASK_MANAGER = require("./taskManager");
-const path = require("path");
-
-// Проверить сервер на существование
-exports.isServerExists = (serverName) => {
+export const isServerExists = (serverName) => {
     return typeof serversConfig[serverName] !== "undefined";
 };
 
-// Получить информацию о сервере
-exports.getServerInfo = (serverName) => {
+export const getServerInfo = (serverName) => {
     if (this.isServerExists(serverName)) {
         return serversConfig[serverName];
     }
     return false;
 };
 
-// Задать информацию о сервере
-exports.writeServerInfo = (serverName, data) => {
+export const writeServerInfo = (serverName, data) => {
     if (this.isServerExists(serverName)) {
         serversConfig[serverName] = data;
         CONFIGURATION.writeServersConfig(serversConfig);
@@ -30,8 +26,7 @@ exports.writeServerInfo = (serverName, data) => {
     return false;
 };
 
-// Получить статус сервера
-exports.getServerStatus = (serverName) => {
+export const getServerStatus = (serverName) => {
     let serverData = this.getServerInfo(serverName);
     if (serverData !== false) {
         return serverData.status;
@@ -39,8 +34,7 @@ exports.getServerStatus = (serverName) => {
     return false;
 };
 
-// Установить статус сервера
-exports.setServerStatus = (serverName, status) => {
+export const setServerStatus = (serverName, status) => {
     if (this.isServerExists(serverName) && Object.values(PREDEFINED.SERVER_STATUSES).includes(status) && serversConfig[serverName].status !== status) {
         serversConfig[serverName].status = status;
         CONFIGURATION.writeServersConfig(serversConfig);
@@ -49,8 +43,7 @@ exports.setServerStatus = (serverName, status) => {
     return false;
 };
 
-// Установить параметр в конфигурации сервера
-exports.setServerProperty = (serverName, property, value) => {
+export const setServerProperty = (serverName, property, value) => {
     if (this.isServerExists(serverName) && COMMONS.isObjectsValid(property, value, serversConfig[serverName][property])) {
         serversConfig[serverName][property] = value;
         CONFIGURATION.writeServersConfig(serversConfig);
@@ -59,14 +52,11 @@ exports.setServerProperty = (serverName, property, value) => {
     return false;
 };
 
-// Получить список серверов
-// DEVELOPED by seeeroy
-exports.getServersList = () => {
+export const getServersList = () => {
     return Object.keys(serversConfig);
 };
 
-// Безвозвратно удалить сервер
-exports.deleteServer = (serverName) => {
+export const deleteServer = (serverName) => {
     if(this.isServerExists(serverName) && this.getServerStatus(serverName) === PREDEFINED.SERVER_STATUSES.STOPPED){
         // Добавляем новую таску
         let serverDelTaskID = TASK_MANAGER.addNewTask({

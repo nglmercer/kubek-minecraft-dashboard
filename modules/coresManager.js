@@ -1,8 +1,6 @@
-const PREDEFINED = require("./predefined");
-const CORES_URL_GEN = require("./coresURLGenerator");
-
-// Функция для получения списка версий ядра
-exports.getCoreVersions = (core, cb) => {
+import * as PREDEFINED from "./predefined.js";
+import * as CORES_URL_GEN from "./coresURLGenerator.js";
+export const getCoreVersions = (core, cb) => {
     if (typeof PREDEFINED.SERVER_CORES[core] !== "undefined") {
         let coreItem = PREDEFINED.SERVER_CORES[core];
         const name = coreItem.name || coreItem.versionsMethod;
@@ -31,8 +29,7 @@ exports.getCoreVersions = (core, cb) => {
         cb(false);
     }
 };
-
-exports.getCoreVersionURL = (core, version, cb) => {
+export const getCoreVersionURL = (core, version, cb) => {
     if (typeof PREDEFINED.SERVER_CORES[core] !== "undefined" && version !== "undefined") {
         let coreItem = PREDEFINED.SERVER_CORES[core];
         switch (coreItem.urlGetMethod) {
@@ -60,8 +57,6 @@ exports.getCoreVersionURL = (core, version, cb) => {
         cb(false);
     }
 };
-
-// Функция для получения списка ядер
-exports.getCoresList = () => {
+export const getCoresList = () => {
     return PREDEFINED.SERVER_CORES;
 };

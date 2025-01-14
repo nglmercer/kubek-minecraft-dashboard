@@ -1,5 +1,7 @@
-const fs = require("fs");
-const colors = require("colors");
+import fs from "fs";
+import colors from "colors";
+import * as PREDEFINED from "./predefined.js";
+import packageJSON from "./../package.json";    
 
 const PREDEFINED = require("./predefined");
 const packageJSON = require("./../package.json");
