@@ -2,7 +2,7 @@ import * as COMMONS from "./../modules/commons.js";
 import * as TASK_MANAGER from "./../modules/taskManager.js";
 import express from "express";
 const router = express.Router();
-
+function initializeWebServer() {
 // Endpoint списка задач
 router.get("/", function (req, res) {
     res.set("Content-Type", "application/json");
@@ -19,5 +19,5 @@ router.get("/:id", function (req, res) {
     }
     res.sendStatus(400);
 });
-
-export { router };
+}
+export { router, initializeWebServer };

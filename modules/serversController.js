@@ -16,7 +16,7 @@ globalThis.restartAttempts = {};
 globalThis.serversToManualRestart = [];
 
 export const isServerReadyToStart = (serverName) => {
-    let serverStarterPath = this.getStartFilePath(serverName);
+    let serverStarterPath = getStartFilePath(serverName);
     if (serverStarterPath === false) {
         return false;
     }
@@ -46,7 +46,7 @@ export const doServersLogsCleanup = () => {
 
 export const prepareServerToStart = (serverName) => {
     instancesLogs[serverName] = "";
-    let serverStarterPath = this.getStartFilePath(serverName);
+    let serverStarterPath = getStartFilePath(serverName);
     if (serverStarterPath === false) {
         return false;
     }
@@ -69,16 +69,16 @@ export const prepareServerToStart = (serverName) => {
 
 export const stopServer = (serverName) => {
     if (SERVERS_MANAGER.isServerExists(serverName) && SERVERS_MANAGER.getServerStatus(serverName) === PREDEFINED.SERVER_STATUSES.RUNNING) {
-        this.writeToStdin(serverName, SERVERS_MANAGER.getServerInfo(serverName).stopCommand);
+        writeToStdin(serverName, SERVERS_MANAGER.getServerInfo(serverName).stopCommand);
         return true;
     }
     return false;
 }
 
 export const startServer = (serverName) => {
-    if (this.isServerReadyToStart(serverName)) {
+    if (isServerReadyToStart(serverName)) {
         // Получаем параметры запуска и производим запуск
-        let startProps = this.prepareServerToStart(serverName);
+        let startProps = prepareServerToStart(serverName);
         if (startProps !== false) {
             // Создаём spawn и добавляем хэндлеры
             if (startProps.spawnArgs.length === 1) {
@@ -88,8 +88,8 @@ export const startServer = (serverName) => {
             } else {
                 return false;
             }
-            this.addInstanceCloseEventHandler(serverName);
-            this.addInstanceStdEventHandler(serverName);
+            addInstanceCloseEventHandler(serverName);
+            addInstanceStdEventHandler(serverName);
             return true;
         }
     }
@@ -98,7 +98,7 @@ export const startServer = (serverName) => {
 
 export const restartServer = (serverName) => {
     serversToManualRestart.push(serverName);
-    this.stopServer(serverName);
+    stopServer(serverName);
     return true;
 };
 
@@ -107,11 +107,11 @@ export const addInstanceCloseEventHandler = (serverName) => {
         SERVERS_MANAGER.setServerStatus(serverName, PREDEFINED.SERVER_STATUSES.STOPPED);
         if (code != null && code > 1 && code !== 127) {
             // Если сервер завершился НЕНОРМАЛЬНО
-            this.writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.stopCode}}", code));
+            writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.stopCode}}", code));
             if (serversConfig[serverName].restartOnError === true) {
                 if (restartAttempts[serverName] >= serversConfig[serverName].maxRestartAttempts) {
                     // Если не удалось запустить сервер после макс. кол-ва попыток
-                    this.writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.restartFailed}}", restartAttempts[serverName]));
+                    writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.restartFailed}}", restartAttempts[serverName]));
                 } else {
                     // Пробуем перезапустить сервер
                     if (COMMONS.isObjectsValid(restartAttempts[serverName])) {
@@ -119,18 +119,18 @@ export const addInstanceCloseEventHandler = (serverName) => {
                     } else {
                         restartAttempts[serverName] = 1;
                     }
-                    this.writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.restartAttempt}}", restartAttempts[serverName]));
-                    this.startServer(serverName);
+                    writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.restartAttempt}}", restartAttempts[serverName]));
+                    startServer(serverName);
                 }
             }
         } else if (code === 1 || code === 127) {
             // Если сервер был убит
-            this.writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.killed}}"));
+            writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.killed}}"));
         } else {
-            this.writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.gracefulShutdown}}"));
+            writeServerLog(serverName, MULTILANG.translateText(currentLanguage, "{{serverConsole.gracefulShutdown}}"));
             // Перезапускаем сервер, если он есть в массиве для перезапуска
             if(serversToManualRestart.includes(serverName)){
-                this.startServer(serverName);
+                startServer(serverName);
                 serversToManualRestart.splice(serversToManualRestart.indexOf(serverName), 1);
             }
         }
@@ -140,12 +140,12 @@ export const addInstanceCloseEventHandler = (serverName) => {
 export const handleServerStd = (serverName, data) => {
     //data = iconvlite.decode(data, "utf-8").toString();
     data = data.toString();
-    this.writeServerLog(serverName, data);
+    writeServerLog(serverName, data);
     // Проверяем на ошибки
     let isAnyErrorsHere = ERRORS_PARSER.checkStringForErrors(data);
     if(isAnyErrorsHere !== false){
         // Добавляем в лог описание найденных ошибок
-        this.writeServerLog(serverName, "§c§l" + MULTILANG.translateText(currentLanguage, isAnyErrorsHere));
+        writeServerLog(serverName, "§c§l" + MULTILANG.translateText(currentLanguage, isAnyErrorsHere));
     }
 
     // Проверяем маркеры смены статуса
@@ -159,17 +159,17 @@ export const handleServerStd = (serverName, data) => {
 
 export const addInstanceStdEventHandler = (serverName) => {
     serversInstances[serverName].stdout.on("data", (data) => {
-        this.handleServerStd(serverName, data);
+        handleServerStd(serverName, data);
     });
     serversInstances[serverName].stderr.on("data", (data) => {
-        this.handleServerStd(serverName, data);
+        handleServerStd(serverName, data);
     });
 };
 
 export const writeToStdin = (serverName, data) => {
     if (COMMONS.isObjectsValid(serversInstances[serverName])) {
         data = Buffer.from(data, "utf-8").toString();
-        this.writeServerLog(serverName, data + "\n");
+        writeServerLog(serverName, data + "\n");
         serversInstances[serverName].stdin.write(data + "\n");
         return true;
     }
@@ -188,7 +188,7 @@ export const killServer = (serverName) => {
 export const getStartScript = (serverName) => {
     let startFileData, startFilePath;
     if (SERVERS_MANAGER.isServerExists(serverName)) {
-        startFilePath = this.getStartFilePath(serverName);
+        startFilePath = getStartFilePath(serverName);
         startFileData = fs.readFileSync(startFilePath);
         startFileData = startFileData.toString().split("\n");
         return startFileData[startFileData.length - 1];
@@ -199,7 +199,7 @@ export const getStartScript = (serverName) => {
 export const setStartScript = (serverName, data) => {
     let startFileData, startFilePath;
     if (SERVERS_MANAGER.isServerExists(serverName)) {
-        startFilePath = this.getStartFilePath(serverName);
+        startFilePath = getStartFilePath(serverName);
         startFileData = fs.readFileSync(startFilePath);
         startFileData = startFileData.toString().split("\n");
         startFileData[startFileData.length - 1] = data;
@@ -243,7 +243,7 @@ export const saveServerProperties = (serverName, data) => {
 };
 
 export const queryServer = (serverName, cb) => {
-    let spData = this.getServerProperties(serverName);
+    let spData = getServerProperties(serverName);
     if (COMMONS.isObjectsValid(spData['server-port']) && COMMONS.isObjectsValid(serversInstances[serverName])) {
         let chkPort = spData['server-port'];
         const chkOptions = {query: false};

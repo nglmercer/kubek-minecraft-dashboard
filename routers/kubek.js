@@ -6,10 +6,10 @@ import * as MULTILANG from "./../modules/multiLanguage.js";
 import express from "express";
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-
 const router = express.Router();
 import { Base64 } from "js-base64";
 const packageJSON = require("../package.json");
+function initializeWebServer(){
 
 // Endpoint для получения использования ресурсов
 router.get("/hardware/usage", function (req, res) {
@@ -63,5 +63,5 @@ router.get("/eula/accept", function (req, res) {
 router.get("/languages", function (req, res) {
     res.send(avaliableLanguages);
 });
-
-export { router };
+}
+export { router, initializeWebServer };

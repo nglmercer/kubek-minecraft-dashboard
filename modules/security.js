@@ -6,7 +6,7 @@ export const isUserHasPermission = (username, permission) => {
         // Сразу разрешаем доступ, если авторизация отключена в конфигурации
         return true;
     }
-    let userData = this.getUserDataByUsername(username);
+    let userData = getUserDataByUsername(username);
     return userData !== false && userData.permissions.includes(permission);
 };
 
@@ -16,7 +16,7 @@ export const isUserHasServerAccess = (username, server) => {
         // Сразу разрешаем доступ, если авторизация отключена в конфигурации
         return true;
     }
-    let userData = this.getUserDataByUsername(username);
+    let userData = getUserDataByUsername(username);
     if (userData !== false) {
         if (userData.serversAccessRestricted === false || userData.serversAllowed.includes(server)) {
             return true;
@@ -31,7 +31,7 @@ export const authorizeUser = (login, password) => {
         // Сразу разрешаем доступ, если авторизация отключена в конфигурации
         return true;
     }
-    let userData = this.getUserDataByUsername(login);
+    let userData = getUserDataByUsername(login);
     return userData !== false && userData.password === SHA256(password).toString();
 };
 
@@ -41,7 +41,7 @@ export const authenticateUser = (login, secret) => {
         // Сразу разрешаем доступ, если авторизация отключена в конфигурации
         return true;
     }
-    let userData = this.getUserDataByUsername(login);
+    let userData = getUserDataByUsername(login);
     return userData !== false && userData.secret === secret;
 };
 
@@ -62,7 +62,7 @@ export const isUserHasCookies = (req) => {
 
 // Проверить существование пользователя
 export const isUserExists = (username) => {
-    return this.getUserDataByUsername(username) !== false;
+    return getUserDataByUsername(username) !== false;
 };
 
 // Сгенерировать рандомный ID безопасности

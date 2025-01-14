@@ -102,7 +102,7 @@ async function startJavaServerGeneration(serverName, core, coreVersion, startPar
             };
             // DEVELOPED by seeeroy
             CONFIGURATION.writeServersConfig(serversConfig);
-            this.writeJavaStartFiles(serverName, core, startParameters, javaExecutablePath, serverPort);
+            writeJavaStartFiles(serverName, core, startParameters, javaExecutablePath, serverPort);
             LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.serverCreatedSuccess}}", colors.cyan(serverName)));
             cb(true);
         } else {
@@ -126,7 +126,7 @@ async function startJavaServerGeneration(serverName, core, coreVersion, startPar
                             stopCommand: "stop"
                         };
                         CONFIGURATION.writeServersConfig(serversConfig);
-                        this.writeJavaStartFiles(serverName, coreFileName, startParameters, javaExecutablePath, serverPort);
+                        writeJavaStartFiles(serverName, coreFileName, startParameters, javaExecutablePath, serverPort);
                         LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.serverCreatedSuccess}}", colors.cyan(serverName)));
                         cb(true);
                     } else {

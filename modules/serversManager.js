@@ -11,14 +11,14 @@ export const isServerExists = (serverName) => {
 };
 
 export const getServerInfo = (serverName) => {
-    if (this.isServerExists(serverName)) {
+    if (isServerExists(serverName)) {
         return serversConfig[serverName];
     }
     return false;
 };
 
 export const writeServerInfo = (serverName, data) => {
-    if (this.isServerExists(serverName)) {
+    if (isServerExists(serverName)) {
         serversConfig[serverName] = data;
         CONFIGURATION.writeServersConfig(serversConfig);
         return true;
@@ -27,7 +27,7 @@ export const writeServerInfo = (serverName, data) => {
 };
 
 export const getServerStatus = (serverName) => {
-    let serverData = this.getServerInfo(serverName);
+    let serverData = getServerInfo(serverName);
     if (serverData !== false) {
         return serverData.status;
     }
@@ -35,7 +35,7 @@ export const getServerStatus = (serverName) => {
 };
 
 export const setServerStatus = (serverName, status) => {
-    if (this.isServerExists(serverName) && Object.values(PREDEFINED.SERVER_STATUSES).includes(status) && serversConfig[serverName].status !== status) {
+    if (isServerExists(serverName) && Object.values(PREDEFINED.SERVER_STATUSES).includes(status) && serversConfig[serverName].status !== status) {
         serversConfig[serverName].status = status;
         CONFIGURATION.writeServersConfig(serversConfig);
         return true;
@@ -44,7 +44,7 @@ export const setServerStatus = (serverName, status) => {
 };
 
 export const setServerProperty = (serverName, property, value) => {
-    if (this.isServerExists(serverName) && COMMONS.isObjectsValid(property, value, serversConfig[serverName][property])) {
+    if (isServerExists(serverName) && COMMONS.isObjectsValid(property, value, serversConfig[serverName][property])) {
         serversConfig[serverName][property] = value;
         CONFIGURATION.writeServersConfig(serversConfig);
         return true;
@@ -57,7 +57,7 @@ export const getServersList = () => {
 };
 
 export const deleteServer = (serverName) => {
-    if(this.isServerExists(serverName) && this.getServerStatus(serverName) === PREDEFINED.SERVER_STATUSES.STOPPED){
+    if(isServerExists(serverName) && getServerStatus(serverName) === PREDEFINED.SERVER_STATUSES.STOPPED){
         // Добавляем новую таску
         let serverDelTaskID = TASK_MANAGER.addNewTask({
             type: PREDEFINED.TASKS_TYPES.DELETION,

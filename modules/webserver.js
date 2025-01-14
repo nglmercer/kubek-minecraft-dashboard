@@ -11,12 +11,13 @@ import fileUpload from "express-fileupload";
 import colors from "colors";
 import mime from "mime";
 import path from 'path';
-import * as permissionsMiddleware from "./permissionsMiddleware.js";
-import * as coresRouter from "./../routers/cores.js";
+
 import { isInSubnet } from "is-in-subnet";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+import * as permissionsMiddleware from "./permissionsMiddleware.js";
+import * as coresRouter from "./../routers/cores.js";
 import * as tasksRouter from "./../routers/tasks.js";
 import * as fileManagerRouter from "./../routers/fileManager.js";
 import * as serversRouter from "./../routers/servers.js";
@@ -141,6 +142,16 @@ export const serversRouterMiddleware = (req, res, next) => {
 export const loadAllDefinedRouters = () => {
     permissionsMiddleware.initializeWebServer(webServer);
     coresRouter.initializeWebServer(webServer);
+    tasksRouter.initializeWebServer(webServer);
+    fileManagerRouter.initializeWebServer(webServer);
+    serversRouter.initializeWebServer(webServer);
+    modsRouter.initializeWebServer(webServer);
+    pluginsRouter.initializeWebServer(webServer);
+    javaRouter.initializeWebServer(webServer);
+    authRouter.initializeWebServer(webServer);
+    accountsRouter.initializeWebServer(webServer);
+    kubekRouter.initializeWebServer(webServer);
+    updatesRouter.initializeWebServer(webServer);
     webServer.use(authLoggingMiddleware);
     webServer.use(staticsMiddleware);
 

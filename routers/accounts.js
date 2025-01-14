@@ -6,7 +6,7 @@ import express from "express";
 import sha256 from 'crypto-js/sha256.js';
 const SHA256 = sha256;
 const router = express.Router();
-
+function initializeWebServer() {
 // Endpoint для получения списка аккаунтов
 router.get("/", function (req, res) {
     res.send(ACCOUNTS_MANAGER.getUsersList());
@@ -108,5 +108,5 @@ router.put("/:login", function (req, res) {
     }
     res.sendStatus(400);
 });
-
-export { router };
+}
+export { router, initializeWebServer };

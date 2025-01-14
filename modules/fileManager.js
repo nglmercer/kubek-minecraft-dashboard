@@ -43,7 +43,7 @@ export const scanDirectory = (server, directory, cb) => {
 };
 
 export const readFile = (server, path, cb) => {
-    let filePath = this.constructFilePath(server, path);
+    let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
         // Если найден path traversal, то ничего не делаем
@@ -62,7 +62,7 @@ export const readFile = (server, path, cb) => {
 };
 
 export const writeFile = (server, path, data) => {
-    let filePath = this.constructFilePath(server, path);
+    let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
         // Если найден path traversal, то ничего не делаем
@@ -74,7 +74,7 @@ export const writeFile = (server, path, data) => {
 };
 
 export const deleteFile = (server, path) => {
-    let filePath = this.constructFilePath(server, path);
+    let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
         // Если найден path traversal, то ничего не делаем
@@ -89,7 +89,7 @@ export const deleteFile = (server, path) => {
 };
 
 export const deleteEmptyDirectory = (server, path) => {
-    let filePath = this.constructFilePath(server, path);
+    let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
         // Если найден path traversal, то ничего не делаем
@@ -104,7 +104,7 @@ export const deleteEmptyDirectory = (server, path) => {
 };
 
 export const renameFile = (server, path, newName) => {
-    let filePath = this.constructFilePath(server, path);
+    let filePath = constructFilePath(server, path);
     let newPath = filePath.split("/").slice(0, -1).join("/") + "/";
 
     if (!verifyPathForTraversal(filePath) || !verifyPathForTraversal(newPath)) {
@@ -120,7 +120,7 @@ export const renameFile = (server, path, newName) => {
 };
 
 export const newDirectory = (server, path, name) => {
-    let filePath = this.constructFilePath(server, path);
+    let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
         // Если найден path traversal, то ничего не делаем
@@ -146,7 +146,7 @@ export const verifyPathForTraversal = (path) => {
 /* ЗАПИСЬ ФАЙЛОВ ПО ЧАНКАМ */
 // Начать запись
 export const startChunkyFileWrite = (server, path) => {
-    let filePath = this.constructFilePath(server, path);
+    let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
         // Если найден path traversal, то ничего не делаем

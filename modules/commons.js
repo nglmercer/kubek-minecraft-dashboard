@@ -46,7 +46,7 @@ export const getDataByURL = (url, cb) => {
 };
 
 export const moveUploadedFile = (server, sourceFile, filePath, cb) => { 
-    if (this.isObjectsValid(server, sourceFile.name)) {
+    if (isObjectsValid(server, sourceFile.name)) {
         let uploadPath;
         uploadPath = "./servers/" + server + filePath;
         fs.mkdirSync(path.dirname(uploadPath), {recursive: true});

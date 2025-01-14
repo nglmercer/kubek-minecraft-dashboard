@@ -4,7 +4,7 @@ import * as DOWNLOADS_MANAGER from "./../modules/downloadsManager.js";
 import express from "express";
 
 const router = express.Router();
-
+function initializeWebServer() {
 // Endpoint списка установленных версий Java
 router.get("/", function (req, res) {
     res.send(STATS_COLLECTOR.getAllJavaInstalled());
@@ -65,5 +65,5 @@ router.get("/download/:version", async function (req, res) {
         res.sendStatus(400); // Version already exists
     }
 });
-
-export { router };
+}
+export { router, initializeWebServer };

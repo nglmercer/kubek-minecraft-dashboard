@@ -75,7 +75,7 @@ export const changePassword = (login, password) => {
     CONFIGURATION.reloadAllConfigurations();
     if (SECURITY.isUserExists(login)) {
         usersConfig[login].password = SHA256(password).toString();
-        this.regenUserHash(login);
+        regenUserHash(login);
         CONFIGURATION.writeUsersConfig(usersConfig);
         return true;
     }

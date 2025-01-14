@@ -9,7 +9,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.ACCOUNTS)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.ACCOUNTS)) {
             return next();
         }
         return res.sendStatus(403);
@@ -22,7 +22,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.MAKING_SERVERS)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.MAKING_SERVERS)) {
             return next();
         }
         return res.sendStatus(403);
@@ -35,7 +35,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.MAKING_SERVERS)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.MAKING_SERVERS)) {
             return next();
         }
         return res.sendStatus(403);
@@ -48,7 +48,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.FILE_MANAGER)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.FILE_MANAGER)) {
             return next();
         }
         return res.sendStatus(403);
@@ -61,7 +61,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.MANAGE_JAVA)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.MANAGE_JAVA)) {
             return next();
         }
         return res.sendStatus(403);
@@ -74,7 +74,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.MANAGE_PLUGINS)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.MANAGE_PLUGINS)) {
             return next();
         }
         return res.sendStatus(403);
@@ -87,7 +87,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.MANAGE_PLUGINS)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.MANAGE_PLUGINS)) {
             return next();
         }
         return res.sendStatus(403);
@@ -100,7 +100,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.KUBEK_SETTINGS)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.KUBEK_SETTINGS)) {
             return next();
         }
         return res.sendStatus(403);
@@ -113,7 +113,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.SYSTEM_MONITORING)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.SYSTEM_MONITORING)) {
             return next();
         }
         return res.sendStatus(403);
@@ -126,7 +126,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.DEFAULT)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.DEFAULT)) {
             return next();
         }
         return res.sendStatus(403);
@@ -139,7 +139,7 @@ export function initializeWebServer(webServer) {
             return next();
         }
     
-        if (this.chkUserPermission(req, PREDEFINED.PERMISSIONS.DEFAULT)) {
+        if (chkUserPermission(req, PREDEFINED.PERMISSIONS.DEFAULT)) {
             return next();
         }
         return res.sendStatus(403);
@@ -154,8 +154,8 @@ export function initializeWebServer(webServer) {
     
         let method = req.method;
         let semiPath = req.path;
-        let chkMonitor = this.chkUserPermission(req, PREDEFINED.PERMISSIONS.MONITOR_SERVERS);
-        let chkManage = this.chkUserPermission(req, PREDEFINED.PERMISSIONS.MANAGE_SERVERS);
+        let chkMonitor = chkUserPermission(req, PREDEFINED.PERMISSIONS.MONITOR_SERVERS);
+        let chkManage = chkUserPermission(req, PREDEFINED.PERMISSIONS.MANAGE_SERVERS);
         if (chkManage && chkMonitor) {
             return next();
         } else if (!chkManage && chkMonitor) {

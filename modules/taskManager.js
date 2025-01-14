@@ -13,7 +13,7 @@ export const getNewTaskID = () => {
 
 // Добавить новую задачу
 export const addNewTask = (data) => {
-    let newTaskID = this.getNewTaskID();
+    let newTaskID = getNewTaskID();
     tasks[newTaskID] = data;
     LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.taskAdded}}", colors.cyan(newTaskID), colors.cyan(data.type)));
     return newTaskID;

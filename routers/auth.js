@@ -5,7 +5,7 @@ import * as COMMONS from "./../modules/commons.js";
 import express from "express";
 
 const router = express.Router();
-
+function initializeWebServer() {
 // Endpoint для входа в систему
 router.get("/login/:login/:password", function (req, res) {
     let q = req.params;
@@ -87,5 +87,5 @@ router.get("/logout", function (req, res) {
 router.get("/isEnabled", (req, res) => {
     res.send(mainConfig.authorization);
 });
-
-export { router };
+}
+export { router, initializeWebServer };
