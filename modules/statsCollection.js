@@ -10,42 +10,47 @@ import pkg from 'node-machine-id';
 const machineIdSync = pkg.machineIdSync;
 import fs from "fs";
 import os from "os";
-
-export const getUniqueID = machineIdSync;
-// Собрать статистику о ПК
+let usersConfig = globalThis.usersConfig;
+let serversConfig = globalThis.serversConfig;
+let mainConfig = globalThis.mainConfig;
+console.log(mainConfig);
+export const getUniqueID = machineIdSync;// Собрать статистику о ПК
 export const collectStats = () => {
-    let uniqueID = this.getUniqueID();
+    let uniqueID = getUniqueID(); // Remove 'this'
     let cpuCommon = os.cpus();
-    let usersCount = Object.keys(usersConfig).length;
-    let serversCount = Object.keys(serversConfig).length;
-    let javasInstalled = this.getAllJavaInstalled();
+    let usersCount = usersConfig ? Object.keys(usersConfig).length : 0;
+    let serversCount = serversConfig ? Object.keys(serversConfig).length : 0;
+    let javasInstalled = getAllJavaInstalled(); // Remove 'this'
+    
     let platformProps = {
         name: os.type(),
         release: os.release(),
         arch: process.arch,
         version: os.version(),
     };
+
     let cpuProps = {
         model: cpuCommon[0].model,
         speed: cpuCommon[0].speed,
         cores: cpuCommon.length,
     };
+
     return {
         platform: platformProps,
         totalRAM: Math.round(os.totalmem() / 1024 / 1024),
         cpu: cpuProps,
         uniqueID: uniqueID,
-        language: mainConfig.language,
+        language: mainConfig?.language,
         version: packageJSON.version,
         javas: JSON.stringify(javasInstalled),
         serversCount: serversCount,
-        authEnabled: mainConfig.authorization,
+        authEnabled: mainConfig?.authorization,
         usersCount: usersCount,
-        tgbotEnabled: mainConfig.telegramBot.enabled,
-        ftpdEnabled: mainConfig.ftpd.enabled,
+        tgbotEnabled: mainConfig?.telegramBot.enabled,
+        ftpdEnabled: mainConfig?.ftpd.enabled,
         uptime: Math.round(process.uptime())
     };
-}
+};
 
 // Получить все установленные версии Java
 export const getAllJavaInstalled = () => {

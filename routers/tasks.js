@@ -1,7 +1,6 @@
-const COMMONS = require("./../modules/commons");
-const TASK_MANAGER = require("./../modules/taskManager");
-
-const express = require("express");
+import * as COMMONS from "./../modules/commons.js";
+import * as TASK_MANAGER from "./../modules/taskManager.js";
+import express from "express";
 const router = express.Router();
 
 // Endpoint списка задач
@@ -21,4 +20,4 @@ router.get("/:id", function (req, res) {
     res.sendStatus(400);
 });
 
-module.exports.router = router;
+export { router };

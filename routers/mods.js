@@ -1,11 +1,10 @@
-const FILE_MANAGER = require("./../modules/fileManager");
-const SERVERS_MANAGER = require("./../modules/serversManager");
-const COMMONS = require("./../modules/commons");
-const WEBSERVER = require("../modules/webserver");
-
-const express = require("express");
+import * as FILE_MANAGER from "./../modules/fileManager.js";
+import * as SERVERS_MANAGER from "./../modules/serversManager.js";
+import * as COMMONS from "./../modules/commons.js";
+import * as WEBSERVER from "./../modules/webserver.js";
+import express from "express";
 const router = express.Router();
-
+function initializeWebServer() {
 // Endpoint списка модов
 router.get("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
@@ -57,5 +56,5 @@ router.delete("/:server", WEBSERVER.serversRouterMiddleware, function (req, res)
     }
     res.sendStatus(400);
 });
-
-module.exports.router = router;
+}
+export { router, initializeWebServer };

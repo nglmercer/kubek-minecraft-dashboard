@@ -170,5 +170,3 @@ export const writeBedrockStartFiles = (serverName) => {
     return true;
 };
 
-module.exports.startJavaServerGeneration = startJavaServerGeneration;
-module.exports.prepareJavaForServer = prepareJavaForServer;

@@ -1,8 +1,8 @@
-const JAVA_MANAGER = require("./../modules/javaManager");
-const STATS_COLLECTOR = require("./../modules/statsCollection");
-const DOWNLOADS_MANAGER = require("./../modules/downloadsManager");
+import * as JAVA_MANAGER from "./../modules/javaManager.js";
+import * as STATS_COLLECTOR from "./../modules/statsCollection.js";
+import * as DOWNLOADS_MANAGER from "./../modules/downloadsManager.js";
+import express from "express";
 
-const express = require("express");
 const router = express.Router();
 
 // Endpoint списка установленных версий Java
@@ -66,4 +66,4 @@ router.get("/download/:version", async function (req, res) {
     }
 });
 
-module.exports.router = router;
+export { router };

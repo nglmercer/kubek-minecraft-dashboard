@@ -1,9 +1,9 @@
-const SECURITY = require("./../modules/security");
-const SERVERS_MANAGER = require("./../modules/serversManager");
-const MULTI_LANGUAGE = require("./../modules/multiLanguage");
-const COMMONS = require("./../modules/commons");
+import * as SECURITY from "./../modules/security.js";
+import * as SERVERS_MANAGER from "./../modules/serversManager.js";
+import * as MULTI_LANGUAGE from "./../modules/multiLanguage.js";
+import * as COMMONS from "./../modules/commons.js";
+import express from "express";
 
-const express = require("express");
 const router = express.Router();
 
 // Endpoint для входа в систему
@@ -88,4 +88,4 @@ router.get("/isEnabled", (req, res) => {
     res.send(mainConfig.authorization);
 });
 
-module.exports.router = router;
+export { router };

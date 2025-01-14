@@ -1,18 +1,18 @@
-const SERVERS_CONTROLLER = require("./../modules/serversController");
-const SERVERS_GENERATOR = require("./../modules/serversGenerator");
-const SERVERS_MANAGER = require("./../modules/serversManager");
-const ACCOUNTS_MANAGER = require("./../modules/accountsManager");
-const PREDEFINED = require("./../modules/predefined");
-const COMMONS = require("./../modules/commons");
-const WEBSERVER = require("./../modules/webserver");
-
-const express = require("express");
+import * as SERVERS_CONTROLLER from "./../modules/serversController.js";
+import * as SERVERS_GENERATOR from "./../modules/serversGenerator.js";
+import * as SERVERS_MANAGER from "./../modules/serversManager.js";
+import * as ACCOUNTS_MANAGER from "./../modules/accountsManager.js";
+import * as PREDEFINED from "./../modules/predefined.js";
+import * as COMMONS from "./../modules/commons.js";
+import * as WEBSERVER from "./../modules/webserver.js";
+import express from "express";
+import fs from "fs";
+import path from "path";
+import { Base64 } from "js-base64";
+import Jimp from "jimp";
 const router = express.Router();
-const fs = require("fs");
-const {Base64} = require("js-base64");
-const Jimp = require("jimp");
-const path = require("path");
 
+function initializeWebServer() {
 // Router для получения списка серверов
 router.get("/", function (req, res) {
     let preparedList = SERVERS_MANAGER.getServersList();
@@ -240,5 +240,5 @@ router.delete("/:server", (req, res) => {
     }
     res.sendStatus(400);
 });
-
-module.exports.router = router;
+}
+export { router, initializeWebServer };

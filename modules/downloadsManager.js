@@ -95,4 +95,4 @@ export const unpackArchive = (archivePath, unpackPath, cb, deleteAfterUnpack = f
             cb(false);
         });
 }
-export const addDownloadTask = addDownloadTask;
+export default addDownloadTask;

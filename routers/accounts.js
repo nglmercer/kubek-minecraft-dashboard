@@ -1,9 +1,10 @@
-const PREDEFINED = require("./../modules/predefined");
-const ACCOUNTS_MANAGER = require("./../modules/accountsManager");
-const COMMONS = require("./../modules/commons");
-
-const express = require("express");
-const SHA256 = require("crypto-js/sha256");
+import * as PREDEFINED from "./../modules/predefined.js";
+import * as ACCOUNTS_MANAGER from "./../modules/accountsManager.js";
+import * as COMMONS from "./../modules/commons.js";
+import * as WEBSERVER from "./../modules/webserver.js";
+import express from "express";
+import sha256 from 'crypto-js/sha256.js';
+const SHA256 = sha256;
 const router = express.Router();
 
 // Endpoint для получения списка аккаунтов
@@ -108,4 +109,4 @@ router.put("/:login", function (req, res) {
     res.sendStatus(400);
 });
 
-module.exports.router = router;
+export { router };

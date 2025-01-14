@@ -11,10 +11,25 @@ import fileUpload from "express-fileupload";
 import colors from "colors";
 import mime from "mime";
 import path from 'path';
+import * as permissionsMiddleware from "./permissionsMiddleware.js";
+import * as coresRouter from "./../routers/cores.js";
 import { isInSubnet } from "is-in-subnet";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import * as tasksRouter from "./../routers/tasks.js";
+import * as fileManagerRouter from "./../routers/fileManager.js";
+import * as serversRouter from "./../routers/servers.js";
+import * as modsRouter from "./../routers/mods.js";
+import * as pluginsRouter from "./../routers/plugins.js";
+import * as javaRouter from "./../routers/java.js";
+import * as authRouter from "./../routers/auth.js";
+import * as accountsRouter from "./../routers/accounts.js";
+import * as kubekRouter from "./../routers/kubek.js";
+import * as updatesRouter from "./../routers/updates.js";
+//t tasksRouter = require("./../routers/tasks.js");
 
-
-globalThis.webServer = express();
+let webServer = express();
 globalThis.webPagesPermissions = {};
 webServer.use(cookieParser());
 webServer.use(
@@ -124,41 +139,32 @@ export const serversRouterMiddleware = (req, res, next) => {
 
 // Функция для загрузки всех роутеров из списка в predefined
 export const loadAllDefinedRouters = () => {
-    require("./permissionsMiddleware");
-    webServer.use(this.authLoggingMiddleware);
-    webServer.use(this.staticsMiddleware);
+    permissionsMiddleware.initializeWebServer(webServer);
+    coresRouter.initializeWebServer(webServer);
+    webServer.use(authLoggingMiddleware);
+    webServer.use(staticsMiddleware);
 
-    let coresRouter = require("./../routers/cores.js");
     webServer.use("/api/cores", coresRouter.router);
 
-    let tasksRouter = require("./../routers/tasks.js");
+
     webServer.use("/api/tasks", tasksRouter.router);
 
-    let fileManagerRouter = require("./../routers/fileManager.js");
     webServer.use("/api/fileManager", fileManagerRouter.router);
 
-    let serversRouter = require("./../routers/servers.js");
     webServer.use("/api/servers", serversRouter.router);
 
-    let modsRouter = require("./../routers/mods.js");
     webServer.use("/api/mods", modsRouter.router);
 
-    let pluginsRouter = require("./../routers/plugins.js");
     webServer.use("/api/plugins", pluginsRouter.router);
 
-    let javaRouter = require("./../routers/java.js");
     webServer.use("/api/java", javaRouter.router);
 
-    let authRouter = require("./../routers/auth.js");
     webServer.use("/api/auth", authRouter.router);
 
-    let accountsRouter = require("./../routers/accounts.js");
     webServer.use("/api/accounts", accountsRouter.router);
 
-    let kubekRouter = require("./../routers/kubek.js");
     webServer.use("/api/kubek", kubekRouter.router);
 
-    let updatesRouter = require("./../routers/updates.js");
     webServer.use("/api/updates", updatesRouter.router);
 
     // Хэндлер для ошибки 404
@@ -176,3 +182,5 @@ export const startWebServer = () => {
         LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.webserverStarted}}", colors.cyan(webPort)));
     });
 };
+
+export { webServer };

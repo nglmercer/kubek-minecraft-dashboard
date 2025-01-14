@@ -1,6 +1,5 @@
-const UPDATER = require("./../modules/updater");
-
-const express = require("express");
+import * as UPDATER from "./../modules/updater.js";
+import express from "express";
 const router = express.Router();
 
 // Endpoint для проверки обновлений
@@ -16,4 +15,4 @@ router.get("/", function (req, res) {
     }
 });
 
-module.exports.router = router;
+export { router };

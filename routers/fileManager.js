@@ -1,12 +1,13 @@
-const COMMONS = require("./../modules/commons");
-const FILE_MANAGER = require("./../modules/fileManager");
-const WEBSERVER = require("../modules/webserver");
+import * as COMMONS from "./../modules/commons.js";
+import * as FILE_MANAGER from "./../modules/fileManager.js";
+import * as WEBSERVER from "./../modules/webserver.js";
+import express from "express";
+import fs from "fs";
+import path from "path";
 
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
 const router = express.Router();
-
+function initializeWebServer() {
+    
 // Endpoint сканирования директории или чтения файлов
 router.get("/get", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
@@ -127,4 +128,6 @@ router.post("/upload", WEBSERVER.serversRouterMiddleware, function (req, res) {
     }
 });
 
-module.exports.router = router;
+}
+
+export { router, initializeWebServer };

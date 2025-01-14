@@ -1,12 +1,14 @@
-const HARDWARE_MANAGER = require("./../modules/hardwareManager");
-const CONFIGURATION = require("./../modules/configuration");
-const COMMONS = require("./../modules/commons");
-const FTP_DAEMON = require("./../modules/ftpDaemon");
-const MULTILANG = require("./../modules/multiLanguage");
+import * as HARDWARE_MANAGER from "./../modules/hardwareManager.js";
+import * as CONFIGURATION from "./../modules/configuration.js";
+import * as COMMONS from "./../modules/commons.js";
+import * as FTP_DAEMON from "./../modules/ftpDaemon.js";
+import * as MULTILANG from "./../modules/multiLanguage.js";
+import express from "express";
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
-const express = require("express");
 const router = express.Router();
-const {Base64} = require("js-base64");
+import { Base64 } from "js-base64";
 const packageJSON = require("../package.json");
 
 // Endpoint для получения использования ресурсов
@@ -62,4 +64,4 @@ router.get("/languages", function (req, res) {
     res.send(avaliableLanguages);
 });
 
-module.exports.router = router;
+export { router };
