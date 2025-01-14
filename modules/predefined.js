@@ -1,4 +1,4 @@
-import { createHash } from 'crypto-js/sha256.js';
+import SHA256 from 'crypto-js/sha256.js';
 
 // Predefined permission values
 export const PERMISSIONS = {
@@ -122,7 +122,7 @@ export const CONFIGURATIONS = {
     USERS: {
         "kubek": {
             username: "kubek",
-            password: createHash(DEFAULT_KUBEK_PASSWORD).toString(),
+            password: SHA256(DEFAULT_KUBEK_PASSWORD).toString(),
             email: "",
             secret: "",
             permissions: Object.values(PERMISSIONS),

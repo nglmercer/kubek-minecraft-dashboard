@@ -6,12 +6,9 @@ import * as COMMONS from "./commons.js";
 import * as SECURITY from "./security.js";
 import * as SERVERS_CONTROLLER from "./serversController.js";
 
-const SERVERS_CONTROLLER = require("./serversController");
 
 global.autoStartedServers = [];
-
-// Мигрировать старый config.json
-exports.migrateOldMainConfig = () => {
+export const migrateOldMainConfig = () => {
     let newConfig = PREDEFINED.CONFIGURATIONS.MAIN;
     let oldConfig = this.readAnyConfig("./config.json");
     if (oldConfig.configVersion !== PREDEFINED.CONFIGURATIONS.MAIN.configVersion) {
@@ -31,8 +28,7 @@ exports.migrateOldMainConfig = () => {
     }
 };
 
-// Мигрировать старые сервера
-exports.migrateOldServersConfig = () => {
+export const migrateOldServersConfig = () => {
     let newConfig = PREDEFINED.CONFIGURATIONS.SERVERS;
     let oldConfig = this.readAnyConfig("./servers/servers.json");
     if(Object.keys(oldConfig).length > 0 && typeof oldConfig[Object.keys(oldConfig)[0]].game === "undefined"){
@@ -60,16 +56,14 @@ exports.migrateOldServersConfig = () => {
     }
 };
 
-// Записать стандартный конфиг файл
-exports.writeDefaultConfig = () => {
+export const writeDefaultConfig = () => {
     let preparedDefaultConfig = PREDEFINED.CONFIGURATIONS.MAIN;
     preparedDefaultConfig["language"] = COMMONS.detectUserLocale();
     this.writeAnyConfig("config.json", preparedDefaultConfig);
     return true;
 };
 
-// Записать стандартный файл пользователей
-exports.writeDefaultUsersConfig = () => {
+export const writeDefaultUsersConfig = () => {
     let newHash = SECURITY.generateSecureID();
     let preparedUsersConfig = PREDEFINED.CONFIGURATIONS.USERS;
     preparedUsersConfig["kubek"]["secret"] = newHash;
@@ -77,8 +71,7 @@ exports.writeDefaultUsersConfig = () => {
     return true;
 };
 
-// Читать JSON-конфиг из любого пути
-exports.readAnyConfig = (filePath) => {
+export const readAnyConfig = (filePath) => {
     if (path.extname(filePath) === ".json") {
         return JSON.parse(fs.readFileSync(filePath).toString());
     } else {
@@ -86,8 +79,7 @@ exports.readAnyConfig = (filePath) => {
     }
 };
 
-// Записать JSON-конфиг по любому пути
-exports.writeAnyConfig = (filePath, data) => {
+export const writeAnyConfig = (filePath, data) => {
     if (path.extname(filePath) === ".json") {
         // Если data в виде объекта, то превращаем в JSON
         typeof data === "object" ? data = JSON.stringify(data, null, "\t") : data;
@@ -99,8 +91,7 @@ exports.writeAnyConfig = (filePath, data) => {
 };
 
 
-// Прочитать главный конфиг (записать и отдать дефолтный при отсутствии)
-exports.readMainConfig = () => {
+export const readMainConfig = () => {
     if (!fs.existsSync("config.json")) {
         this.writeDefaultConfig();
         return PREDEFINED.CONFIGURATIONS.MAIN;
@@ -109,14 +100,12 @@ exports.readMainConfig = () => {
     }
 };
 
-// Записать главный конфиг
-exports.writeMainConfig = (data) => {
+export const writeMainConfig = (data) => {
     return this.writeAnyConfig("config.json", data);
 };
 
 
-// Прочитать конфиг пользователей (записать и отдать дефолтный при отсутствии)
-exports.readUsersConfig = () => {
+export const readUsersConfig = () => {
     if (!fs.existsSync("users.json")) {
         this.writeDefaultUsersConfig();
         return PREDEFINED.CONFIGURATIONS.USERS;
@@ -125,14 +114,12 @@ exports.readUsersConfig = () => {
     }
 };
 
-// Записать конфиг пользователей
-exports.writeUsersConfig = (data) => {
+export const writeUsersConfig = (data) => {
     return this.writeAnyConfig("users.json", data);
 };
 
 
-// Прочитать конфиг серверов (записать и отдать дефолтный при отсутствии)
-exports.readServersConfig = () => {
+export const readServersConfig = () => {
     if (!fs.existsSync("./servers/servers.json")) {
         this.writeAnyConfig("./servers/servers.json", PREDEFINED.CONFIGURATIONS.SERVERS);
         return PREDEFINED.CONFIGURATIONS.SERVERS;
@@ -141,8 +128,7 @@ exports.readServersConfig = () => {
     }
 };
 
-// Автоматически запустить сервера, которые были запущены при закрытии Kubek
-exports.autoStartServers = () => {
+export const autoStartServers = () => {
     for (const [key, value] of Object.entries(serversConfig)) {
         if(serversConfig[key].status !== PREDEFINED.SERVER_STATUSES.STOPPED && !autoStartedServers.includes(key)){
             // Запускаем сервер, который был запущен до остановки Kubek
@@ -153,13 +139,11 @@ exports.autoStartServers = () => {
     }
 };
 
-// Записать конфиг серверов
-exports.writeServersConfig = (data) => {
+export const writeServersConfig = (data) => {
     return this.writeAnyConfig("./servers/servers.json", data);
 };
 
-// Перезагрузить все конфиги в память
-exports.reloadAllConfigurations = () => {
+export const reloadAllConfigurations = () => {
     global.mainConfig = this.readMainConfig();
     global.usersConfig = this.readUsersConfig();
     global.serversConfig = this.readServersConfig();

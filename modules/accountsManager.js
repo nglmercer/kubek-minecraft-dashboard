@@ -1,7 +1,7 @@
 import * as PREDEFINED from "./predefined.js";
 import * as SECURITY from "./security.js";
 import * as CONFIGURATION from "./configuration.js";
-import { SHA256 } from "crypto-js/sha256";
+import SHA256 from 'crypto-js/sha256';
 export const createNewAccount = (login, password, permissions = [], email = "", servers = []) => {
     CONFIGURATION.reloadAllConfigurations();
     if (login !== "kubek" && !SECURITY.isUserExists(login)) {

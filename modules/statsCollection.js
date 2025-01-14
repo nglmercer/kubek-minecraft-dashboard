@@ -1,8 +1,13 @@
-import * as packageJSON from "./../package.json";
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+const packageJSON = require("./../package.json");
+
 import * as LOGGER from "./logger.js";
 import * as COMMONS from "./commons.js";
 import * as PREDEFINED from "./predefined.js";
-import {machineIdSync} from 'node-machine-id';
+import pkg from 'node-machine-id';
+const machineIdSync = pkg.machineIdSync;
 import fs from "fs";
 import os from "os";
 

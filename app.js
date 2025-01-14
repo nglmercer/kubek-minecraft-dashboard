@@ -1,6 +1,6 @@
 // Загружаем нужные самописные модули
 import * as COMMONS from "./modules/commons.js";
-const CONFIGURATION = require("./modules/configuration");
+import * as CONFIGURATION from "./modules/configuration.js";    
 
 // Создаём нужные папки (если их не существует)
 COMMONS.makeBaseDirs();
@@ -10,11 +10,11 @@ CONFIGURATION.reloadAllConfigurations();
 CONFIGURATION.migrateOldMainConfig();
 CONFIGURATION.migrateOldServersConfig();
 
-const LOGGER = require("./modules/logger");
-const MULTI_LANGUAGE = require("./modules/multiLanguage");
-const WEBSERVER = require("./modules/webserver");
-const STATS_COLLECTION = require("./modules/statsCollection");
-const FTP_DAEMON = require("./modules/ftpDaemon");
+import * as LOGGER from "./modules/logger.js";
+import * as MULTI_LANGUAGE from "./modules/multiLanguage.js";
+import * as WEBSERVER from "./modules/webserver.js";
+import * as STATS_COLLECTION from "./modules/statsCollection.js";
+import * as FTP_DAEMON from "./modules/ftpDaemon.js";
 
 const collStats = STATS_COLLECTION.collectStats();
 STATS_COLLECTION.sendStatsToServer(collStats, true);

@@ -1,7 +1,10 @@
 import fs from "fs";
 import colors from "colors";
 import * as PREDEFINED from "./predefined.js";
-import packageJSON from "./../package.json";    
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+const packageJSON = require("./../package.json");
 
 export const getTimeFormatted = () => {
     let dateTime = new Date();

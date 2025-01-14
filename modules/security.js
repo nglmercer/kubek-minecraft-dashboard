@@ -1,5 +1,5 @@
-import sha256 from 'crypto-js/sha256';
-const SHA256  = sha256;
+import sha256 from 'crypto-js/sha256.js';
+const SHA256 = sha256;
 // Проверить имеет ли пользователь определённое право
 export const isUserHasPermission = (username, permission) => {  
     if (mainConfig.authorization === false) {

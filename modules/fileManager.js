@@ -88,8 +88,7 @@ export const deleteFile = (server, path) => {
     return false;
 };
 
-// Удалить директорию (пустую)
-exports.deleteEmptyDirectory = (server, path) => {
+export const deleteEmptyDirectory = (server, path) => {
     let filePath = this.constructFilePath(server, path);
 
     if (!this.verifyPathForTraversal(filePath)) {
