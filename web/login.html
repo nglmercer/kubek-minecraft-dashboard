@@ -49,6 +49,20 @@
 </div>
 
 <div class="uiPool bottom left" id="alerts-pool"></div>
+<custom-alert></custom-alert>
+
+<script>
+    // Crea una alerta
+    const alerts = document.querySelector('custom-alert');
+    alerts.addAlert(
+        'Mensaje de prueba',
+        'info',
+        'Descripción opcional',
+        5000,
+        'clase-icono-opcional',
+        () => console.log('Alerta clickeada')
+    );
+</script>
 </body>
 
 <script>
