@@ -64,6 +64,10 @@ async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
             });
 
             data.pipe(writeStream);
+        }).catch(error => {
+            // Manejar el error de la promesa
+            console.error("Error en la descarga:", error.message);
+            cb(error);
         });
 
     } catch (error) {
@@ -73,7 +77,8 @@ async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
         } else {
             cb(error);
         }
-        throw error;
+        // No relanzar el error para evitar que el proceso se detenga
+        console.error("Error en la descarga:", error.message);
     }
 }
 

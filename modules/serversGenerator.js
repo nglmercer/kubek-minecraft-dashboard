@@ -13,54 +13,52 @@ const path = require("path");
 const colors = require("colors");
 
 async function prepareJavaForServer(javaVersion, cb) {
-    let javaExecutablePath = "";
-    let javaDownloadURL = "";
-    let isJavaNaN = isNaN(parseInt(javaVersion));
+    try {
+        let javaExecutablePath = "";
+        let javaDownloadURL = "";
+        let isJavaNaN = isNaN(parseInt(javaVersion));
 
-    if (isJavaNaN && fs.existsSync(javaVersion)) {
-        // Если в аргументе указан путь к существующему файла Java
-        javaExecutablePath = javaVersion;
-    } else if (!isJavaNaN) {
-        // Если передана версия Java, то не делаем ничего
-    } else {
-        // Если версия Java не была передана
-        cb(false);
-        return;
-    }
+        if (isJavaNaN && fs.existsSync(javaVersion)) {
+            javaExecutablePath = javaVersion;
+        } else if (!isJavaNaN) {
+            // Si se pasa una versión de Java, no hacer nada
+        } else {
+            cb(false);
+            return;
+        }
 
-    // Если в javaVersion указана версия Java, а не путь
-    if (!isJavaNaN) {
-        javaExecutablePath = JAVA_MANAGER.getJavaPath(javaVersion);
+        if (!isJavaNaN) {
+            javaExecutablePath = JAVA_MANAGER.getJavaPath(javaVersion);
 
-        // Если мы не смогли найти нужную версию Java в папке
-        if (javaExecutablePath === false) {
-            let javaVerInfo = JAVA_MANAGER.getJavaInfoByVersion(javaVersion);
-            javaDownloadURL = javaVerInfo.url;
+            if (javaExecutablePath === false) {
+                let javaVerInfo = JAVA_MANAGER.getJavaInfoByVersion(javaVersion);
+                javaDownloadURL = javaVerInfo.url;
 
-            // Начинаем скачивание нужной версии Java
-            DOWNLOADS_MANAGER.addDownloadTask(javaDownloadURL, javaVerInfo.downloadPath, (javaDlResult) => {
-                if (javaDlResult === true) {
-                    // Если скачивание успешно завершено, то распаковываем
-                    DOWNLOADS_MANAGER.unpackArchive(javaVerInfo.downloadPath, javaVerInfo.unpackPath, (javaUnpackResult) => {
-                        if (javaUnpackResult === true) {
-                            // Если всё успешно распаковалось - просто перезапускаем создание сервера с теми же параметрами
-                            javaExecutablePath = JAVA_MANAGER.getJavaPath(javaVersion);
-                            cb(javaExecutablePath);
-                        } else {
-                            LOGGER.warning(MULTILANG.translateText(mainConfig.language, "{{console.javaUnpackFailed}}"));
-                            cb(false);
-                        }
-                    }, true);
-                } else {
-                    LOGGER.warning(MULTILANG.translateText(mainConfig.language, "{{console.javaDownloadFailed}}"));
-                    cb(false);
-                }
-            });
+                await DOWNLOADS_MANAGER.addDownloadTask(javaDownloadURL, javaVerInfo.downloadPath, (javaDlResult) => {
+                    if (javaDlResult === true) {
+                        DOWNLOADS_MANAGER.unpackArchive(javaVerInfo.downloadPath, javaVerInfo.unpackPath, (javaUnpackResult) => {
+                            if (javaUnpackResult === true) {
+                                javaExecutablePath = JAVA_MANAGER.getJavaPath(javaVersion);
+                                cb(javaExecutablePath);
+                            } else {
+                                LOGGER.warning(MULTILANG.translateText(mainConfig.language, "{{console.javaUnpackFailed}}"));
+                                cb(false);
+                            }
+                        }, true);
+                    } else {
+                        LOGGER.warning(MULTILANG.translateText(mainConfig.language, "{{console.javaDownloadFailed}}"));
+                        cb(false);
+                    }
+                });
+            } else {
+                cb(javaExecutablePath);
+            }
         } else {
             cb(javaExecutablePath);
         }
-    } else {
-        cb(javaExecutablePath);
+    } catch (error) {
+        console.error("Error in prepareJavaForServer:", error);
+        cb(false);
     }
 }
 
