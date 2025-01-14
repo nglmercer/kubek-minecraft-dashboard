@@ -14,8 +14,8 @@ import path from 'path';
 import { isInSubnet } from "is-in-subnet";
 
 
-global.webServer = express();
-global.webPagesPermissions = {};
+globalThis.webServer = express();
+globalThis.webPagesPermissions = {};
 webServer.use(cookieParser());
 webServer.use(
     fileUpload({
@@ -25,7 +25,7 @@ webServer.use(
 );
 
 // Получаем порт веб-сервера из конфига
-let webPort = mainConfig.webserverPort;
+let webPort = globalThis.mainConfig?.webserverPort;
 export const logWebRequest = (req, res, username = null) => {
     let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
     ip = ip.replace("::ffff:", "").replace("::1", "127.0.0.1");

@@ -10,10 +10,10 @@ import treekill from "tree-kill";
 import spParser from "minecraft-server-properties";
 import {spawn} from "node:child_process";
 import mcs from "node-mcstatus";
-global.serversInstances = {};
-global.instancesLogs = {};
-global.restartAttempts = {};
-global.serversToManualRestart = [];
+globalThis.serversInstances = {};
+globalThis.instancesLogs = {};
+globalThis.restartAttempts = {};
+globalThis.serversToManualRestart = [];
 
 export const isServerReadyToStart = (serverName) => {
     let serverStarterPath = this.getStartFilePath(serverName);

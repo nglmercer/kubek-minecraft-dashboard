@@ -42,7 +42,7 @@ router.put("/settings", function (req, res) {
         }
         let writeResult = CONFIGURATION.writeMainConfig(Base64.decode(q.config));
         CONFIGURATION.reloadAllConfigurations();
-        global.currentLanguage = mainConfig.language;
+        globalThis.currentLanguage = mainConfig.language;
         FTP_DAEMON.startFTP();
         return res.send(writeResult);
     }

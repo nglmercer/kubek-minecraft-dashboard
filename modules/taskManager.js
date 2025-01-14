@@ -1,5 +1,5 @@
 // Переменная для сохранения всех задач
-global.tasks = {};
+globalThis.tasks = {};
 import * as LOGGER from "./logger.js";
 import * as MULTILANG from "./multiLanguage.js";
 import * as PREDEFINED from "./predefined.js";

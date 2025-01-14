@@ -1,7 +1,7 @@
 import * as PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";    
 import packageJSON from "./../package.json";
-global.cachedUpdate = null;
+globalThis.cachedUpdate = null;
 
 // Функция для получения объекта релизов с GitHub
 export const getGitHubReleases = (cb) => {

@@ -2,7 +2,7 @@
 import fs from "fs";
 import path from "path";
 // Список кодов для доступных языков
-global.avaliableLanguages = {};
+globalThis.avaliableLanguages = {};
 
 // Загрузить список доступных языков
 export const loadAvailableLanguages = () => {

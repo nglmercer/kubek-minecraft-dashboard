@@ -7,7 +7,7 @@ import * as SECURITY from "./security.js";
 import * as SERVERS_CONTROLLER from "./serversController.js";
 
 
-global.autoStartedServers = [];
+globalThis.autoStartedServers = [];
 export const migrateOldMainConfig = () => {
     let newConfig = PREDEFINED.CONFIGURATIONS.MAIN;
     let oldConfig = this.readAnyConfig("./config.json");
@@ -143,10 +143,10 @@ export const writeServersConfig = (data) => {
     return this.writeAnyConfig("./servers/servers.json", data);
 };
 
-export const reloadAllConfigurations = () => {
-    global.mainConfig = this.readMainConfig();
-    global.usersConfig = this.readUsersConfig();
-    global.serversConfig = this.readServersConfig();
+export const reloadAllConfigurations = async () => {
+    globalThis.mainConfig = await this.readMainConfig();
+    globalThis.usersConfig = await this.readUsersConfig();
+    globalThis.serversConfig = await this.readServersConfig();
 };
 
 // DEVELOPED by seeeroy
