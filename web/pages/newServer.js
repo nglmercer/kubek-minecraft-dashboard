@@ -145,11 +145,16 @@ function refreshCoreVersionsList(cb = () => {
 }) {
     currentSelectedVersion = "";
     KubekCoresManager.getCoreVersions(currentSelectedCore, (versions) => {
+        if (!versions) {
+            console.log(versions);
+            $(".new-server-container #cores-versions .item").off("click");
+            cb(false);
+            return;
+        }
         $(".new-server-container #cores-versions .item").off("click");
 
         // Очищаем список
         $(".new-server-container #cores-versions").html("");
-
         // Загружаем новый список
         versions.forEach((ver) => {
             $(".new-server-container #cores-versions").append("<div class='item'>" + ver + "</div>");

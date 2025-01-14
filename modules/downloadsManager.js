@@ -10,45 +10,71 @@ const decompress = require("decompress");
 const colors = require("colors");
 
 // Создать задачу на скачивание
-async function addDownloadTask(downloadURL, filePath, cb = () => {
-}) {
-    // Создаём новый объект Axios
-    const {data, headers} = await axios({
-        url: downloadURL,
-        method: "GET",
-        responseType: "stream",
-    }).catch((error) => {
-        // Возвращаем коллбэк при ошибке
-        cb(error);
-    });
+async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
+    try {
+        const response = await axios({
+            url: downloadURL,
+            method: "GET",
+            responseType: "stream",
+            timeout: 10000, // Set a timeout (e.g., 10 seconds)
+        });
+        
+        const { data, headers } = response;
 
-    // Создаём новую задачу и запоминаем её ID
-    let dlTaskID = TASK_MANAGER.addNewTask({
-        type: PREDEFINED.TASKS_TYPES.DOWNLOADING,
-        progress: 0,
-        size: {
-            total: parseInt(headers['content-length']),
-            current: 0
-        },
-        url: downloadURL,
-        path: filePath,
-        filename: path.basename(filePath)
-    })
+        // Crear nueva tarea
+        let dlTaskID = TASK_MANAGER.addNewTask({
+            type: PREDEFINED.TASKS_TYPES.DOWNLOADING,
+            progress: 0,
+            size: {
+                total: parseInt(headers['content-length']),
+                current: 0
+            },
+            url: downloadURL,
+            path: filePath,
+            filename: path.basename(filePath)
+        });
 
-    LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.downloadTaskCreated}}", colors.cyan(dlTaskID), colors.cyan(path.basename(filePath))));
+        LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.downloadTaskCreated}}", colors.cyan(dlTaskID), colors.cyan(path.basename(filePath))));
 
-    // Каждый чанк обновляем прогресс
-    data.on('data',(chunk) => {
-        tasks[dlTaskID].size.current = tasks[dlTaskID].size.current + chunk.length;
-        tasks[dlTaskID].progress = Math.round((tasks[dlTaskID].size.current / tasks[dlTaskID].size.total) * 100);
-        if (tasks[dlTaskID].size.current === tasks[dlTaskID].size.total) {
-            // Возвращаем коллбэк после окончания скачивания
-            TASK_MANAGER.removeTask(dlTaskID);
-            cb(true);
+        return new Promise((resolve, reject) => {
+            // Manejar errores en el stream
+            data.on('error', (error) => {
+                TASK_MANAGER.removeTask(dlTaskID);
+                cb(error);
+                reject(error);
+            });
+
+            // Manejar los chunks de datos
+            data.on('data', (chunk) => {
+                tasks[dlTaskID].size.current = tasks[dlTaskID].size.current + chunk.length;
+                tasks[dlTaskID].progress = Math.round((tasks[dlTaskID].size.current / tasks[dlTaskID].size.total) * 100);
+                if (tasks[dlTaskID].size.current === tasks[dlTaskID].size.total) {
+                    TASK_MANAGER.removeTask(dlTaskID);
+                    cb(true);
+                    resolve(true);
+                }
+            });
+
+            // Crear el writeStream y manejar sus errores
+            const writeStream = fs.createWriteStream(filePath);
+            writeStream.on('error', (error) => {
+                TASK_MANAGER.removeTask(dlTaskID);
+                cb(error);
+                reject(error);
+            });
+
+            data.pipe(writeStream);
+        });
+
+    } catch (error) {
+        if (error.response && error.response.status === 522) {
+            console.error("Connection timed out (522):", error.message);
+            cb(new Error("Connection timed out"));
+        } else {
+            cb(error);
         }
-    })
-
-    data.pipe(fs.createWriteStream(filePath));
+        throw error;
+    }
 }
 
 // Распаковать архив по нужному пути

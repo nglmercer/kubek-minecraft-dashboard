@@ -40,20 +40,30 @@ router.get("/all", (req, res) => {
     });
 });
 
-router.get("/download/:version", function (req, res) {
+router.get("/download/:version", async function (req, res) {
     let q = req.params;
     let localJavaVersions = JAVA_MANAGER.getLocalJavaVersions();
+
     if (!localJavaVersions.includes(q.version)) {
         let javaInfo = JAVA_MANAGER.getJavaInfoByVersion(q.version);
-        DOWNLOADS_MANAGER.addDownloadTask(javaInfo.url, javaInfo.downloadPath, (result) => {
-            if (result === true) {
-                DOWNLOADS_MANAGER.unpackArchive(javaInfo.downloadPath, javaInfo.unpackPath, () => {
-                }, true);
-            }
-        });
-        return res.send(true);
+
+        try {
+            await DOWNLOADS_MANAGER.addDownloadTask(javaInfo.url, javaInfo.downloadPath, (result) => {
+                if (result === true) {
+                    DOWNLOADS_MANAGER.unpackArchive(javaInfo.downloadPath, javaInfo.unpackPath, () => {
+                        res.send(true); // Send response after unpacking
+                    }, true);
+                } else {
+                    res.status(500).send("Download failed"); // Handle download failure
+                }
+            });
+        } catch (error) {
+            console.error("Download error:", error);
+            res.status(500).send("Download failed due to an error");
+        }
+    } else {
+        res.sendStatus(400); // Version already exists
     }
-    res.sendStatus(400);
 });
 
 module.exports.router = router;
