@@ -34,7 +34,7 @@ export const getLastLogFileName = () => {
 
 // Записать строку в лог
 export const writeLineToLog = (line) => {
-    let fileName = this.getLastLogFileName();
+    let fileName = getLastLogFileName();
     let readLog = "";
     if (fs.existsSync("./logs/" + fileName)) {
         readLog = fs.readFileSync("./logs/" + fileName);
@@ -45,23 +45,23 @@ export const writeLineToLog = (line) => {
 
 // Вывести текст в консоль и записать в файл
 export const log = (...text) => {
-    let preparedText = this.getTimeFormatted() + " " + text.join(" ");
+    let preparedText = getTimeFormatted() + " " + text.join(" ");
     console.log(preparedText);
-    this.writeLineToLog(preparedText);
+    writeLineToLog(preparedText);
 };
 
 // Вывести текст типа WARNING в консоль и записать в файл
 export const warning = (...text) => {
-    let preparedText = this.getTimeFormatted() + " " + text.join(" ");
+    let preparedText = getTimeFormatted() + " " + text.join(" ");
     console.log(colors.yellow(preparedText));
-    this.writeLineToLog("[WARN] " + preparedText);
+    writeLineToLog("[WARN] " + preparedText);
 };
 
 // Вывести текст типа ERROR в консоль и записать в файл
 export const error = (...text) => {
-    let preparedText = this.getTimeFormatted() + " " + text.join(" ");
+    let preparedText = getTimeFormatted() + " " + text.join(" ");
     console.log(colors.red(preparedText));
-    this.writeLineToLog("[ERR] " + preparedText);
+    writeLineToLog("[ERR] " + preparedText);
 };
 
 // Вывести приветственное сообщение Kubek

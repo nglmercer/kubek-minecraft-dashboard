@@ -119,7 +119,9 @@ export const readServersConfig = () => {
 export const writeServersConfig = (data) => {
     return writeAnyConfig("./servers/servers.json", data);
 };
-
+globalThis.mainConfig = readMainConfig();
+globalThis.usersConfig = readUsersConfig();
+globalThis.serversConfig = readServersConfig();
 export const reloadAllConfigurations = async () => {
     globalThis.mainConfig = readMainConfig();
     globalThis.usersConfig = readUsersConfig();

@@ -1,6 +1,9 @@
 import * as PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";    
-import packageJSON from "./../package.json";
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+const packageJSON = require("./../package.json");
 globalThis.cachedUpdate = null;
 
 // Функция для получения объекта релизов с GitHub
@@ -10,7 +13,7 @@ export const getGitHubReleases = (cb) => {
 
 // Получить последнюю версию из релизов на GitHub   
 export const getLatestVersionOnGitHub = (cb) => {
-    this.getGitHubReleases((ghReleases) => {
+    getGitHubReleases((ghReleases) => {
         if (ghReleases !== false) {
             if (typeof ghReleases !== "undefined" && typeof ghReleases[0] !== "undefined" && typeof ghReleases[0].tag_name !== "undefined") {
                 cb({
@@ -30,8 +33,8 @@ export const getLatestVersionOnGitHub = (cb) => {
 
 // Проверить обновления (возвращает false или ссылку на обновление)
 export const checkForUpdates = (cb) => {
-    this.getLatestVersionOnGitHub((ghLatestVer) => {
-        this.saveUpdateToCache(ghLatestVer);
+    getLatestVersionOnGitHub((ghLatestVer) => {
+        saveUpdateToCache(ghLatestVer);
         if (ghLatestVer !== false) {
             if (packageJSON.version !== ghLatestVer.version) {
                 cb(ghLatestVer.url);

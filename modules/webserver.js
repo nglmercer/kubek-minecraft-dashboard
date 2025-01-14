@@ -64,7 +64,7 @@ export const authLoggingMiddleware = (req, res, next) => {
 
     // Показываем запрос в логах
     if (!COMMONS.testForRegexArray(req.path, PREDEFINED.NO_LOG_URLS)) {
-        this.logWebRequest(req, res, username);
+        logWebRequest(req, res, username);
     }
 
     // Добавляем проверку на вхождение IP в range (при включенной функции)
