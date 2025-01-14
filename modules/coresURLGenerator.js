@@ -7,7 +7,8 @@ const LOGGER = require("./logger");
 
 // Метод с API PaperMC
 exports.getPaperCoreURL = (core, version, cb) => {
-    let firstStepURL = "https://papermc.io/api/v2/projects/" + core + "/versions/" + version;
+    let firstStepURL = "https://api.papermc.io/v2/projects/" + core + "/versions/" + version;
+    LOGGER.log("firstStepURL", firstStepURL);
     COMMONS.getDataByURL(firstStepURL, (data) => {
         if (data === false) {
             LOGGER.warning("Oops! An error occurred while fetching cores");
@@ -56,12 +57,15 @@ exports.getCoreByExternalURL = (url, version, cb) => {
 
 // Метод с API PaperMC
 exports.getAllPaperLikeCores = (cb, core = "paper") => {
-    COMMONS.getDataByURL("https://papermc.io/api/v2/projects/" + core, (data) => {
+    const url = "https://api.papermc.io/v2/projects/" + core;
+    COMMONS.getDataByURL(url, (data) => {
         if (data === false) {
             LOGGER.warning("Oops! An error occurred while fetching cores");
             cb(false);
             return;
         }
+
+        LOGGER.log("data paper", data, core,url);
         let paperCoresList = data.versions;
         paperCoresList.reverse();
         cb(paperCoresList);
@@ -95,18 +99,19 @@ exports.getAllPurpurCores = (cb) => {
 }
 
 // Метод с external URL
-exports.getAllCoresByExternalURL = (url, cb) => {
+exports.getAllCoresByExternalURL = (url, cb, name) => {
     let resultList = [];
-
+    LOGGER.log("url", url, name);
     COMMONS.getDataByURL(url, (data) => {
         if (data === false) {
-            LOGGER.warning("Oops! An error occurred while fetching cores");
+            LOGGER.warning("Oops! An error occurred while fetching cores", url, data);
             cb(false);
             return;
         }
         for (const [key] of Object.entries(data)) {
             resultList.push(key);
         }
+        LOGGER.log("url", url, resultList, name);
         cb(resultList);
     });
 };
