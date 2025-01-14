@@ -1,13 +1,12 @@
-const TASK_MANAGER = require("./taskManager");
-const PREDEFINED = require("./predefined");
-const LOGGER = require("./logger");
-const MULTILANG = require("./multiLanguage");
-
-const path = require("path");
-const axios = require("axios");
-const fs = require("fs");
-const decompress = require("decompress");
-const colors = require("colors");
+import * as TASK_MANAGER from "./taskManager.js";
+import * as PREDEFINED from "./predefined.js";
+import * as LOGGER from "./logger.js";
+import * as MULTILANG from "./multiLanguage.js";
+import path from "path";
+import axios from "axios";
+import fs from "fs";
+import decompress from "decompress";    
+import colors from "colors";
 
 // Создать задачу на скачивание
 async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
@@ -82,8 +81,7 @@ async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
     }
 }
 
-// Распаковать архив по нужному пути
-exports.unpackArchive = (archivePath, unpackPath, cb, deleteAfterUnpack = false) => {
+export const unpackArchive = (archivePath, unpackPath, cb, deleteAfterUnpack = false) => {
     fs.mkdirSync(unpackPath, {recursive: true});
     decompress(archivePath, unpackPath)
         .then(function () {
@@ -97,5 +95,4 @@ exports.unpackArchive = (archivePath, unpackPath, cb, deleteAfterUnpack = false)
             cb(false);
         });
 }
-
-module.exports.addDownloadTask = addDownloadTask;
+export const addDownloadTask = addDownloadTask;

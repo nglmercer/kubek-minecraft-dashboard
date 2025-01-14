@@ -1,12 +1,11 @@
 // Формат перевода в тексте: {{категория.ключ}}
-
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
 // Список кодов для доступных языков
 global.avaliableLanguages = {};
 
 // Загрузить список доступных языков
-exports.loadAvailableLanguages = () => {
+export const loadAvailableLanguages = () => {
     if (fs.existsSync(path.join(__dirname, "./../languages"))) {
         fs.readdirSync(path.join(__dirname, "./../languages")).forEach(file => {
             if (path.extname(file) === ".json") {
@@ -22,7 +21,7 @@ exports.loadAvailableLanguages = () => {
 };
 
 // Получить информацию о языке по названию
-exports.getLanguageInfo = (language) => {
+export const getLanguageInfo = (language) => {
     if (Object.keys(avaliableLanguages).includes(language)) {
         return avaliableLanguages[language];
     }
@@ -30,7 +29,7 @@ exports.getLanguageInfo = (language) => {
 };
 
 // Перевести все вхождения меток переводов в текст
-exports.translateText = (language, text, ...placers) => {
+export const translateText = (language, text, ...placers) => {
     text = text.toString();
     if (Object.keys(avaliableLanguages).includes(language)) {
         let translationFile = JSON.parse(fs.readFileSync(path.join(__dirname, "./../languages", language + ".json")).toString());
@@ -67,7 +66,7 @@ exports.translateText = (language, text, ...placers) => {
 };
 
 // Получить EULA для опр. языка
-exports.getEULA = (language) => {
+export const getEULA = (language) => {
     if(this.getLanguageInfo(language) !== false){
         let translationFile = JSON.parse(fs.readFileSync("./languages/" + language + ".json").toString());
         return translationFile.eula;

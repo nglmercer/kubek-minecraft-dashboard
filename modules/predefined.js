@@ -1,4 +1,4 @@
-import { createHash } from 'crypto-js/sha256.js"';
+import { createHash } from 'crypto-js/sha256.js';
 
 // Predefined permission values
 export const PERMISSIONS = {

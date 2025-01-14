@@ -1,16 +1,15 @@
-const TASK_MANAGER = require("./taskManager");
-const CORES_MANAGER = require("./coresManager");
-const JAVA_MANAGER = require("./javaManager");
-const DOWNLOADS_MANAGER = require("./downloadsManager");
-const SERVERS_MANAGER = require("./serversManager");
-const PREDEFINED = require("./predefined");
-const CONFIGURATION = require("./configuration");
-const LOGGER = require("./logger");
-const MULTILANG = require("./multiLanguage");
-
-const fs = require("fs");
-const path = require("path");
-const colors = require("colors");
+import * as TASK_MANAGER from "./taskManager.js";
+import * as CORES_MANAGER from "./coresManager.js";
+import * as JAVA_MANAGER from "./javaManager.js";
+import * as DOWNLOADS_MANAGER from "./downloadsManager.js";
+import * as SERVERS_MANAGER from "./serversManager.js";
+import * as PREDEFINED from "./predefined.js";
+import * as CONFIGURATION from "./configuration.js";
+import * as LOGGER from "./logger.js";
+import * as MULTILANG from "./multiLanguage.js";
+import fs from "fs";
+import path from "path";
+import colors from "colors";
 
 async function prepareJavaForServer(javaVersion, cb) {
     try {
@@ -140,9 +139,7 @@ async function startJavaServerGeneration(serverName, core, coreVersion, startPar
         }
     }
 }
-
-// Записать файлы запуска и eula для сервера Java
-exports.writeJavaStartFiles = (serverName, coreFileName, startParameters, javaExecutablePath, serverPort) => {
+export const writeJavaStartFiles = (serverName, coreFileName, startParameters, javaExecutablePath, serverPort) => {
     let fullStartParameters = "-Dfile.encoding=UTF-8 " + startParameters + " -jar " + coreFileName + " nogui";
     let fullJavaExecutablePath = path.resolve(javaExecutablePath);
     fs.writeFileSync("./servers/" + serverName + "/eula.txt", "eula=true");
@@ -163,9 +160,7 @@ exports.writeJavaStartFiles = (serverName, coreFileName, startParameters, javaEx
     );
     return true;
 };
-
-// Записать файл запуска для сервера Bedrock
-exports.writeBedrockStartFiles = (serverName) => {
+export const writeBedrockStartFiles = (serverName) => {
     fs.writeFileSync("./servers/" + serverName + "/eula.txt", "eula=true");
     if (process.platform === "win32") {
         fs.writeFileSync("./servers/" + serverName + "/start.bat", "pushd %~dp0\nbedrock_server.exe\npopd");

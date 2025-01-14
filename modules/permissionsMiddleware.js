@@ -1,7 +1,6 @@
-const PREDEFINED = require("./predefined");
-const SECURITY = require("./security");
-const COMMONS = require("./commons");
-
+import * as PREDEFINED from "./predefined.js";
+import * as SECURITY from "./security.js";
+import * as COMMONS from "./commons.js";
 // Проверка permissions для управления аккаунтами
 webServer.use("/api/accounts", (req, res, next) => {
     // Проверка URL на разрешённую для пропуска проверки прав
@@ -173,9 +172,7 @@ webServer.use("/api/servers", (req, res, next) => {
     }
     return res.sendStatus(403);
 })
-
-// Общая функция для проверки прав в middleware
-exports.chkUserPermission = (req, permission) => {
+export const chkUserPermission = (req, permission) => {
     if (mainConfig.authorization === false) {
         return true;
     }

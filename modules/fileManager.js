@@ -1,11 +1,9 @@
-const fs = require("fs");
+import fs from "fs";
 let fileWrites = {};
-const {Base64} = require('js-base64');
+import { Base64 } from "js-base64";
+import * as SECURITY from './security.js';
 
-const SECURITY = require('./security');
-
-// Получить файлы в директории
-exports.scanDirectory = (server, directory, cb) => {
+export const scanDirectory = (server, directory, cb) => {
     let relDirectoryPath = "./servers/" + server + directory;
 
     if (!this.verifyPathForTraversal(relDirectoryPath)) {
@@ -44,8 +42,7 @@ exports.scanDirectory = (server, directory, cb) => {
     }
 };
 
-// Прочитать содержимое файла
-exports.readFile = (server, path, cb) => {
+export const readFile = (server, path, cb) => {
     let filePath = this.constructFilePath(server, path);
 
     if (!this.verifyPathForTraversal(filePath)) {
@@ -64,8 +61,7 @@ exports.readFile = (server, path, cb) => {
     }
 };
 
-// Записать файл
-exports.writeFile = (server, path, data) => {
+export const writeFile = (server, path, data) => {
     let filePath = this.constructFilePath(server, path);
 
     if (!this.verifyPathForTraversal(filePath)) {
@@ -77,8 +73,7 @@ exports.writeFile = (server, path, data) => {
     return true;
 };
 
-// Удалить файл
-exports.deleteFile = (server, path) => {
+export const deleteFile = (server, path) => {
     let filePath = this.constructFilePath(server, path);
 
     if (!this.verifyPathForTraversal(filePath)) {
@@ -109,8 +104,7 @@ exports.deleteEmptyDirectory = (server, path) => {
     return false;
 };
 
-// Переименовать файл
-exports.renameFile = (server, path, newName) => {
+export const renameFile = (server, path, newName) => {
     let filePath = this.constructFilePath(server, path);
     let newPath = filePath.split("/").slice(0, -1).join("/") + "/";
 
@@ -126,8 +120,7 @@ exports.renameFile = (server, path, newName) => {
     return false;
 };
 
-// Создать папку
-exports.newDirectory = (server, path, name) => {
+export const newDirectory = (server, path, name) => {
     let filePath = this.constructFilePath(server, path);
 
     if (!this.verifyPathForTraversal(filePath)) {
@@ -140,13 +133,11 @@ exports.newDirectory = (server, path, name) => {
     })
 };
 
-// Собрать путь к папке
-exports.constructFilePath = (server, path) => {
+export const constructFilePath = (server, path) => {
     return "./servers/" + server + path;
 }
 
-// Проверка на path traversal
-exports.verifyPathForTraversal = (path) => {
+export const verifyPathForTraversal = (path) => {
     return path.match(/\%2e\./gim) == null &&
         path.match(/\%2e\%2e/gim) == null &&
         path.match(/\.\%2e/gim) == null &&
@@ -155,7 +146,7 @@ exports.verifyPathForTraversal = (path) => {
 
 /* ЗАПИСЬ ФАЙЛОВ ПО ЧАНКАМ */
 // Начать запись
-exports.startChunkyFileWrite = (server, path) => {
+export const startChunkyFileWrite = (server, path) => {
     let filePath = this.constructFilePath(server, path);
 
     if (!this.verifyPathForTraversal(filePath)) {
@@ -172,8 +163,7 @@ exports.startChunkyFileWrite = (server, path) => {
     return randomUUID;
 };
 
-// Дописать чанк
-exports.addFileChunk = (id, chunk) => {
+export const addFileChunk = (id, chunk) => {
     if (typeof fileWrites[id] !== "undefined") {
         fileWrites[id].text === "" ? fileWrites[id].text = Base64.decode(chunk) : fileWrites[id].text += "\n" + Base64.decode(chunk);
         return true;
@@ -182,8 +172,7 @@ exports.addFileChunk = (id, chunk) => {
     }
 };
 
-// Завершить запись
-exports.endChunkyFileWrite = (id) => {
+export const endChunkyFileWrite = (id) => {
     if (typeof fileWrites[id] !== "undefined") {
         fs.writeFileSync(fileWrites[id].path, fileWrites[id].text);
         fileWrites[id] = null;

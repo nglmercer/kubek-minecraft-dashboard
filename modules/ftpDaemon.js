@@ -1,16 +1,15 @@
-const MULTILANG = require("./multiLanguage");
-const LOGGER = require("./logger");
-
-const ftpd = require("ftpd");
-const colors = require("colors");
-const path = require("path");
+import * as MULTILANG from "./multiLanguage.js";
+import * as LOGGER from "./logger.js";
+import ftpd from "ftpd";
+import colors from "colors";
+import path from "path";
 const defaultOptions = {
     host: "127.0.0.1",
     port: 21,
     tls: null
 };
 
-exports.startFTP = () => {
+export const startFTP = () => {
     let isEnabled = mainConfig.ftpd.enabled;
     if (isEnabled) {
         let initPath = path.normalize("./");
@@ -108,7 +107,7 @@ exports.startFTP = () => {
 };
 
 // Остановить сервер
-exports.stopFTP = () => {
+export const stopFTP = () => {
     ftpDaemon.close();
     ftpDaemon = null;
     LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.ftpStopped}}"));
@@ -116,6 +115,6 @@ exports.stopFTP = () => {
 }
 
 // Запущен ли FTP-сервер
-exports.isFTPStarted = () => {
+export const isFTPStarted = () => {
     return ftpDaemon !== null;
 };

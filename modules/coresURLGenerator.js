@@ -1,12 +1,10 @@
-const COMMONS = require('./commons');
-const LOGGER = require("./logger");
+import * as COMMONS from './commons.js';
+import * as LOGGER from "./logger.js";
 
 /////////////////////////////////////////////////////
 /* ФУНКЦИИ ДЛЯ ПОЛУЧЕНИЯ ССЫЛОК НА СКАЧИВАНИЕ ЯДЕР */
 /////////////////////////////////////////////////////
-
-// Метод с API PaperMC
-exports.getPaperCoreURL = (core, version, cb) => {
+export const getPaperCoreURL = (core, version, cb) => {
     let firstStepURL = "https://api.papermc.io/v2/projects/" + core + "/versions/" + version;
     LOGGER.log("firstStepURL", firstStepURL);
     COMMONS.getDataByURL(firstStepURL, (data) => {
@@ -29,18 +27,15 @@ exports.getPaperCoreURL = (core, version, cb) => {
     });
 };
 
-// Метод с API PurpurMC
-exports.getPurpurCoreURL = (version, cb) => {
+export const getPurpurCoreURL = (version, cb) => {
     cb("https://api.purpurmc.org/v2/purpur/" + version + "/latest/download");
 };
 
-// Метод с API MagmaFoundation
-exports.getMagmaCoreURL = (version, cb) => {
+export const getMagmaCoreURL = (version, cb) => {
     cb("https://api.magmafoundation.org/api/v2/" + version + "/latest/download");
 };
 
-// Метод с external URL
-exports.getCoreByExternalURL = (url, version, cb) => {
+export const getCoreByExternalURL = (url, version, cb) => {
     COMMONS.getDataByURL(url, (data) => {
         if (data === false) {
             LOGGER.warning("Oops! An error occurred while fetching cores");
@@ -55,8 +50,7 @@ exports.getCoreByExternalURL = (url, version, cb) => {
 /* ФУНКЦИИ ДЛЯ ПОЛУЧЕНИЯ СПИСКА ДОСТУПНЫХ ЯДЕР */
 /////////////////////////////////////////////////
 
-// Метод с API PaperMC
-exports.getAllPaperLikeCores = (cb, core = "paper") => {
+export const getAllPaperLikeCores = (cb, core = "paper") => {
     const url = "https://api.papermc.io/v2/projects/" + core;
     COMMONS.getDataByURL(url, (data) => {
         if (data === false) {
@@ -72,8 +66,7 @@ exports.getAllPaperLikeCores = (cb, core = "paper") => {
     });
 }
 
-// Метод с API MagmaFoundation
-exports.getAllMagmaCores = (cb) => {
+export const getAllMagmaCores = (cb) => {
     COMMONS.getDataByURL("https://api.magmafoundation.org/api/v2/allVersions", (data) => {
         if (data === false) {
             LOGGER.warning("Oops! An error occurred while fetching cores");
@@ -84,8 +77,7 @@ exports.getAllMagmaCores = (cb) => {
     });
 }
 
-// Метод с API PurpurMC
-exports.getAllPurpurCores = (cb) => {
+export const getAllPurpurCores = (cb) => {
     COMMONS.getDataByURL("https://api.purpurmc.org/v2/purpur/", (data) => {
         if (data === false) {
             LOGGER.warning("Oops! An error occurred while fetching cores");
@@ -98,8 +90,7 @@ exports.getAllPurpurCores = (cb) => {
     });
 }
 
-// Метод с external URL
-exports.getAllCoresByExternalURL = (url, cb, name) => {
+export const getAllCoresByExternalURL = (url, cb, name) => {
     let resultList = [];
     LOGGER.log("url", url, name);
     COMMONS.getDataByURL(url, (data) => {

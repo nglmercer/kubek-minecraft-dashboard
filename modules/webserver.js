@@ -1,18 +1,18 @@
-const LOGGER = require("./logger");
-const PREDEFINED = require("./predefined");
-const COMMONS = require("./commons");
-const SECURITY = require("./security");
-const FILE_MANAGER = require("./fileManager");
-const MULTILANG = require("./multiLanguage");
+import * as LOGGER from "./logger.js";
+import * as PREDEFINED from "./predefined.js";
+import * as COMMONS from "./commons.js";
+import * as SECURITY from "./security.js";
+import * as FILE_MANAGER from "./fileManager.js";
+import * as MULTILANG from "./multiLanguage.js";
+import fs from "fs";
+import express from 'express';
+import cookieParser from "cookie-parser";
+import fileUpload from "express-fileupload";
+import colors from "colors";
+import mime from "mime";
+import path from 'path';
+import { isInSubnet } from "is-in-subnet";
 
-const fs = require("fs");
-const express = require('express');
-const cookieParser = require("cookie-parser");
-const fileUpload = require("express-fileupload");
-const colors = require('colors');
-const mime = require("mime");
-const path = require('path');
-const {isInSubnet} = require('is-in-subnet');
 
 global.webServer = express();
 global.webPagesPermissions = {};
@@ -26,9 +26,7 @@ webServer.use(
 
 // Получаем порт веб-сервера из конфига
 let webPort = mainConfig.webserverPort;
-
-// Функция для показа запроса в логах
-exports.logWebRequest = (req, res, username = null) => {
+export const logWebRequest = (req, res, username = null) => {
     let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
     ip = ip.replace("::ffff:", "").replace("::1", "127.0.0.1");
     let additionalInfo2 = "";
@@ -39,7 +37,7 @@ exports.logWebRequest = (req, res, username = null) => {
 };
 
 // Middleware для всех роутеров
-exports.authLoggingMiddleware = (req, res, next) => {
+export const authLoggingMiddleware = (req, res, next) => {
     let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
     ip = ip.replace("::ffff:", "").replace("::1", "127.0.0.1");
 
@@ -75,7 +73,7 @@ exports.authLoggingMiddleware = (req, res, next) => {
 };
 
 // Middleware для статических страниц
-exports.staticsMiddleware = (req, res, next) => {
+export const staticsMiddleware = (req, res, next) => {
     let filePath = path.join(__dirname, "./../web", req.path);
     let ext = path.extname(req.path).replace(".", "").toLowerCase();
     if (req.path === "/") {
@@ -100,7 +98,7 @@ exports.staticsMiddleware = (req, res, next) => {
 };
 
 // Middleware для проверки на доступ к серверу (ставится ко всем роутерам!)
-exports.serversRouterMiddleware = (req, res, next) => {
+export const serversRouterMiddleware = (req, res, next) => {
     // Если авторизация отключена
     if (mainConfig.authorization === false) {
         return next();
@@ -125,7 +123,7 @@ exports.serversRouterMiddleware = (req, res, next) => {
 }
 
 // Функция для загрузки всех роутеров из списка в predefined
-exports.loadAllDefinedRouters = () => {
+export const loadAllDefinedRouters = () => {
     require("./permissionsMiddleware");
     webServer.use(this.authLoggingMiddleware);
     webServer.use(this.staticsMiddleware);
@@ -173,7 +171,7 @@ exports.loadAllDefinedRouters = () => {
 };
 
 // Запустить веб-сервер на выбранном порту
-exports.startWebServer = () => {
+export const startWebServer = () => {
     webServer.listen(webPort, () => {
         LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.webserverStarted}}", colors.cyan(webPort)));
     });

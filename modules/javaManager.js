@@ -1,12 +1,10 @@
-const COMMONS = require('./commons');
-const PREDEFINED = require('./predefined');
-
-const path = require("path");
-const fs = require("fs");
-
+import * as COMMONS from './commons.js';
+import * as PREDEFINED from './predefined.js';
+import path from "path";    
+import fs from "fs";            
 // Конвертировать версию игры в требуемую версию Java
 // DEPRECATED
-exports.gameVersionToJava = (version) => {
+export const gameVersionToJava = (version) => {
     let sec = parseInt(version.split(".")[1]);
     let ter = parseInt(version.split(".")[2]);
     if (sec < 8) {
@@ -29,7 +27,7 @@ exports.gameVersionToJava = (version) => {
 };
 
 // Получить список доступных на сервере версий Java
-exports.getDownloadableJavaVersions = (cb) => {
+export const getDownloadableJavaVersions = (cb) => {
     COMMONS.getDataByURL(PREDEFINED.JAVA_LIST_URL, (data) => {
         if (data !== false) {
             let availReleases = data.available_releases;
@@ -44,7 +42,7 @@ exports.getDownloadableJavaVersions = (cb) => {
 };
 
 // Получить список доступных Kubek`у локальных версий Java
-exports.getLocalJavaVersions = () => {
+export const getLocalJavaVersions = () => {
     let startPath = "./binaries/java";
     let rdResult = fs.readdirSync(startPath);
     rdResult = rdResult.filter(entry => fs.lstatSync(startPath + path.sep + entry).isDirectory());
@@ -52,7 +50,7 @@ exports.getLocalJavaVersions = () => {
 };
 
 // Получить информацию о Java по версии
-exports.getJavaInfoByVersion = (javaVersion) => {
+export const getJavaInfoByVersion = (javaVersion) => {
     let platformName = "";
     let fileExtension = "";
     let platformArch = "";
@@ -96,7 +94,7 @@ exports.getJavaInfoByVersion = (javaVersion) => {
 };
 
 // Получить путь к скачанной версии Java (возвращает false, если версия не существует)
-exports.getJavaPath = (javaVersion) => {
+export const getJavaPath = (javaVersion) => {
     let javaDirPath = "." + path.sep + "binaries" + path.sep + "java" + path.sep + javaVersion;
     let javaSearchPath1 = javaDirPath + path.sep + "bin" + path.sep + "java";
     if(process.platform === "win32"){

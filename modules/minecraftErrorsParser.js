@@ -11,9 +11,7 @@ const FILE_NOT_FOUND_ERRORS = [/Error: Unable to access jarfile/gim];
 const JAVA_INCOMP_PLACEHOLDER = "{{serverErrors.incompatibleJava}}";
 const JAVA_PATH_PLACEHOLDER = "{{serverErrors.cantFindPath}}";
 const FILE_NOT_FOUND_PLACEHOLDER = "{{serverErrors.jarfileAccess}}";
-
-// Проверить строку на ошибки
-exports.checkStringForErrors = (str) => {
+export const checkStringForErrors = (str) => {
     let returnResult = false;
     JAVA_INCOMP_ERRORS.forEach(function (err) {
         if (str.match(err) != null) {

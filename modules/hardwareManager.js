@@ -1,9 +1,8 @@
-const os = require("os");
-const nodeDiskInfo = require("node-disk-info");
-const osutils = require("os-utils");
-
+import os from "os";
+import nodeDiskInfo from "node-disk-info";
+import osutils from "os-utils";
 // Получить информацию об использовании ЦПУ и ОЗУ
-exports.getResourcesUsage = (cb) => {
+export const getResourcesUsage = (cb) => {
     osutils.cpuUsage(function (cpuValue) {
         cb({
             cpu: Math.round(cpuValue * 100),
@@ -18,7 +17,7 @@ exports.getResourcesUsage = (cb) => {
 };
 
 // Получить суммарную информацию о системе и железе
-exports.getHardwareInfo = (cb) => {
+export const getHardwareInfo = (cb) => {
     nodeDiskInfo
         .getDiskInfo()
         .then((disks) => {

@@ -1,17 +1,14 @@
-const packageJSON = require("./../package.json");
-const LOGGER = require("./logger");
-const COMMONS = require("./commons");
-const PREDEFINED = require("./predefined");
+import * as packageJSON from "./../package.json";
+import * as LOGGER from "./logger.js";
+import * as COMMONS from "./commons.js";
+import * as PREDEFINED from "./predefined.js";
+import {machineIdSync} from 'node-machine-id';
+import fs from "fs";
+import os from "os";
 
-const {machineIdSync} = require('node-machine-id');
-const fs = require("fs");
-const os = require("os");
-
-// Получить уникальный ID компьютера
-exports.getUniqueID = machineIdSync;
-
+export const getUniqueID = machineIdSync;
 // Собрать статистику о ПК
-exports.collectStats = () => {
+export const collectStats = () => {
     let uniqueID = this.getUniqueID();
     let cpuCommon = os.cpus();
     let usersCount = Object.keys(usersConfig).length;
@@ -46,7 +43,7 @@ exports.collectStats = () => {
 }
 
 // Получить все установленные версии Java
-exports.getAllJavaInstalled = () => {
+export const getAllJavaInstalled = () => {
     if (process.platform === "win32") {
         let directories = [
             "C:/Program Files",
@@ -80,9 +77,8 @@ exports.getAllJavaInstalled = () => {
     }
     return ["java"];
 };
-
 // Отправить статистику на сервер
-exports.sendStatsToServer = (statsData, isOnStart, cb = () => {
+export const sendStatsToServer = (statsData, isOnStart, cb = () => {
 }) => {
     let statsResultURL = PREDEFINED.STATS_SEND_URL + encodeURIComponent(JSON.stringify(statsData)) + "&start=" + isOnStart;
 

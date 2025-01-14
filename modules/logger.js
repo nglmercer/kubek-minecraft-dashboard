@@ -3,11 +3,7 @@ import colors from "colors";
 import * as PREDEFINED from "./predefined.js";
 import packageJSON from "./../package.json";    
 
-const PREDEFINED = require("./predefined");
-const packageJSON = require("./../package.json");
-
-// Получить отформатированное время для логов
-exports.getTimeFormatted = () => {
+export const getTimeFormatted = () => {
     let dateTime = new Date();
     return (
         "[" +
@@ -23,7 +19,7 @@ exports.getTimeFormatted = () => {
 };
 
 // Получить имя файла для лога
-exports.getLastLogFileName = () => {
+export const getLastLogFileName = () => {
     let dateTime = new Date();
     return dateTime.getDate().toString().padStart(2, "0") +
         "-" +
@@ -34,7 +30,7 @@ exports.getLastLogFileName = () => {
 };
 
 // Записать строку в лог
-exports.writeLineToLog = (line) => {
+export const writeLineToLog = (line) => {
     let fileName = this.getLastLogFileName();
     let readLog = "";
     if (fs.existsSync("./logs/" + fileName)) {
@@ -45,28 +41,28 @@ exports.writeLineToLog = (line) => {
 };
 
 // Вывести текст в консоль и записать в файл
-exports.log = (...text) => {
+export const log = (...text) => {
     let preparedText = this.getTimeFormatted() + " " + text.join(" ");
     console.log(preparedText);
     this.writeLineToLog(preparedText);
 };
 
 // Вывести текст типа WARNING в консоль и записать в файл
-exports.warning = (...text) => {
+export const warning = (...text) => {
     let preparedText = this.getTimeFormatted() + " " + text.join(" ");
     console.log(colors.yellow(preparedText));
     this.writeLineToLog("[WARN] " + preparedText);
 };
 
 // Вывести текст типа ERROR в консоль и записать в файл
-exports.error = (...text) => {
+export const error = (...text) => {
     let preparedText = this.getTimeFormatted() + " " + text.join(" ");
     console.log(colors.red(preparedText));
     this.writeLineToLog("[ERR] " + preparedText);
 };
 
 // Вывести приветственное сообщение Kubek
-exports.kubekWelcomeMessage = () => {
+export const kubekWelcomeMessage = () => {
     console.log("");
     console.log(colors.cyan(PREDEFINED.KUBEK_LOGO_ASCII));
     console.log("");

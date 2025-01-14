@@ -1,16 +1,15 @@
-const PREDEFINED = require("./predefined");
-const COMMONS = require("./commons");
-const packageJSON = require("./../package.json");
-
+import * as PREDEFINED from "./predefined.js";
+import * as COMMONS from "./commons.js";    
+import packageJSON from "./../package.json";
 global.cachedUpdate = null;
 
 // Функция для получения объекта релизов с GitHub
-exports.getGitHubReleases = (cb) => {
+export const getGitHubReleases = (cb) => {
     COMMONS.getDataByURL(PREDEFINED.UPDATES_URL_API, cb);
 };
 
-// Получить последнюю версию из релизов на GitHub
-exports.getLatestVersionOnGitHub = (cb) => {
+// Получить последнюю версию из релизов на GitHub   
+export const getLatestVersionOnGitHub = (cb) => {
     this.getGitHubReleases((ghReleases) => {
         if (ghReleases !== false) {
             if (typeof ghReleases !== "undefined" && typeof ghReleases[0] !== "undefined" && typeof ghReleases[0].tag_name !== "undefined") {
@@ -30,7 +29,7 @@ exports.getLatestVersionOnGitHub = (cb) => {
 };
 
 // Проверить обновления (возвращает false или ссылку на обновление)
-exports.checkForUpdates = (cb) => {
+export const checkForUpdates = (cb) => {
     this.getLatestVersionOnGitHub((ghLatestVer) => {
         this.saveUpdateToCache(ghLatestVer);
         if (ghLatestVer !== false) {
@@ -46,7 +45,7 @@ exports.checkForUpdates = (cb) => {
 };
 
 // Сохранить обновление в кеш
-exports.saveUpdateToCache = (latVer) => {
+export const saveUpdateToCache = (latVer) => {
     if (latVer !== false && packageJSON.version !== latVer.version) {
         cachedUpdate = {
             hasUpdate: true,
@@ -65,7 +64,7 @@ exports.saveUpdateToCache = (latVer) => {
 };
 
 // Получить информацию об обновлении из кеша
-exports.getCachedUpdate = () => {
+export const getCachedUpdate = () => {
     if(cachedUpdate === null){
         return false;
     }
