@@ -2,13 +2,10 @@ SWITCH_ELEMENT = '<label class="switch"> <input type="checkbox"$0> <span class="
 NUMBER_INPUT = "<input type='number' value='$0'>";
 TEXT_INPUT = "<input type='text' value='$0'>";
 
-$(function () {
-    KubekUI.setTitle("Kubek | Server.properties");
+KubekUI.setTitle("Kubek | Server.properties");
 
-    KubekServerPropertiesUI.loadProperties();
-})
 
-KubekServerPropertiesUI = class {
+/* KubekServerPropertiesUI = class {
     static loadProperties() {
         KubekRequests.get("/servers/" + selectedServer + "/server.properties", (result) => {
             for (const [key, value] of Object.entries(result)) {
@@ -72,7 +69,7 @@ KubekServerPropertiesUI = class {
         }
         return "string";
     }
-}
+} */
 class ServerPropertiesElement extends HTMLElement {
     static get observedAttributes() {
         return ['server-id'];
@@ -96,24 +93,32 @@ class ServerPropertiesElement extends HTMLElement {
             ${this.getStyles()}
             </style>
             <table id="sp-table"></table>
-            <button id="save-btn" class="primary-btn">Save Properties</button>
+            <button id="save-btn" class="primary-btn hidden">Save Properties</button>
         `;
     }
     getStyles() {
         return `
-    .primary-btn {
-      padding: 8px 16px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+        :host {
+            width: 100%;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+            .hidden {
+                display: none;
+            }
+                .primary-btn {
+                padding: 8px 16px;
+                background: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                }
 
-    .primary-btn:hover {
-      background: #0056b3;
-    }
-                     .switch {
+                .primary-btn:hover {
+                background: #0056b3;
+                }
+                .switch {
                     position: relative;
                     display: inline-block;
                     width: 60px;
@@ -167,6 +172,7 @@ class ServerPropertiesElement extends HTMLElement {
                 table {
                     width: 100%;
                     border-collapse: collapse;
+                    table-layout: fixed;
                 }
                 
                 td {
@@ -175,7 +181,7 @@ class ServerPropertiesElement extends HTMLElement {
                 }
                 
                 input[type="text"], input[type="number"] {
-                    width: 100%;
+                    width: auto;
                     padding: 6px;
                     box-sizing: border-box;
                 }
@@ -183,7 +189,7 @@ class ServerPropertiesElement extends HTMLElement {
     }
     connectedCallback() {
         this.loadProperties();
-        this.shadowRoot.querySelector('#save-btn').addEventListener('click', () => this.saveProperties());
+        this.shadowRoot.querySelector('#save-btn').addEventListener('click', () => this.emitPropertiesChange());
     }
 
     getValueType(value) {
@@ -267,7 +273,7 @@ class ServerPropertiesElement extends HTMLElement {
         }
     }
 
-    async saveProperties() {
+    async getPropertiesToSave() {
         const serverId = this.getAttribute('server-id');
         const saveResult = {};
         
@@ -287,9 +293,18 @@ class ServerPropertiesElement extends HTMLElement {
             // Parse value according to its original type
             saveResult[key] = this.parseValueByType(rawValue, originalType);
         });
+        const data = {
+            server: serverId,
+            result: saveResult
+        }
+        return data;
 
+    }
+    async emitPropertiesChange() {
+        const data = await this.getPropertiesToSave();
+        console.log("result", data);
         try {
-            if (Object.keys(saveResult).length === 0) {
+            if (Object.keys(data).length === 0) {
                 console.log("saveResult is empty");
                 return;
             }
@@ -297,8 +312,7 @@ class ServerPropertiesElement extends HTMLElement {
             this.dispatchEvent(new CustomEvent('save-success', {
                 bubbles: true,
                 composed: true,
-                detail: saveResult,
-                idserver: serverId
+                detail: data,
             }));
         } catch (error) {
             console.error('Error saving properties:', error);
@@ -309,9 +323,29 @@ class ServerPropertiesElement extends HTMLElement {
 customElements.define('server-properties', ServerPropertiesElement);
 const serverPropertiesElement = document.querySelector('server-properties');
 serverPropertiesElement.setAttribute('server-id', selectedServer);
-document.querySelector('server-properties').addEventListener('save-success', (e) => {
+serverPropertiesElement.addEventListener('save-success', (e) => {
     // Show success message
     //KubekAlerts.addAlert("Save successful", "check", "", 5000);
     const details = e.detail;
     console.log("details", details);
+});
+const savePropertiesBtn = document.querySelector('#save-properties');
+savePropertiesBtn.addEventListener('click', async () => {
+    const data = await serverPropertiesElement.getPropertiesToSave();
+    console.log("data", data);
+    if (Object.keys(data).length === 0) {
+        console.log("saveResult is empty");
+        return;
+    }
+
+    const blobdata = Base64.encodeURI(JSON.stringify(data.result));
+    if (KubekRequests) {
+        const serverId = data.server;
+        //const url = `/servers/${data.server}/server.properties?server=${data.server}&data=${blobdata}`;
+        const url = "/servers/" + serverId + "/server.properties?server=" + serverId + "&data=" + blobdata;
+        console.log("url", url, blobdata);
+        KubekRequests.put(url, (result) => {
+            console.log("result", result);
+        });
+    }
 });

@@ -200,7 +200,7 @@
       "restartOnError": "Reiniciar el servidor cuando se produzca un error",
       "restartAttempts": "Número de intentos de reinicio",
       "startScript": "Script de inicio",
-      "stopCommand": "Server stop command",
+      "stopCommand": "Comando para detener el servidor",
       "deleteServer": "¿Eliminar servidor?"
     },
     "kubekSettings": {

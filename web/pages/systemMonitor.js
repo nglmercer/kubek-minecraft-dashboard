@@ -3,14 +3,15 @@ $(function () {
 
     KubekHardware.getSummary( (data) => {
         // Загружаем список переменных системы
-        for (const [key, value] of Object.entries(data.enviroment)) {
+        console.log("data", data);
+        for (const [key, value] of objectentries(data.enviroment)) {
             $("#enviroment-table").append(
                 '<tr><th>' + key + '</th><td>' + value + '</td></td>'
             );
         }
 
         // Загружаем сетевые интерфейсы
-        for (const [key, value] of Object.entries(data.networkInterfaces)) {
+        for (const [key, value] of objectentries(data.networkInterfaces)) {
             let ips = "";
             value.forEach(function (inner) {
                 ips =
@@ -51,3 +52,11 @@ $(function () {
         $("#cpu-speed").text(data.cpu.speed + " MHz");
     });
 });
+function objectentries(obj) {
+    if (obj === null || typeof obj !== "object") {
+        console.log("obj is not an object", typeof obj, obj);
+        return;
+    }
+    const entries = Object.entries(obj);
+    return entries;
+}

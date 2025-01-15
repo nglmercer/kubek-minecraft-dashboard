@@ -234,10 +234,15 @@ export const getServerProperties = (serverName) => {
 
 export const saveServerProperties = (serverName, data) => {
     let parsed = JSON.parse(data);
+    console.log("data", data, serverName, parsed);
+    
     let result = "";
     for (const [key, value] of Object.entries(parsed)) {
-        result += "\n" + key.toString() + "=" + value.toString();
+        // Handle null values by converting them to empty strings
+        const stringValue = value === null ? "" : value.toString();
+        result += "\n" + key.toString() + "=" + stringValue;
     }
+    
     FILE_MANAGER.writeFile(serverName, "/server.properties", result);
     return true;
 };
