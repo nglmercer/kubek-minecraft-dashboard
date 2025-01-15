@@ -344,25 +344,38 @@ class KubekPluginsUIclass extends HTMLElement {
 customElements.define('kubek-plugins-ui', KubekPluginsUIclass);
 
 // Usage example:
+const kubekModsUI = document.querySelector('#mods-ui');
 const kubekPluginsUI = document.querySelector('#plugins-ui');
 const updateplugin  = (type) => {
   console.log("updateplugin", type, pluginsManager.mods);
   if (kubekPluginsUI.renderAllLists)   kubekPluginsUI.renderAllLists(type);
 }
-['toggle', 'delete'].forEach(eventName => {
-  kubekPluginsUI.addEventListener(eventName, event => {
-    const detail = event.detail;
-    console.log(detail);
-    const itemname = detail.item;
-    if (eventName === "delete") {
-      deletefile(itemname, detail.type);
-    } else if (eventName === "toggle") {
-      togglepluginormod(itemname, detail.type, detail.newName);
-    }
-  });
+
+["plugins", "mods"].forEach(type => {
+  const elements = {
+    "plugins": document.querySelector('#plugins-ui'),
+    "mods": document.querySelector('#mods-ui')
+  };
+  if (elements[type]) {
+    elements[type].renderAllLists(type);
+    elements[type].setType(type);
+    ["toggle", "delete"].forEach(eventName => {
+      elements[type].addEventListener(eventName, event => {
+        const detail = event.detail;
+        console.log(detail);
+        const itemname = detail.item;
+        if (eventName === "delete") {
+          deletefile(itemname, detail.type);
+        } else if (eventName === "toggle") {
+          togglepluginormod(itemname, detail.type, detail.newName);
+        }
+      });
+    });
+  }
+
 });
 kubekPluginsUI.renderAllLists("plugins");
-
+kubekModsUI.renderAllLists("mods");
 function setpluginsandmods(type) {
   const verifytype = type.includes("plugin") ? "plugins" : "mods";
   if (!kubekPluginsUI) return;
@@ -374,7 +387,7 @@ function setpluginsandmods(type) {
 
   } else if (verifytype === "mods") {
     console.log('Before setting mods list:', pluginsManager.mods);
-    kubekPluginsUI.setElementList(pluginsManager.mods);
+    kubekModsUI.setElementList(pluginsManager.mods);
     console.log('After setting mods list:', pluginsManager.mods);
   }
   updateplugin(type);
@@ -410,3 +423,4 @@ function togglepluginormod(item, itemType, newName) {
   }
 }
 getpluginsandmods("plugins");
+getpluginsandmods("mods");
