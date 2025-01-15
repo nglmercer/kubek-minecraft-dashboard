@@ -84,6 +84,9 @@ class ServerPropertiesElement extends HTMLElement {
         this.NUMBER_INPUT = "<input type='number' value='$0'>";
         this.TEXT_INPUT = "<input type='text' value='$0'>";
         
+        // Store original types mapping
+        this.propertyTypes = new Map();
+        
         // Create shadow DOM
         this.attachShadow({ mode: 'open' });
         
@@ -184,40 +187,67 @@ class ServerPropertiesElement extends HTMLElement {
     }
 
     getValueType(value) {
-        if (value === true || value === false) {
-            return "boolean";
+        if (value === null) {
+            return "null";
         }
-        if (!isNaN(parseInt(value))) {
-            return "number";
+        const type = typeof value;
+        if (type === "boolean" || type === "number") {
+            return type;
         }
         return "string";
+    }
+
+    parseValueByType(value, type) {
+        switch (type) {
+            case "null":
+                return null;
+            case "boolean":
+                return value === "true" || value === true;
+            case "number":
+                const num = Number(value);
+                return isNaN(num) ? 0 : num;
+            default:
+                return String(value);
+        }
     }
 
     async loadProperties() {
         const serverId = this.getAttribute('server-id') || selectedServer;
         try {
             const url = `/api/servers/${serverId}/server.properties`;
-            console.log("url", url);
             const response = await fetch(url);
-                console.log("response", response);
             const result = await response.json();
+            console.log("result", result, response);
             
             const table = this.shadowRoot.querySelector('#sp-table');
             table.innerHTML = ''; // Clear existing content
             
             for (const [key, value] of Object.entries(result)) {
-                let valueStr = value === null ? "" : value;
-                let valType = this.getValueType(valueStr);
-                if(key === "server-ip") valType = "string";
-                
+                // Store original type
+                const originalType = this.getValueType(value);
+                this.propertyTypes.set(key, originalType);
+
+                // Handle display value
+                let displayValue = value;
+                if (originalType === "null") {
+                    displayValue = "";
+                }
+
+                // Override specific property types
+                if (key === "server-ip") {
+                    this.propertyTypes.set(key, "string");
+                }
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${key}</td>
-                    <td>${this.createInput(valType, valueStr)}</td>
+                    <td>${this.createInput(this.propertyTypes.get(key), displayValue)}</td>
                 `;
-                table.appendChild(row); 
+                // Store type information in the row
+                row.dataset.propertyType = this.propertyTypes.get(key);
+                table.appendChild(row);
             }
-           
+            
         } catch (error) {
             console.error('Error loading properties:', error);
         }
@@ -230,6 +260,8 @@ class ServerPropertiesElement extends HTMLElement {
                 return this.SWITCH_ELEMENT.replace("$0", isChecked);
             case "number":
                 return this.NUMBER_INPUT.replace("$0", value);
+            case "null":
+                return this.TEXT_INPUT.replace("$0", "");
             default:
                 return this.TEXT_INPUT.replace("$0", value);
         }
@@ -242,38 +274,44 @@ class ServerPropertiesElement extends HTMLElement {
         this.shadowRoot.querySelectorAll('#sp-table tr').forEach(row => {
             const key = row.cells[0].textContent;
             const inputCell = row.cells[1];
-            let value = null;
+            const originalType = this.propertyTypes.get(key);
             
+            let rawValue;
             const checkbox = inputCell.querySelector('input[type="checkbox"]');
             if (checkbox) {
-                value = checkbox.checked;
+                rawValue = checkbox.checked;
             } else {
-                value = inputCell.querySelector('input').value;
+                rawValue = inputCell.querySelector('input').value;
             }
-            
-            saveResult[key] = value;
+
+            // Parse value according to its original type
+            saveResult[key] = this.parseValueByType(rawValue, originalType);
         });
 
         try {
-            const encodedData = btoa(JSON.stringify(saveResult));
-            const response = await fetch(`/servers/${serverId}/server.properties?server=${serverId}&data=${encodedData}`, {
-                method: 'PUT'
-            });
-            
-            const result = await response.json();
-            if (result !== false) {
-                this.dispatchEvent(new CustomEvent('save-success', {
-                    bubbles: true,
-                    composed: true
-                }));
+            if (Object.keys(saveResult).length === 0) {
+                console.log("saveResult is empty");
+                return;
             }
+
+            this.dispatchEvent(new CustomEvent('save-success', {
+                bubbles: true,
+                composed: true,
+                detail: saveResult,
+                idserver: serverId
+            }));
         } catch (error) {
             console.error('Error saving properties:', error);
         }
     }
 }
-
 // Register the custom element
 customElements.define('server-properties', ServerPropertiesElement);
 const serverPropertiesElement = document.querySelector('server-properties');
 serverPropertiesElement.setAttribute('server-id', selectedServer);
+document.querySelector('server-properties').addEventListener('save-success', (e) => {
+    // Show success message
+    //KubekAlerts.addAlert("Save successful", "check", "", 5000);
+    const details = e.detail;
+    console.log("details", details);
+});
