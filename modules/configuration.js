@@ -15,16 +15,26 @@ const readAnyConfig = (filePath) => {
     }
     return false;
 };
-
+const ensureDirectoryExists = (filePath) => {
+    const dirname = path.dirname(filePath);
+    if (!fs.existsSync(dirname)) {
+        fs.mkdirSync(dirname, { recursive: true });
+    }
+};
 const writeAnyConfig = (filePath, data) => {
     if (path.extname(filePath) === ".json") {
-        typeof data === "object" ? data = JSON.stringify(data, null, "\t") : data;
-        fs.writeFileSync(filePath, data);
-        return true;
+        try {
+            ensureDirectoryExists(filePath);
+            typeof data === "object" ? data = JSON.stringify(data, null, "\t") : data;
+            fs.writeFileSync(filePath, data);
+            return true;
+        } catch (error) {
+            console.error(`Error writing config file ${filePath}:`, error);
+            return false;
+        }
     }
     return false;
 };
-
 export const migrateOldMainConfig = () => {
     let newConfig = PREDEFINED.CONFIGURATIONS.MAIN;
     let oldConfig = readAnyConfig("./config.json");
@@ -109,11 +119,13 @@ export const writeUsersConfig = (data) => {
 };
 
 export const readServersConfig = () => {
-    if (!fs.existsSync("./servers/servers.json")) {
-        writeAnyConfig("./servers/servers.json", PREDEFINED.CONFIGURATIONS.SERVERS);
+    const serversPath = "./servers/servers.json";
+    if (!fs.existsSync(serversPath)) {
+        ensureDirectoryExists(serversPath);
+        writeAnyConfig(serversPath, PREDEFINED.CONFIGURATIONS.SERVERS);
         return PREDEFINED.CONFIGURATIONS.SERVERS;
     }
-    return readAnyConfig("./servers/servers.json");
+    return readAnyConfig(serversPath);
 };
 
 export const writeServersConfig = (data) => {
