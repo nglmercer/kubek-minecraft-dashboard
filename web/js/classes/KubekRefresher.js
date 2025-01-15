@@ -43,7 +43,8 @@ class KubekRefresher {
     // Обновить текст в консоли
     static refreshConsoleLog = () => {
         let consoleTextElem = document.querySelector('game-console');
-        if (!consoleTextElem || consoleTextElem.length !== 0) {
+        if (consoleTextElem) {
+            //console.log("consoleTextElem", consoleTextElem, typeof consoleTextElem);
             KubekServers.getServerLog(selectedServer, (serverLog) => {
                 //console.log("getServerLog", selectedServer, {serverLog});
                 consoleTextElem.refreshConsoleLog(serverLog);

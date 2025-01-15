@@ -46,7 +46,7 @@ async function initConsole() {
 
 }
     initConsole();
-    const inputCommandelement = document.querySelector('input-command');
+    var inputCommandelement = document.querySelector('input-command');
     console.log("inputCommandelement", inputCommandelement);
     inputCommandelement.addEventListener('command', (e) => {
         const detail = e.detail;
