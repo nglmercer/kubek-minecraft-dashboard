@@ -209,51 +209,9 @@ class KubekPredefined {
     //endpoints
     </script>
     <div class="max100dvh">
-        <game-console></game-console>
-        <input-command></input-command>
+
     </div>
 
-    <script type="module">
-let selectedServer = "pluginserver121";
-        document.querySelector('input-command').addEventListener('command', (e) => {
-    const command = e.detail;
-    console.log("detail", command);
-});
 
-// To update the console log
-const gameConsole = document.querySelector('game-console');
-//gameConsole.refreshConsoleLog(getlog())
-setInterval(() => {
-    KubekServers.getServerLog(selectedServer, (serverLog) => {
-    console.log("serverLog", selectedServer,{serverLog});
-    gameConsole.refreshConsoleLog(serverLog);
-});
-}, 1000);
-
-KubekServers.getServersList((serversList) => {
-                            if(!serversList.includes(selectedServer)){
-                                window.localStorage.selectedServer = serversList[0];
-                            }
-                        });
-function getlog() {
-    const log = `getServerLog Starting org.bukkit.craftbukkit.Main
-
-WARN StatusConsoleListener Advanced terminal features are not available in this environment
-
-[02:22:07 INFO]: [bootstrap] Running Java 23 (OpenJDK 64-Bit Server VM 23.0.1+11; Eclipse Adoptium Temurin-23.0.1+11) on Windows 11 10.0 (amd64)
-
-[02:22:07 INFO]: [bootstrap] Loading Purpur 1.21-2284-ver/1.21@4e55e26 (2024-08-10T17:35:56Z) for Minecraft 1.21
-
-[02:22:08 INFO]: [PluginInitializerManager] Initializing plugins...
-
-[02:22:08 INFO]: [PluginInitializerManager] Initialized 1 plugin
-
-[02:22:08 INFO]: [PluginInitializerManager] Bukkit plugins (1):
-
- - connect (0.5.0)
-`
-    return log
-}
-    </script>
 </body>
 </html>
