@@ -1,32 +1,21 @@
-$(function() {
-  KubekUI.setTitle("Kubek | {{sections.plugins}}");
-});
-
-var   KubekPluginsUI = class {
-  static refreshAllLists(type) {
-    console.log("refreshAllLists");
-    setTimeout(() => {
-      getpluginsandmods(type);
-    }, 1000);
-  }
-
+KubekUI.setTitle("Kubek | {{sections.plugins}}");
+var KubekPluginsUI = class {
 // Загрузить плагин/мод на сервер
   static uploadItem(itemType){
-    let uploadURL = "/" + itemType + "s/" + selectedServer;
-    let inputElement = $("#server-" + itemType + "-input");
-    inputElement.trigger("click");
-    inputElement.off("change");
-    inputElement.on("change", () => {
-      let formData = new FormData($("#server-" + itemType + "-form")[0]);
-      KubekRequests.post(uploadURL, () => {
-        KubekPluginsUI.refreshAllLists(itemType);
+    const baseelement = "#server-" + itemType
+    const a_inputElement = document.querySelector(baseelement + "-input");
+    const a_uploadURL = "/" + itemType + "s/" + selectedServer;
+    a_inputElement.click();
+    a_inputElement.addEventListener("change", () => {
+      const a_formData = new FormData(document.querySelector(baseelement + "-form"));
+      KubekRequests.post(a_uploadURL, () => {
         getpluginsandmods(itemType);
-        console.log(uploadURL, inputElement, selectedServer, formData);
-      }, formData);
+        console.log(a_uploadURL, a_inputElement, selectedServer, a_formData);
+      }, a_formData);
     });
   }
 }
-class PluginsAndModsManager {
+var pluginsmanagerclass = class PluginsAndModsManager {
   constructor() {
     this._state = {
       plugins: [],
@@ -91,7 +80,7 @@ class PluginsAndModsManager {
 }
 
 // Create a single instance of the manager
-const pluginsManager = new PluginsAndModsManager();
+var pluginsManager = new pluginsmanagerclass();
 
 async function getpluginsandmods(type) {
   const verifytype = type.includes("plugin") ? "plugins" : "mods";
@@ -116,7 +105,7 @@ async function getpluginsandmods(type) {
     console.error('Error fetching plugins/mods:', error);
   }
 }
-class KubekPluginsUIclass extends HTMLElement {
+var kubekuiclass = class KubekPluginsUIclass extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -340,13 +329,13 @@ class KubekPluginsUIclass extends HTMLElement {
   }
   
 }
-
-customElements.define('kubek-plugins-ui', KubekPluginsUIclass);
-
+if (!customElements.get('kubek-plugins-ui')) {
+customElements.define('kubek-plugins-ui', kubekuiclass);
+}
 // Usage example:
-const kubekModsUI = document.querySelector('#mods-ui');
-const kubekPluginsUI = document.querySelector('#plugins-ui');
-const updateplugin  = (type) => {
+var kubekModsUI = document.querySelector('#mods-ui');
+var kubekPluginsUI = document.querySelector('#plugins-ui');
+var updateplugin  = (type) => {
   console.log("updateplugin", type, pluginsManager.mods);
   if (kubekPluginsUI.renderAllLists)   kubekPluginsUI.renderAllLists(type);
 }
@@ -393,12 +382,13 @@ function setpluginsandmods(type) {
   updateplugin(type);
 }
 function deletefile(item, itemType){
-  if (itemType !== "plugins" && itemType !== "mods") {
+  const verifytype = itemType.includes("plugin") ? "plugins" : "mods";
+  if (verifytype !== "plugins" && verifytype !== "mods") {
     console.log("Invalid item type", itemType);
     return;
   }
 // after refreshing the list
-  const itemtodelete = '/'+ itemType + '/'+ item;
+  const itemtodelete = '/'+ verifytype + '/'+ item;
   console.log(itemtodelete);
   // params filePath string and callback function
   KubekFileManager.delete(itemtodelete, (data) => {

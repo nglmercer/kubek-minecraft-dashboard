@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./test.js"></script>
+    <style>
+        .max100dvh {
+            max-height: 50dvh;
+            position: relative;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <script>
+class KubekServers {
+    // Get server list
+    static getServersList(cb) {
+        KubekRequests.get("servers", cb);
+    }
+
+    // Get server info (including status)
+    static getServerInfo(server, cb) {
+        KubekRequests.get(`servers/${server}/info`, cb);
+    }
+
+    // Check if server exists
+    static isServerExists(server, cb) {
+        this.getServersList((sList) => {
+            cb(sList.includes(server));
+        });
+    }
+
+    // Get server log
+    static getServerLog(server, cb) {
+        KubekRequests.get(`servers/${server}/log`, (log) => {
+            cb(log === false ? "" : log);
+        });
+    }
+
+    // Send command to server
+    static sendCommandToServer(server, cmd) {
+        KubekRequests.get(`servers/${server}/send?cmd=${cmd}`);
+    }
+
+    // Send command from console input
+    static sendCommandFromInput(server, inputElem) {
+        console.log("sendCommandFromInput", server, inputElem);
+        if (inputElem) {
+            this.sendCommandToServer(server, inputElem);
+        }
+    }
+
+    // Start server
+    static startServer(server) {
+        if (currentServerStatus === KubekPredefined.SERVER_STATUSES.STOPPED) {
+            KubekRequests.get(`servers/${server}/start`);
+        }
+    }
+
+    // Restart server
+    static restartServer(server) {
+        if (currentServerStatus === KubekPredefined.SERVER_STATUSES.RUNNING) {
+            KubekRequests.get(`servers/${server}/restart`);
+        }
+    }
+
+    // Stop server
+    static stopServer(server) {
+        if (currentServerStatus === KubekPredefined.SERVER_STATUSES.RUNNING) {
+            KubekRequests.get(`servers/${server}/stop`);
+        }
+    }
+}
+
+class KubekRequests {
+    // Make AJAX request with required settings
+    static async makeAjaxRequest(url, type, data = "", apiEndpoint = true, cb = () => {}) {
+        if (apiEndpoint) {
+            console.log(url, KubekPredefined.API_ENDPOINT , "url", "");
+            url = `${KubekPredefined.API_ENDPOINT}/${url}`;
+        }
+
+        const options = {
+            method: type.toString().toUpperCase(),
+            headers: {}
+        };
+
+        if (data) {
+            options.body = data;
+        }
+
+        try {
+            const response = await fetch(url, options);
+           
+            if (!response.ok) {
+                if (response.status === 403) {
+                    KubekAlerts.addAlert(
+                        "{{commons.failedToRequest}}",
+                        "warning",
+                        "{{commons.maybeUDoesntHaveAccess}}",
+                        5000
+                    );
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+           
+            const result = await response.json();
+            cb(result);
+        } catch (error) {
+            cb(false, 'error', error.message);
+        }
+    }
+
+    // Methods for each request type
+    static get(url, cb, apiEndpoint = true) {
+        this.makeAjaxRequest(url, "GET", "", apiEndpoint, cb);
+    }
+
+    static post(url, cb, data = "", apiEndpoint = true) {
+        this.makeAjaxRequest(url, "POST", data, apiEndpoint, cb);
+    }
+
+    static put(url, cb, data = "", apiEndpoint = true) {
+        this.makeAjaxRequest(url, "PUT", data, apiEndpoint, cb);
+    }
+
+    static delete(url, cb, data = "", apiEndpoint = true) {
+        this.makeAjaxRequest(url, "DELETE", data, apiEndpoint, cb);
+    }
+
+    static head(url, cb, data = "", apiEndpoint = true) {
+        this.makeAjaxRequest(url, "HEAD", data, apiEndpoint, cb);
+    }
+
+    static options(url, cb, data = "", apiEndpoint = true) {
+        this.makeAjaxRequest(url, "OPTIONS", data, apiEndpoint, cb);
+    }
+}
+// KubekPredefined class remains the same as it doesn't use jQuery
+class KubekPredefined {
+    // Права
+    static PERMISSIONS = {
+        DEFAULT: "default",
+        ACCOUNTS: "accounts",
+        FILE_MANAGER: "file_manager",
+        MANAGE_SERVERS: "manage_servers",
+        MAKING_SERVERS: "making_servers",
+        MONITOR_SERVERS: "monitor_servers",
+        MANAGE_JAVA: "manage_java",
+        MANAGE_PLUGINS: "manage_plugins"
+    };
+
+    // См. название :)
+    static API_ENDPOINT = "/api";
+
+    // Переводы статусов серверов
+    static SERVER_STATUSES_TRANSLATE = {
+        "stopped": "{{serverStatus.stopped}}",
+        "starting": "{{serverStatus.starting}}",
+        "stopping": "{{serverStatus.stopping}}",
+        "running": "{{serverStatus.running}}"
+    }
+
+    // Статусы серверов
+    static SERVER_STATUSES = {
+        STOPPED: "stopped",
+        RUNNING: "running",
+        STARTING: "starting",
+        STOPPING: "stopping"
+    }
+
+    // Базовые типы задач
+    static TASKS_TYPES = {
+        DOWNLOADING: "downloading",
+        INSTALLING: "installing",
+        ZIPPING: "zipping",
+        UNPACKING: "unpacking",
+        UPDATING: "updating",
+        RESTARTING: "restarting",
+        CREATING: "creating",
+        DELETION: "deletion",
+        COMMON: "common",
+        UNKNOWN: "unknown"
+    }
+
+    // Шаги создания сервера
+    static SERVER_CREATION_STEPS = {
+        SEARCHING_CORE: "searchingCore",
+        CHECKING_JAVA: "checkingJava",
+        DOWNLOADING_JAVA: "downloadingJava",
+        UNPACKING_JAVA: "unpackingJava",
+        DOWNLOADING_CORE: "downloadingCore",
+        CREATING_BAT: "creatingBat",
+        COMPLETION: "completion",
+        COMPLETED: "completed",
+        FAILED: "failed",
+    }
+
+    // REGEX для авторизации
+    static PASSWORD_REGEX = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{6,64}$/g;
+    static LOGIN_REGEX = /^[a-zA-Z0-9_.-]{3,16}$/g;
+    static EMAIL_REGEX = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+
+    static MODAL_CANCEL_BTN = '<button class="dark-btn" onclick="KubekNotifyModal.destroyAllModals()">{{commons.close}}</button>';
+}
+    //endpoints
+    </script>
+    <div class="max100dvh">
+        <game-console></game-console>
+        <input-command></input-command>
+    </div>
+
+    <script type="module">
+let selectedServer = "pluginserver121";
+        document.querySelector('input-command').addEventListener('command', (e) => {
+    const command = e.detail;
+    console.log("detail", command);
+});
+
+// To update the console log
+const gameConsole = document.querySelector('game-console');
+//gameConsole.refreshConsoleLog(getlog())
+setInterval(() => {
+    KubekServers.getServerLog(selectedServer, (serverLog) => {
+    console.log("serverLog", selectedServer,{serverLog});
+    gameConsole.refreshConsoleLog(serverLog);
+});
+}, 1000);
+
+KubekServers.getServersList((serversList) => {
+                            if(!serversList.includes(selectedServer)){
+                                window.localStorage.selectedServer = serversList[0];
+                            }
+                        });
+function getlog() {
+    const log = `getServerLog Starting org.bukkit.craftbukkit.Main
+
+WARN StatusConsoleListener Advanced terminal features are not available in this environment
+
+[02:22:07 INFO]: [bootstrap] Running Java 23 (OpenJDK 64-Bit Server VM 23.0.1+11; Eclipse Adoptium Temurin-23.0.1+11) on Windows 11 10.0 (amd64)
+
+[02:22:07 INFO]: [bootstrap] Loading Purpur 1.21-2284-ver/1.21@4e55e26 (2024-08-10T17:35:56Z) for Minecraft 1.21
+
+[02:22:08 INFO]: [PluginInitializerManager] Initializing plugins...
+
+[02:22:08 INFO]: [PluginInitializerManager] Initialized 1 plugin
+
+[02:22:08 INFO]: [PluginInitializerManager] Bukkit plugins (1):
+
+ - connect (0.5.0)
+`
+    return log
+}
+    </script>
+</body>
+</html>

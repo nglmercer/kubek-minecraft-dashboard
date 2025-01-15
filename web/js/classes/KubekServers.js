@@ -33,11 +33,9 @@ class KubekServers {
     };
 
     // Отправить команду на сервер из поля ввода консоли
-    static sendCommandFromInput = (server) => {
-        let inputElem = $("#cmd-input");
+    static sendCommandFromInput = (server, inputElem) => {
         if(inputElem.length === 1){
-            this.sendCommandToServer(server, inputElem.val());
-            inputElem.val("");
+            this.sendCommandToServer(server, inputElem);
         }
     };
 

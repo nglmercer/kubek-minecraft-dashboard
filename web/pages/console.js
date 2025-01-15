@@ -27,19 +27,29 @@ KubekConsoleUI = class {
         changeProgressvalue("ram", ram);
         changeProgressvalue("ram", KubekUtils.getProgressGradientColor(ram), "setactivecolor");
         changeProgressvalue("cpu", KubekUtils.getProgressGradientColor(cpu), "setactivecolor");
-        document.querySelector("#ram-usage-text").textContent = KubekUtils.humanizeFileSize(ramElem.used) + " / " + KubekUtils.humanizeFileSize(ramElem.total);
+        const ramusagecontainer = document.querySelector("#ram-usage-text");
+        if (ramusagecontainer) {
+            ramusagecontainer.textContent = KubekUtils.humanizeFileSize(ramElem.used) + " / " + KubekUtils.humanizeFileSize(ramElem.total);
+        }
     }
 }
 
 async function initConsole() {
     KubekUI.setTitle("Kubek | {{sections.console}}");
     KubekHardware.getUsage((usage) => {
+        console.log("usage", usage);
+        if (!usage || !usage.cpu || !usage.ram) {
+            return;
+        }
         KubekConsoleUI.refreshUsageItems(usage.cpu, usage.ram.percent, usage.ram);
     });
-    document.querySelector("#cmd-input").addEventListener("keydown", (e) => {
-        if (e.code === "Enter") {
-            KubekServers.sendCommandFromInput(selectedServer);
-        }
-    });
+
 }
-initConsole();
+    initConsole();
+    const inputCommandelement = document.querySelector('input-command');
+    console.log("inputCommandelement", inputCommandelement);
+    inputCommandelement.addEventListener('command', (e) => {
+        const detail = e.detail;
+        console.log("detail",);
+        KubekServers.sendCommandToServer(selectedServer, detail.command);
+    });

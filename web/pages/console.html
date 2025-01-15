@@ -6,14 +6,13 @@
     <!-- Главный контейнер -->
     <div class="console-layout">
         <!-- Сама консоль -->
-        <div class="console" id="console-text"></div>
-        <!-- Поле ввода команд -->
+        <div class="console" id="asdasd">
+            <game-console></game-console>
+            
+        </div>
         <div class="input">
-            <input type="text" id="cmd-input" placeholder="{{gameConsole.inputCommand}}"/>
-            <button class="dark-btn icon-only">
-                <span class="material-symbols-rounded"
-                      onclick="KubekServers.sendCommandFromInput(selectedServer)"> send </span>
-            </button>
+            <input-command></input-command>
+
         </div>
         <!-- Доп. блоки -->
         <div class="settings">
