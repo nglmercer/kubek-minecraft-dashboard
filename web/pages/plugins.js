@@ -1,89 +1,13 @@
 $(function() {
   KubekUI.setTitle("Kubek | {{sections.plugins}}");
-
-  KubekPluginsUI.refreshAllLists();
 });
 
-KubekPluginsUI = class {
-  // Обновить список плагинов
-  static refreshPluginsList() {
-    let listElem = $("#plugins-list");
-    KubekPlugins.getPluginsList((plugins) => {
-      if(listElem.length === 1){
-        listElem.html("");
-      }
-      plugins.forEach((plugin) => {
-        KubekPluginsUI.addPluginItemToList(listElem, plugin, "plugin");
-      })
-    });
-  }
-
-// Обновить список модов
-  static refreshModsList() {
-    let listElem = $("#mods-list");
-    KubekPlugins.getModsList((mods) => {
-      if(listElem.length === 1){
-        listElem.html("");
-      }
-      mods.forEach((mod) => {
-        KubekPluginsUI.addPluginItemToList(listElem, mod, "mod");
-      })
-    });
-  }
-
-  static addPluginItemToList(listElem, item, itemType) {
-    // Preparar datos básicos
-    const nameSplit = item.split('.');
-    const displayName = item.replaceAll(".jar", "").replaceAll(".dis", "");
-    
-    // Construir rutas y acciones
-    const filePath = `/${itemType}s/${item}`;
-    console.log(filePath);
-    const onclick1 = ""
-    const onclick2 = "";
-/*     const onclick1 = `KubekPluginsUI.togglePluginOrMod("${item}", "${itemType}")`;
-    const onclick2 = `KubekFileManager.deleteFile("${filePath}", KubekPluginsUI.refreshAllLists)`; */
-    
-    // Determinar estado del switch
-    const switchedOn = nameSplit[nameSplit.length - 1] !== "dis" ? " checked" : "";
-    
-    // Construir HTML usando template literal para mejor legibilidad
-    const itemHTML = `
-      <div class='item'>
-        <label class='switch'>
-          <input onchange='${onclick1}' type='checkbox'${switchedOn}>
-          <span class='slider round'></span>
-        </label>
-        <span class='filename'>${displayName}</span>
-        <button class='dark-btn icon-only' onclick='${onclick2}'>
-          <span class='material-symbols-rounded'>delete</span>
-        </button>
-      </div>
-    `;
-    
-    listElem.append(itemHTML);
-  }
-
-// Сменить состояние мода/файла (вкл./выкл.)
-  static togglePluginOrMod(item, type){
-    let nameSplit = item.split('.');
-    let newName;
-    if(nameSplit[nameSplit.length - 1] === "dis"){
-      newName = item.replace(".dis", "");
-    } else {
-      newName = item + ".dis";
-    }
-    KubekFileManager.renameFile("/" + type + "s/" + item, newName, () => {
-      setTimeout(() => {
-        KubekPluginsUI.refreshAllLists();
-      }, 800);
-    });
-  }
-
-// Обновить все списки
-  static refreshAllLists() {
-    KubekPluginsUI.refreshPluginsList();
-    KubekPluginsUI.refreshModsList();
+const KubekPluginsUI = class {
+  static refreshAllLists(type) {
+    console.log("refreshAllLists");
+    setTimeout(() => {
+      getpluginsandmods(type);
+    }, 1000);
   }
 
 // Загрузить плагин/мод на сервер
@@ -95,28 +19,102 @@ KubekPluginsUI = class {
     inputElement.on("change", () => {
       let formData = new FormData($("#server-" + itemType + "-form")[0]);
       KubekRequests.post(uploadURL, () => {
-        KubekPluginsUI.refreshAllLists();
+        KubekPluginsUI.refreshAllLists(itemType);
+        getpluginsandmods(itemType);
+        console.log(uploadURL, inputElement, selectedServer, formData);
       }, formData);
     });
   }
 }
-let modsandplugins = {
-  plugins: [],
-  mods: []
-}
-async function getpluginsandmods(type) {
-  if(type === "plugins"){
-    KubekPlugins.getPluginsList((plugins) => {
-      modsandplugins.plugins = plugins;
-      setpluginsandmods(type);
-    });
-  } else if(type === "mods"){
-    KubekPlugins.getModsList((mods) => {
-      modsandplugins.mods = mods;
-      setpluginsandmods(type);
+class PluginsAndModsManager {
+  constructor() {
+    this._state = {
+      plugins: [],
+      mods: []
+    };
+    this._listeners = new Set();
+  }
+
+  // Getter methods
+  get plugins() {
+    return [...this._state.plugins];
+  }
+
+  get mods() {
+    return [...this._state.mods];
+  }
+
+  // Subscribe to state changes
+  subscribe(callback) {
+    this._listeners.add(callback);
+    return () => this._listeners.delete(callback);
+  }
+
+  // Notify all listeners of state changes
+  _notifyListeners() {
+    this._listeners.forEach(listener => listener(this._state));
+  }
+
+  // Update state methods
+  setPlugins(plugins) {
+    this._state.plugins = [...plugins];
+    this._notifyListeners();
+  }
+
+  setMods(mods) {
+    this._state.mods = [...mods];
+    this._notifyListeners();
+  }
+
+  // Async methods to fetch data
+  async fetchPlugins() {
+    return new Promise((resolve) => {
+      KubekPlugins.getPluginsList((plugins) => {
+        if (plugins) {
+          this.setPlugins(plugins);
+        }
+        resolve(plugins);
+      });
     });
   }
-  return modsandplugins;
+
+  async fetchMods() {
+    return new Promise((resolve) => {
+      KubekPlugins.getModsList((mods) => {
+        if (mods) {
+          this.setMods(mods);
+        }
+        resolve(mods);
+      });
+    });
+  }
+}
+
+// Create a single instance of the manager
+const pluginsManager = new PluginsAndModsManager();
+
+async function getpluginsandmods(type) {
+  const verifytype = type.includes("plugin") ? "plugins" : "mods";
+  try {
+
+    if (verifytype === "plugins") {
+    const plugins = await pluginsManager.fetchPlugins();
+    console.log(plugins, "plugins", pluginsManager.plugins);
+    if (plugins) {
+      pluginsManager.setPlugins(plugins);
+      }
+    } else {
+    const mods = await pluginsManager.fetchMods();
+    if (mods) {
+      pluginsManager.setMods(mods);
+      }
+    console.log(mods, "mods", pluginsManager.mods);
+    }
+    setpluginsandmods(type);
+    updateplugin(type);
+  } catch (error) {
+    console.error('Error fetching plugins/mods:', error);
+  }
 }
 class KubekPluginsUIclass extends HTMLElement {
   constructor() {
@@ -126,6 +124,27 @@ class KubekPluginsUIclass extends HTMLElement {
     this.render();
     this.setupEventListeners();
     this.type = "plugins";
+  }
+
+  addElement(element) {
+    // Verificar si el elemento ya existe
+    if (!this._elementList.includes(element)) {
+      this._elementList.push(element);
+      this.renderAllLists(this.type);
+      return true; // Elemento añadido exitosamente
+    }
+    return false; // Elemento ya existe
+  }
+
+  // Nuevo método para eliminar un elemento específico
+  removeElement(element) {
+    const index = this._elementList.indexOf(element);
+    if (index !== -1) {
+      this._elementList.splice(index, 1);
+      this.renderAllLists(this.type);
+      return true; // Elemento eliminado exitosamente
+    }
+    return false; // Elemento no encontrado
   }
 
   get elements() {
@@ -145,10 +164,36 @@ class KubekPluginsUIclass extends HTMLElement {
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
       <style>
 
+      :host {
+      }
+        button {
+        appearance: none;
+        outline: none;
+        border: 0;
+        padding: 12px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        display: flex
+    ;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        font-size: 14pt;
+        cursor: pointer;
+      }
+            button:hover {
+        background: var(--bg-dark-accent-light);
+      }
         .item {
+          background: #222c3a;
           display: flex;
           align-items: center;
-          margin-bottom: 10px;
+          padding-block: 1rem;
+          padding-inline: 6px;
+          justify-content: space-between;
+          width: 100%;
+          border-radius: 10px;
         }
         .switch {
           position: relative;
@@ -190,12 +235,18 @@ class KubekPluginsUIclass extends HTMLElement {
           transform: translateX(32px);
         }
         .dark-btn {
-          background-color: #333;
+          background-color:transparent;
           color: white;
           border: none;
           padding: 5px 10px;
           cursor: pointer;
         }
+          #elements-list {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 10px;
+            }
       </style>
       <div id="elements-list"></div>
     `;
@@ -212,7 +263,8 @@ class KubekPluginsUIclass extends HTMLElement {
     console.log(displayName);
     return `
       <div class="item">
-        <label class="switch">
+        <div class="item-container">
+                <label class="switch">
           <input 
             type="checkbox" 
             ${isEnabled ? 'checked' : ''} 
@@ -222,6 +274,7 @@ class KubekPluginsUIclass extends HTMLElement {
           <span class="slider round"></span>
         </label>
         <span class="filename">${displayName}</span>
+        </div>
         <button 
           class="dark-btn icon-only" 
           data-item="${item}" 
@@ -285,13 +338,17 @@ class KubekPluginsUIclass extends HTMLElement {
   setType(type){
     this.type = type;
   }
+  
 }
 
 customElements.define('kubek-plugins-ui', KubekPluginsUIclass);
 
 // Usage example:
-const kubekPluginsUI = document.querySelector('kubek-plugins-ui');
-
+const kubekPluginsUI = document.querySelector('#plugins-ui');
+const updateplugin  = (type) => {
+  console.log("updateplugin", type, pluginsManager.mods);
+  if (kubekPluginsUI.renderAllLists)   kubekPluginsUI.renderAllLists(type);
+}
 ['toggle', 'delete'].forEach(eventName => {
   kubekPluginsUI.addEventListener(eventName, event => {
     const detail = event.detail;
@@ -307,11 +364,20 @@ const kubekPluginsUI = document.querySelector('kubek-plugins-ui');
 kubekPluginsUI.renderAllLists("plugins");
 
 function setpluginsandmods(type) {
-  if(type === "plugins"){
-    kubekPluginsUI.setElementList(modsandplugins.plugins);
-  } else if(type === "mods"){
-    kubekPluginsUI.setElementList(modsandplugins.mods);
+  const verifytype = type.includes("plugin") ? "plugins" : "mods";
+  if (!kubekPluginsUI) return;
+
+  if (verifytype === "plugins") {
+    console.log('Before setting plugins list:', pluginsManager.plugins);
+    kubekPluginsUI.setElementList(pluginsManager.plugins);
+    console.log('After setting plugins list:', pluginsManager.plugins);
+
+  } else if (verifytype === "mods") {
+    console.log('Before setting mods list:', pluginsManager.mods);
+    kubekPluginsUI.setElementList(pluginsManager.mods);
+    console.log('After setting mods list:', pluginsManager.mods);
   }
+  updateplugin(type);
 }
 function deletefile(item, itemType){
   if (itemType !== "plugins" && itemType !== "mods") {
@@ -321,7 +387,12 @@ function deletefile(item, itemType){
 // after refreshing the list
   const itemtodelete = '/'+ itemType + '/'+ item;
   console.log(itemtodelete);
-  // KubekFileManager.deleteFile("${filePath}", KubekPluginsUI.refreshAllLists) 1 params filePath string and callback function
+  // params filePath string and callback function
+  KubekFileManager.delete(itemtodelete, (data) => {
+    console.log("File deleted successfully", data);
+    if (data)     kubekPluginsUI.removeElement(item);
+    // KubekPluginsUI.refreshAllLists();
+  });
 }
 function togglepluginormod(item, itemType, newName) {
   if (itemType !== "plugins" && itemType !== "mods") {
@@ -330,7 +401,11 @@ function togglepluginormod(item, itemType, newName) {
   }
   if (newName) {
     const filePath = `/${itemType}/${item}`;
-    // KubekFileManager.renameFile(filePath, newName, KubekPluginsUI.refreshAllLists) 3 params filePath string, newName string and callback function
+    // params filePath string, newName string and callback function
+    KubekFileManager.renameFile(filePath, newName, (data) => {
+      console.log("File renamed successfully", data);
+      // KubekPluginsUI.refreshAllLists();
+    });
     console.log(item, itemType, newName, filePath);
   }
 }
