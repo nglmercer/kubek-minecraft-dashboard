@@ -2,7 +2,7 @@ $(function() {
   KubekUI.setTitle("Kubek | {{sections.plugins}}");
 });
 
-const KubekPluginsUI = class {
+var   KubekPluginsUI = class {
   static refreshAllLists(type) {
     console.log("refreshAllLists");
     setTimeout(() => {

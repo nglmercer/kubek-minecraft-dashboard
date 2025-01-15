@@ -1,7 +1,7 @@
-const cpuElem = document.getElementById("cpu-bar");
+var cpuElem = document.querySelector("#cpu-bar");
 cpuElem.setAttribute("value", 55);
 cpuElem.setAttribute("active-color", "#007bff");
-const ramElem = document.getElementById("ram-bar");
+var ramElem = document.getElementById("ram-bar");
 ramElem.setAttribute("value", 55);
 ramElem.setAttribute("active-color", "#007bff");
 
@@ -27,25 +27,19 @@ KubekConsoleUI = class {
         changeProgressvalue("ram", ram);
         changeProgressvalue("ram", KubekUtils.getProgressGradientColor(ram), "setactivecolor");
         changeProgressvalue("cpu", KubekUtils.getProgressGradientColor(cpu), "setactivecolor");
-
-        $("#ram-usage-text").text(KubekUtils.humanizeFileSize(ramElem.used) + " / " + KubekUtils.humanizeFileSize(ramElem.total));
-        if ($("#cpu-usage-bar").css("display") === "none") {
-            $("#cpu-usage-spinner").hide();
-            $("#ram-usage-spinner").hide();
-        }
+        document.querySelector("#ram-usage-text").textContent = KubekUtils.humanizeFileSize(ramElem.used) + " / " + KubekUtils.humanizeFileSize(ramElem.total);
     }
 }
 
-$(function () {
+async function initConsole() {
     KubekUI.setTitle("Kubek | {{sections.console}}");
-
     KubekHardware.getUsage((usage) => {
         KubekConsoleUI.refreshUsageItems(usage.cpu, usage.ram.percent, usage.ram);
     });
-
-    $("#cmd-input").on("keydown", (e) => {
-        if (e.originalEvent.code === "Enter") {
+    document.querySelector("#cmd-input").addEventListener("keydown", (e) => {
+        if (e.code === "Enter") {
             KubekServers.sendCommandFromInput(selectedServer);
         }
     });
-})
+}
+initConsole();
