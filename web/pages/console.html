@@ -20,7 +20,7 @@
             <!-- Блок мониторинга CPU -->
             <div class="layout-accent-box">
                 <div class="lds-spinner flexCentered developed-by-seeeroy" id="cpu-usage-spinner"><div></div><div></div><div></div></div>
-                <div id="cpu-usage-bar"></div>
+                <kubek-circle-progress id="cpu-bar"></kubek-circle-progress>
                 <div class="desc-text">
                     <h4>CPU</h4>
                 </div>
@@ -28,7 +28,7 @@
             <!-- Блок мониторинга RAM -->
             <div class="layout-accent-box">
                 <div class="lds-spinner flexCentered" id="ram-usage-spinner"><div></div><div></div><div></div></div>
-                <div id="ram-usage-bar"></div>
+                <kubek-circle-progress id="ram-bar"></kubek-circle-progress>
                 <div class="desc-text">
                     <h4>RAM</h4>
                     <sup id="ram-usage-text">{{commons.loading}}</sup>
