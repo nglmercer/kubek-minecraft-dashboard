@@ -32,7 +32,7 @@ export async function prepareJavaForServer(javaVersion, cb) {
             if (javaExecutablePath === false) {
                 let javaVerInfo = JAVA_MANAGER.getJavaInfoByVersion(javaVersion);
                 javaDownloadURL = javaVerInfo.url;
-
+                console.log(javaDownloadURL, javaVerInfo);
                 await DOWNLOADS_MANAGER.addDownloadTask(javaDownloadURL, javaVerInfo.downloadPath, (javaDlResult) => {
                     if (javaDlResult === true) {
                         DOWNLOADS_MANAGER.unpackArchive(javaVerInfo.downloadPath, javaVerInfo.unpackPath, (javaUnpackResult) => {
