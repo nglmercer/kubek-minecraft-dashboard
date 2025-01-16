@@ -63,13 +63,15 @@ KubekSettingsUI = class {
     // Получить конфиг
     static getConfig = (cb = () => {
     }) => {
-        KubekRequests.get("/kubek/settings", cb);
+      var urlink = "/kubek/settings";  
+      KubekRequests.get(urlink, cb);
+      console.log("urlink", urlink);    
     }
 
     // Загрузить конфиг в интерфейс
-    static loadConfig = (cb = () => {
-    }) => {
+    static loadConfig = (cb = () => { }) => {
         this.getConfig((config) => {
+          console.log("config", config, currentConfig);
             currentConfig = config;
             $("#language-list .item[data-lang='" + config.language + "']").addClass("active");
             $("#server-port-input").val(config.webserverPort);
@@ -317,7 +319,482 @@ KubekSettingsUI = class {
         });
     };
 }
+var makeAjaxRequest = (url, type, data = "", apiEndpoint = true, cb = () => {}) => {
+  if (apiEndpoint) {
+      url = KubekPredefined.API_ENDPOINT + url;
+  }
 
+  const options = {
+      method: type.toUpperCase(),
+      headers: {}
+  };
+
+  if (data !== "") {
+      options.body = data; // Para enviar datos en la solicitud
+      // Si necesitas enviar JSON, descomenta la línea siguiente
+      // options.headers["Content-Type"] = "application/json";
+  }
+
+  fetch(url, options)
+      .then(response => {
+          if (!response.ok) {
+              if (response.status === 403) {
+                  KubekAlerts.addAlert(
+                      "{{commons.failedToRequest}}", 
+                      "warning", 
+                      "{{commons.maybeUDoesntHaveAccess}}", 
+                      5000
+                  );
+              }
+              throw new Error(`${response.statusText} (status: ${response.status})`);
+          }
+          return response.json(); // O response.text(), según la respuesta esperada
+      })
+      .then(data => cb(data))
+      .catch((error) => {
+          cb(false, error.message, error);
+      });
+};
+
+function refreshLanguagesList(cb) {
+  var apiget = (url, callback, apiEndpoint = true) => {
+    makeAjaxRequest(url, "GET", "", apiEndpoint, callback);
+  }
+  var settingslink = "/kubek/settings"; 
+  var languageslink = "/kubek/languages";
+  apiget(languageslink, (langs) => {
+/*       $("#language-list").html("");
+      Object.values(langs).forEach(lang => {
+          $("#language-list").append(LANGUAGE_ITEM.replaceAll("$0", lang.code).replaceAll("$1", lang.displayName).replaceAll("$2", lang.displayNameEnglish).replaceAll("$3", lang.author));
+      });
+      cb(); */
+      cb();
+      console.log("langs", langs);
+      setlangselector(langs);
+      return langs;
+  });
+};
+class KubekSettings extends HTMLElement {
+  constructor() {
+      super();
+      this.currentEditorMode = null;
+      this.currentConfig = null;
+      this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+      this.setupStyles();
+      this.setupEventListeners();
+      this.init();
+  }
+
+  init() {
+      this.setTitle("Kubek | Settings");
+      refreshLanguagesList(() => {
+          //this.setupLanguageClickHandlers();
+          this.loadConfig();
+          this.refreshUsersList();
+      });
+  }
+
+  setupStyles() {
+      this.shadowRoot.innerHTML = `
+          <style>
+              .item {
+                  display: flex;
+                  align-items: center;
+                  padding: 10px;
+                  cursor: pointer;
+              }
+              .active {
+                  background-color: var(--bg-accent);
+              }
+              .error {
+                  border-color: red;
+              }
+          </style>
+          <div id="main-container">
+              <div id="language-list"></div>
+              <div id="accounts-list"></div>
+              <div class="userEditModal" style="display: none;">
+                  <!-- Modal content -->
+              </div>
+          </div>
+      `;
+  }
+
+  setTitle(title) {
+      document.title = title;
+  }
+
+  async getConfig(callback = () => {}) {
+      try {
+          const response = await fetch('/api/kubek/settings');
+          console.log("config", response);
+          const config = await response.json();
+          callback(config);
+      } catch (error) {
+          console.error('Error fetching config:', error);
+      }
+  }
+
+  loadConfig(callback = () => {}) {
+      this.getConfig((config) => {
+          console.log("config", config);
+          this.currentConfig = config;
+          this.updateUIWithConfig(config);
+          callback();
+      });
+  }
+
+  updateUIWithConfig(config) {
+      const languageItem = this.shadowRoot.querySelector(`#language-list .item[data-lang='${config.language}']`);
+      if (languageItem) languageItem.classList.add('active');
+      
+      this.switchASwitch(this.shadowRoot.querySelector('#ftp-server-enabled'), config.ftpd.enabled);
+      this.switchASwitch(this.shadowRoot.querySelector('#auth-enabled'), config.authorization);
+      this.switchASwitch(this.shadowRoot.querySelector('#ips-access-switch'), config.allowOnlyIPsList);
+      
+      // Update input values
+      const inputs = {
+          'server-port-input': config.webserverPort,
+          'ftp-login-input': config.ftpd.username,
+          'ftp-password-input': config.ftpd.password,
+          'ftp-port-input': config.ftpd.port,
+          'subnets-list': config.IPsAllowed.join('\n')
+      };
+
+      Object.entries(inputs).forEach(([id, value]) => {
+          const input = this.shadowRoot.querySelector(`#${id}`);
+          if (input) input.value = value;
+      });
+  }
+
+  async saveConfig() {
+      const newConfig = this.gatherConfigFromUI();
+      try {
+          const response = await fetch('/kubek/settings', {
+              method: 'PUT',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(newConfig)
+          });
+          
+          const result = await response.json();
+          this.handleSaveResult(result);
+      } catch (error) {
+          console.error('Error saving config:', error);
+          this.showAlert('Error saving configuration', 'error');
+      }
+  }
+
+  async refreshUsersList() {
+      try {
+          const response = await fetch('/api/accounts');
+          const accounts = await response.json();
+          this.renderUsersList(accounts);
+      } catch (error) {
+          console.error('Error fetching users:', error);
+      }
+  }
+
+  renderUsersList(accounts) {
+      const accountsList = this.shadowRoot.querySelector('#accounts-list');
+      accountsList.innerHTML = this.createNewAccountItem();
+      
+      accounts.forEach(account => {
+          accountsList.innerHTML += this.createAccountItem(account);
+      });
+
+      //this.setupUserClickHandlers();
+  }
+
+  createAccountItem(account) {
+      return `
+          <div class="item" data-account="${account}">
+              <div class="iconBg">
+                  <span class="material-symbols-rounded">person</span>
+              </div>
+              <span>${account}</span>
+          </div>
+      `;
+  }
+
+  createNewAccountItem() {
+      return `
+          <div class="item" data-account="newAccItem">
+              <div class="iconBg">
+                  <span class="material-symbols-rounded">add</span>
+              </div>
+              <span>Add New Account</span>
+          </div>
+      `;
+  }
+
+  switchASwitch(element, state) {
+      if (!element) return;
+      element.checked = state;
+  }
+
+  validateInputs() {
+      const inputs = {
+          username: this.shadowRoot.querySelector('#username-input'),
+          email: this.shadowRoot.querySelector('#email-input'),
+          password: this.shadowRoot.querySelector('#password-input')
+      };
+
+      const validation = {
+          username: /^[a-zA-Z0-9_-]+$/,
+          email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          password: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+      };
+
+      let isValid = true;
+
+      Object.entries(inputs).forEach(([key, input]) => {
+          if (!input) return;
+          
+          const value = input.value;
+          const isValidInput = key === 'email' && value === '' ? true : validation[key].test(value);
+          
+          if (!isValidInput) {
+              input.classList.add('error');
+              isValid = false;
+          } else {
+              input.classList.remove('error');
+          }
+      });
+
+      const saveButton = this.shadowRoot.querySelector('#save-btn');
+      if (saveButton) {
+          saveButton.disabled = !isValid;
+      }
+
+      return isValid;
+  }
+
+  setupEventListeners() {
+      this.shadowRoot.addEventListener('input', (e) => {
+          if (e.target.matches('.userEditModal input')) {
+              this.validateInputs();
+          }
+      });
+
+      this.shadowRoot.addEventListener('click', (e) => {
+          if (e.target.matches('#save-btn')) {
+              this.saveUser();
+          } else if (e.target.matches('#delete-account-btn')) {
+              this.deleteUser();
+          }
+      });
+  }
+
+  async saveUser() {
+      if (!this.validateInputs()) return;
+
+      const userData = this.gatherUserData();
+      const url = this.currentEditorMode === 'new' ? '/accounts' : `/accounts/${userData.username}`;
+
+      try {
+          const response = await fetch(url, {
+              method: 'PUT',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(userData)
+          });
+
+          const result = await response.json();
+          this.handleSaveUserResult(result, userData.username);
+      } catch (error) {
+          console.error('Error saving user:', error);
+          this.showAlert('Error saving user', 'error');
+      }
+  }
+
+  gatherUserData() {
+      return {
+          username: this.shadowRoot.querySelector('#username-input').value,
+          email: this.shadowRoot.querySelector('#email-input').value,
+          password: this.shadowRoot.querySelector('#password-input').value,
+          permissions: this.getSelectedPermissions(),
+          serversRestricted: this.shadowRoot.querySelector('#restrict-servers-access').checked,
+          allowedServers: this.getSelectedServersInList()
+      };
+  }
+
+  getSelectedServersInList() {
+      return Array.from(
+          this.shadowRoot.querySelectorAll('#allowed-servers-list .item.active')
+      ).map(item => item.dataset.server);
+  }
+
+  getSelectedPermissions() {
+      return Array.from(
+          this.shadowRoot.querySelectorAll('.permissions input[type=checkbox]:checked')
+      ).map(checkbox => checkbox.id.replace('perm-', ''));
+  }
+
+  showAlert(message, type, duration = 5000) {
+      const alert = document.createElement('div');
+      alert.className = `alert ${type}`;
+      alert.textContent = message;
+      document.body.appendChild(alert);
+      setTimeout(() => alert.remove(), duration);
+  }
+}
+
+customElements.define('kubek-settings', KubekSettings);
+class LanguageSelector extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._langs = [];
+    this._selectedLang = null;
+    
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          background-color: rgb(34, 44, 58);
+          color: rgb(255, 255, 255);
+          padding: 8px;
+          border-radius: 8px;
+          font-family: Arial, sans-serif;
+        }
+        .lang-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+        }
+        .lang-item {
+          padding: 14px;
+          gap: 8px;
+          cursor: pointer;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          border-radius: 8px;
+          background-color: rgb(46, 62, 83);
+          color: rgb(255, 255, 255);
+        }
+        .lang-item:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+        .lang-item.selected {
+          background-color: rgba(50, 213, 131, 0.1);
+          color: rgb(50, 213, 131);
+        }
+        .author {
+          font-size: 14px;
+          color: rgb(104, 121, 138);
+          margin-left: auto;
+        }
+        .display-name-english {
+          color: rgb(104, 121, 138);
+        }
+      </style>
+      <ul class="lang-list"></ul>
+    `;
+  }
+
+  static get observedAttributes() {
+    return ['selected'];
+  }
+
+  get langs() {
+    return this._langs;
+  }
+
+  set langs(value) {
+    this._langs = value;
+    this.render();
+  }
+
+  get selected() {
+    return this._selectedLang;
+  }
+
+  set selected(value) {
+    if (this._selectedLang !== value) {
+      this._selectedLang = value;
+      this.dispatchEvent(new CustomEvent('language-change', {
+        detail: {
+          langCode: value,
+          language: this._langs.find(lang => lang.code === value)
+        },
+        bubbles: true,
+        composed: true
+      }));
+      this.render();
+    }
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'selected' && oldValue !== newValue) {
+      this.selected = newValue;
+    }
+  }
+
+  render() {
+    const list = this.shadowRoot.querySelector('.lang-list');
+    list.innerHTML = '';
+    console.log('Rendering languages:', this._langs);
+    if (!this._langs.length) {
+      return;
+    }
+    this._langs.forEach(lang => {
+      const li = document.createElement('li');
+      li.className = `lang-item ${lang.code === this._selectedLang ? 'selected' : ''}`;
+      li.innerHTML = `
+        <span class="display-name">${lang.displayName}</span>
+        <span class="display-name-english">${lang.displayNameEnglish}</span>
+        <span class="author">by ${lang.author}</span>
+      `;
+      li.addEventListener('click', () => {
+        this.selected = lang.code;
+      });
+      list.appendChild(li);
+    });
+  }
+}
+
+customElements.define('language-selector', LanguageSelector);
+const langSelector = document.querySelector('language-selector');
+// transform objeto en array
+var objlang = {
+  en: {
+    code: "en",
+    id: "en",
+    displayName: "English",
+    displayNameEnglish: "English",
+    author: "Seeroy"
+  },
+  es: {
+    code: "es",
+    id: "es",
+    displayName: "Español",
+    displayNameEnglish: "Spanish",
+    author: "melser"
+  },
+};
+langSelector.langs = Object.values(objlang);
+function setlangselector(langs = []) {
+  const objtoarray = Object.values(langs);
+  if (!langs.length) {
+    langSelector.langs = objtoarray;
+  } else {
+    langSelector.langs = langs;
+  }
+}
+// Listen for language changes
+langSelector.addEventListener('language-change', (event) => {
+  console.log('Selected language:', event.detail.langCode);
+  console.log('Language data:', event.detail.language);
+});
 /*$(document).ready(function () {
   loadUsersList();
   loadKubekSettings();

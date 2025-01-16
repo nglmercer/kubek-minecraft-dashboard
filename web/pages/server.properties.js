@@ -102,6 +102,7 @@ class ServerPropertiesElement extends HTMLElement {
             width: 100%;
             border-radius: 8px;
             box-sizing: border-box;
+            color-scheme: light dark;
         }
             .hidden {
                 display: none;
@@ -173,11 +174,12 @@ class ServerPropertiesElement extends HTMLElement {
                     width: 100%;
                     border-collapse: collapse;
                     table-layout: fixed;
+                    border: 1px solid rgb(46, 62, 83, 0.5);
                 }
                 
                 td {
                     padding: 8px;
-                    border: 1px solid #ddd;
+                    border: 1px solid rgb(46, 62, 83, 0.5);
                 }
                 
                 input[type="text"], input[type="number"] {

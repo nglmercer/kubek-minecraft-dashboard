@@ -2,7 +2,9 @@
     width: 100%;
     height: 62vh;
 }
-
+.light-dark {
+    color-scheme: light dark;
+}
 /* RadioButtons */
 .ssettings-container .radioButtons {
     background: var(--bg-dark-accent);
