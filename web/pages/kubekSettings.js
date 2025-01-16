@@ -74,10 +74,6 @@ KubekSettingsUI = class {
           currentConfig = config;
           const recatogrized = getcategorizeddata(config);
           console.log("config", config, currentConfig, recatogrized);
-/*           setPropertiestoInputs(recatogrized.general, 'general');
-          setPropertiestoInputs(recatogrized.security, 'security');
-          setPropertiestoInputs(recatogrized.services.ftpd, 'FTP'); */
-            $("#language-list .item[data-lang='" + config.language + "']").addClass("active");
             const serverPortInput = document.querySelector('#server-port-input');
             serverPortInput.setInputValues(config.webserverPort);
             const ftpLoginInput = document.querySelector('#ftp-login-input');
@@ -102,7 +98,7 @@ KubekSettingsUI = class {
 
     // Сохранить конфигурацию
     static saveConfig = () => {
-        let language = $("#language-list .item.active").data("lang");
+        let language = getLanguage();
         let serverPort =  document.querySelector('#server-port-input').getInputValues();
         let ftpEnabled = document.querySelector('#ftp-server-enabled').getInputValues();
         let ftpLogin = document.querySelector('#ftp-login-input').getInputValues();
@@ -444,17 +440,21 @@ class CustomInput extends HTMLElement {
       .input-container {
         display: flex;
         flex-direction: column;
+        padding: 8px;
       }
       
       input, textarea {
-        padding: 8px;
+        padding: 1rem;
         border: 1px solid ${darkMode ? '#555' : '#ccc'};
         border-radius: 4px;
         font-size: 14px;
         background-color: ${darkMode ? '#333' : '#fff'};
         color: ${darkMode ? '#fff' : '#000'};
       }
-      
+      textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
       input:disabled, textarea:disabled {
         background-color: ${darkMode ? '#222' : '#f5f5f5'};
         cursor: not-allowed;
@@ -630,10 +630,25 @@ class CustomInput extends HTMLElement {
     if (input.tagName.toLowerCase() === 'textarea') {
       return input.value.split('\n');
     }
-    
-    return input.value;
+    const inputvalue = this.parseValueByType(input);
+    return inputvalue;
   }
-
+  parseValueByType(input) {
+    const valueType = typeof input.value;
+    const inputType = input.type;
+    const value = input.value;
+    console.log("valueType", valueType, value, inputType);
+    switch (inputType) {
+      case 'number':
+        const num = Number(value);
+        return isNaN(num) ? 0 : num * 1;
+      case 'text':
+      case 'string':
+        return value;
+      default:
+        return value;
+    }
+  }
   setInputValues(value) {
     const input = this.shadowRoot.querySelector('input, textarea');
     if (!input) return;
@@ -813,6 +828,9 @@ function setlangselector(langs = []) {
 }
 function selectedLanguage(value) {
   langSelector.selected = value;
+}
+function getLanguage() {
+  return langSelector.selected;
 }
 // Listen for language changes
 langSelector.addEventListener('language-change', (event) => {
