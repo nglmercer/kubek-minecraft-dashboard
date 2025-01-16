@@ -9,7 +9,7 @@ import decompress from "decompress";
 import colors from "colors";
 
 // Создать задачу на скачивание
-async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
+export async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
     try {
         const response = await axios({
             url: downloadURL,

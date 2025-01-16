@@ -11,7 +11,7 @@ import fs from "fs";
 import path from "path";
 import colors from "colors";
 
-async function prepareJavaForServer(javaVersion, cb) {
+export async function prepareJavaForServer(javaVersion, cb) {
     try {
         let javaExecutablePath = "";
         let javaDownloadURL = "";
@@ -62,7 +62,7 @@ async function prepareJavaForServer(javaVersion, cb) {
 }
 
 // Функция для запуска создания сервера Java
-async function startJavaServerGeneration(serverName, core, coreVersion, startParameters, javaExecutablePath, serverPort, cb) {
+export async function startJavaServerGeneration(serverName, core, coreVersion, startParameters, javaExecutablePath, serverPort, cb) {
     let coreDownloadURL = "";
     let coreFileName = core + "-" + coreVersion + ".jar";
 
