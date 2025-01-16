@@ -30,7 +30,7 @@ router.get("/", function (req, res) {
     }
     res.send(preparedList);
 });
-
+// SERVERS_GENERATOR.prepareJavaForServer error  is not a function
 // Router для создания нового сервера
 router.get("/new", function (req, res) {
     let q = req.query;

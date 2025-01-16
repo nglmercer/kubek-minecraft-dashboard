@@ -6,6 +6,7 @@ class KubekServers {
 
     // Получить информацию о сервере (в т.ч. статус)
     static getServerInfo = (server, cb) => {
+        console.log(server);
         KubekRequests.get("/servers/" + server + "/info", cb);
     };
 
