@@ -71,17 +71,31 @@ KubekSettingsUI = class {
     // Загрузить конфиг в интерфейс
     static loadConfig = (cb = () => { }) => {
         this.getConfig((config) => {
-          console.log("config", config, currentConfig);
-            currentConfig = config;
+          currentConfig = config;
+          const recatogrized = getcategorizeddata(config);
+          console.log("config", config, currentConfig, recatogrized);
+/*           setPropertiestoInputs(recatogrized.general, 'general');
+          setPropertiestoInputs(recatogrized.security, 'security');
+          setPropertiestoInputs(recatogrized.services.ftpd, 'FTP'); */
             $("#language-list .item[data-lang='" + config.language + "']").addClass("active");
-            $("#server-port-input").val(config.webserverPort);
-            this.switchASwtich($("#ftp-server-enabled"), config.ftpd.enabled);
-            $("#ftp-login-input").val(config.ftpd.username);
-            $("#ftp-password-input").val(config.ftpd.password);
-            $("#ftp-port-input").val(config.ftpd.port);
-            this.switchASwtich($("#auth-enabled"), config.authorization);
-            this.switchASwtich($("#ips-access-switch"), config.allowOnlyIPsList);
-            $("#subnets-list").val(config.IPsAllowed.join("\n"));
+            const serverPortInput = document.querySelector('#server-port-input');
+            serverPortInput.setInputValues(config.webserverPort);
+            const ftpLoginInput = document.querySelector('#ftp-login-input');
+            ftpLoginInput.setInputValues(config.ftpd.username);
+            const ftpPasswordInput = document.querySelector('#ftp-password-input');
+            ftpPasswordInput.setInputValues(config.ftpd.password);
+            const ftpPortInput = document.querySelector('#ftp-port-input');
+            ftpPortInput.setInputValues(config.ftpd.port);
+            const authEnabled = document.querySelector('#auth-enabled');
+            authEnabled.setInputValues(config.authorization);
+            const ftpServerEnabled = document.querySelector('#ftp-server-enabled');
+            ftpServerEnabled.setInputValues(config.ftpd.enabled);
+            const ipsAccessSwitch = document.querySelector('#ips-access-switch');
+            ipsAccessSwitch.setInputValues(config.allowOnlyIPsList);
+            const subnetsInput = document.querySelector('#subnets-list');
+            subnetsInput.setInputValues(config.IPsAllowed);
+            console.log("config.IPsAllowed", config.IPsAllowed);
+            selectedLanguage(config.language);
             cb();
         });
     }
@@ -89,14 +103,14 @@ KubekSettingsUI = class {
     // Сохранить конфигурацию
     static saveConfig = () => {
         let language = $("#language-list .item.active").data("lang");
-        let serverPort = $("#server-port-input").val();
-        let ftpEnabled = $("#ftp-server-enabled").is(":checked");
-        let ftpLogin = $("#ftp-login-input").val();
-        let ftpPassword = $("#ftp-password-input").val();
-        let ftpPort = $("#ftp-port-input").val();
-        let authorization = $("#auth-enabled").is(":checked");
-        let ipsAccess = $("#ips-access-switch").is(":checked");
-        let subnets = $("#subnets-list").val().split("\n");
+        let serverPort =  document.querySelector('#server-port-input').getInputValues();
+        let ftpEnabled = document.querySelector('#ftp-server-enabled').getInputValues();
+        let ftpLogin = document.querySelector('#ftp-login-input').getInputValues();
+        let ftpPassword = document.querySelector('#ftp-password-input').getInputValues();
+        let ftpPort = document.querySelector('#ftp-port-input').getInputValues();
+        let authorization = document.querySelector('#auth-enabled').getInputValues();
+        let ipsAccess = document.querySelector('#ips-access-switch').getInputValues();
+        let subnets = document.querySelector('#subnets-list').getInputValues();
         currentConfig.language = language;
         currentConfig.webserverPort = serverPort;
         currentConfig.ftpd.enabled = ftpEnabled;
@@ -106,7 +120,10 @@ KubekSettingsUI = class {
         currentConfig.authorization = authorization;
         currentConfig.allowOnlyIPsList = ipsAccess;
         currentConfig.IPsAllowed = subnets;
-        KubekRequests.put("/kubek/settings?config=" + Base64.encodeURI(JSON.stringify(currentConfig)), (result) => {
+        console.log("currentConfig", currentConfig);
+        const componentdata = getAllInputValues();
+        console.log("componentdata", componentdata);
+/*         KubekRequests.put("/kubek/settings?config=" + Base64.encodeURI(JSON.stringify(currentConfig)), (result) => {
             if (result === true) {
                 KubekAlerts.addAlert("{{kubekSettings.configSaved}}", "check", "", 5000);
             } else {
@@ -115,13 +132,14 @@ KubekSettingsUI = class {
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
-        });
+        }); */
     }
 
     // Обновить список пользователей
     static refreshUsersList = () => {
         $("#accounts-list").html("");
         KubekRequests.get("/accounts", (accounts) => {
+          console.log("accounts", accounts);
             $("#accounts-list").append(NEW_ACCOUNT_ITEM);
             accounts.forEach((account) => {
                 $("#accounts-list").append(ACCOUNT_ITEM.replaceAll("$0", account));
@@ -311,6 +329,7 @@ KubekSettingsUI = class {
     // Функция для обновления списка языков
     static refreshLanguagesList = (cb) => {
         KubekRequests.get("/kubek/languages", (langs) => {
+          setlangselector(langs);
             $("#language-list").html("");
             Object.values(langs).forEach(lang => {
                 $("#language-list").append(LANGUAGE_ITEM.replaceAll("$0", lang.code).replaceAll("$1", lang.displayName).replaceAll("$2", lang.displayNameEnglish).replaceAll("$3", lang.author));
@@ -318,6 +337,33 @@ KubekSettingsUI = class {
             cb();
         });
     };
+}
+function setAllInputValues(dataObject) {
+  const inputs = document.querySelectorAll('custom-input');
+  
+  inputs.forEach(input => {
+    const id = input.getAttribute('id');
+    const name = input.getAttribute('name');
+    
+    // Buscar el valor en el objeto usando id o name como clave
+    const value = dataObject[id] || dataObject[name];
+    
+    if (value !== undefined) {
+      input.setInputValues(value);
+    }
+  });
+}
+function getAllInputValues() {
+  const allData = {};
+  const inputs = document.querySelectorAll('custom-input');
+  
+  inputs.forEach((input) => {
+    const id = input.getAttribute('id');
+    const value = input.getInputValues();
+    allData[id] = value;
+  });
+  
+  return allData;
 }
 var makeAjaxRequest = (url, type, data = "", apiEndpoint = true, cb = () => {}) => {
   if (apiEndpoint) {
@@ -374,278 +420,252 @@ function refreshLanguagesList(cb) {
       return langs;
   });
 };
-class KubekSettings extends HTMLElement {
+class CustomInput extends HTMLElement {
   constructor() {
-      super();
-      this.currentEditorMode = null;
-      this.currentConfig = null;
-      this.attachShadow({ mode: 'open' });
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.handleInputChange = this.handleInputChange.bind(this);
+  }
+
+  static get observedAttributes() {
+    return ['type', 'id', 'name', 'value', 'placeholder', 'disabled', 'readonly', 'darkmode'];
+  }
+
+  getStyles() {
+    const darkMode = this.hasAttribute('darkmode');
+    
+    return `
+      :host {
+        display: block;
+        margin: 10px 0;
+        color-scheme: light dark;
+      }
+      
+      .input-container {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      input, textarea {
+        padding: 8px;
+        border: 1px solid ${darkMode ? '#555' : '#ccc'};
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: ${darkMode ? '#333' : '#fff'};
+        color: ${darkMode ? '#fff' : '#000'};
+      }
+      
+      input:disabled, textarea:disabled {
+        background-color: ${darkMode ? '#222' : '#f5f5f5'};
+        cursor: not-allowed;
+        color: ${darkMode ? '#666' : '#888'};
+      }
+      
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+      
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: ${darkMode ? '#555' : '#ccc'};
+        transition: .4s;
+        border-radius: 34px;
+      }
+      
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: ${darkMode ? '#888' : 'white'};
+        transition: .4s;
+        border-radius: 50%;
+      }
+      
+      input:checked + .slider {
+        background-color: #2196F3;
+      }
+      
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+      
+      input:focus, textarea:focus {
+        outline: none;
+        border-color: #2196F3;
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+      }
+    `;
   }
 
   connectedCallback() {
-      this.setupStyles();
-      this.setupEventListeners();
-      this.init();
+    this.render();
+    const input = this.shadowRoot.querySelector('input, textarea');
+    if (input) {
+      input.addEventListener('input', this.handleInputChange);
+      input.addEventListener('change', this.handleInputChange);
+    }
   }
 
-  init() {
-      this.setTitle("Kubek | Settings");
-      refreshLanguagesList(() => {
-          //this.setupLanguageClickHandlers();
-          this.loadConfig();
-          this.refreshUsersList();
-      });
+  disconnectedCallback() {
+    const input = this.shadowRoot.querySelector('input, textarea');
+    if (input) {
+      input.removeEventListener('input', this.handleInputChange);
+      input.removeEventListener('change', this.handleInputChange);
+    }
   }
 
-  setupStyles() {
-      this.shadowRoot.innerHTML = `
-          <style>
-              .item {
-                  display: flex;
-                  align-items: center;
-                  padding: 10px;
-                  cursor: pointer;
-              }
-              .active {
-                  background-color: var(--bg-accent);
-              }
-              .error {
-                  border-color: red;
-              }
-          </style>
-          <div id="main-container">
-              <div id="language-list"></div>
-              <div id="accounts-list"></div>
-              <div class="userEditModal" style="display: none;">
-                  <!-- Modal content -->
-              </div>
-          </div>
-      `;
+  handleInputChange(event) {
+    const value = this.getInputValues();
+    this.dispatchEvent(new CustomEvent('input-change', {
+      detail: {
+        id: this.getAttribute('id'),
+        name: this.getAttribute('name'),
+        value: value
+      },
+      bubbles: true,
+      composed: true
+    }));
   }
 
-  setTitle(title) {
-      document.title = title;
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      this.render();
+    }
   }
 
-  async getConfig(callback = () => {}) {
-      try {
-          const response = await fetch('/api/kubek/settings');
-          console.log("config", response);
-          const config = await response.json();
-          callback(config);
-      } catch (error) {
-          console.error('Error fetching config:', error);
-      }
+  render() {
+    const type = this.getAttribute('type') || 'text';
+    const id = this.getAttribute('id');
+    const name = this.getAttribute('name');
+    const value = this.getAttribute('value') || '';
+    const placeholder = this.getAttribute('placeholder') || '';
+    const disabled = this.hasAttribute('disabled');
+    const readonly = this.hasAttribute('readonly');
+
+    this.shadowRoot.innerHTML = `
+      <style>${this.getStyles()}</style>
+      <div class="input-container">
+        ${this.renderInput(type, id, name, value, placeholder, disabled, readonly)}
+      </div>
+    `;
+
+    // Reattach event listeners after rendering
+    const input = this.shadowRoot.querySelector('input, textarea');
+    if (input) {
+      input.addEventListener('input', this.handleInputChange);
+      input.addEventListener('change', this.handleInputChange);
+    }
   }
 
-  loadConfig(callback = () => {}) {
-      this.getConfig((config) => {
-          console.log("config", config);
-          this.currentConfig = config;
-          this.updateUIWithConfig(config);
-          callback();
-      });
-  }
-
-  updateUIWithConfig(config) {
-      const languageItem = this.shadowRoot.querySelector(`#language-list .item[data-lang='${config.language}']`);
-      if (languageItem) languageItem.classList.add('active');
+  renderInput(type, id, name, value, placeholder, disabled, readonly) {
+    switch (type) {
+      case 'textarea':
+        return `
+          <textarea
+            id="${id}"
+            name="${name}"
+            placeholder="${placeholder}"
+            ${disabled ? 'disabled' : ''}
+            ${readonly ? 'readonly' : ''}
+          >${value}</textarea>
+        `;
       
-      this.switchASwitch(this.shadowRoot.querySelector('#ftp-server-enabled'), config.ftpd.enabled);
-      this.switchASwitch(this.shadowRoot.querySelector('#auth-enabled'), config.authorization);
-      this.switchASwitch(this.shadowRoot.querySelector('#ips-access-switch'), config.allowOnlyIPsList);
+      case 'checkbox':
+      case 'switch':
+      case 'boolean':
+        return `
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="${id}"
+              name="${name}"
+              ${value === 'true' ? 'checked' : ''}
+              ${disabled ? 'disabled' : ''}
+              ${readonly ? 'readonly' : ''}
+            >
+            <span class="slider"></span>
+          </label>
+        `;
       
-      // Update input values
-      const inputs = {
-          'server-port-input': config.webserverPort,
-          'ftp-login-input': config.ftpd.username,
-          'ftp-password-input': config.ftpd.password,
-          'ftp-port-input': config.ftpd.port,
-          'subnets-list': config.IPsAllowed.join('\n')
-      };
-
-      Object.entries(inputs).forEach(([id, value]) => {
-          const input = this.shadowRoot.querySelector(`#${id}`);
-          if (input) input.value = value;
-      });
+      default:
+        return `
+          <input
+            type="${type === 'string' ? 'text' : type}"
+            id="${id}"
+            name="${name}"
+            value="${value}"
+            placeholder="${placeholder}"
+            ${disabled ? 'disabled' : ''}
+            ${readonly ? 'readonly' : ''}
+          >
+        `;
+    }
   }
 
-  async saveConfig() {
-      const newConfig = this.gatherConfigFromUI();
-      try {
-          const response = await fetch('/kubek/settings', {
-              method: 'PUT',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(newConfig)
-          });
-          
-          const result = await response.json();
-          this.handleSaveResult(result);
-      } catch (error) {
-          console.error('Error saving config:', error);
-          this.showAlert('Error saving configuration', 'error');
-      }
+  getInputValues() {
+    const input = this.shadowRoot.querySelector('input, textarea');
+    if (!input) return null;
+
+    if (input.type === 'checkbox') {
+      return input.checked;
+    }
+    
+    if (input.tagName.toLowerCase() === 'textarea') {
+      return input.value.split('\n');
+    }
+    
+    return input.value;
   }
 
-  async refreshUsersList() {
-      try {
-          const response = await fetch('/api/accounts');
-          const accounts = await response.json();
-          this.renderUsersList(accounts);
-      } catch (error) {
-          console.error('Error fetching users:', error);
-      }
+  setInputValues(value) {
+    const input = this.shadowRoot.querySelector('input, textarea');
+    if (!input) return;
+
+    if (input.type === 'checkbox') {
+      input.checked = Boolean(value);
+    } else if (Array.isArray(value) && input.tagName.toLowerCase() === 'textarea') {
+      input.value = value.join('\n');
+    } else {
+      input.value = value;
+    }
+
+    // Dispatch event when setting values programmatically
+    this.handleInputChange();
   }
 
-  renderUsersList(accounts) {
-      const accountsList = this.shadowRoot.querySelector('#accounts-list');
-      accountsList.innerHTML = this.createNewAccountItem();
-      
-      accounts.forEach(account => {
-          accountsList.innerHTML += this.createAccountItem(account);
-      });
+  resetInputValues() {
+    const input = this.shadowRoot.querySelector('input, textarea');
+    if (!input) return;
 
-      //this.setupUserClickHandlers();
-  }
+    if (input.type === 'checkbox') {
+      input.checked = false;
+    } else {
+      input.value = '';
+    }
 
-  createAccountItem(account) {
-      return `
-          <div class="item" data-account="${account}">
-              <div class="iconBg">
-                  <span class="material-symbols-rounded">person</span>
-              </div>
-              <span>${account}</span>
-          </div>
-      `;
-  }
-
-  createNewAccountItem() {
-      return `
-          <div class="item" data-account="newAccItem">
-              <div class="iconBg">
-                  <span class="material-symbols-rounded">add</span>
-              </div>
-              <span>Add New Account</span>
-          </div>
-      `;
-  }
-
-  switchASwitch(element, state) {
-      if (!element) return;
-      element.checked = state;
-  }
-
-  validateInputs() {
-      const inputs = {
-          username: this.shadowRoot.querySelector('#username-input'),
-          email: this.shadowRoot.querySelector('#email-input'),
-          password: this.shadowRoot.querySelector('#password-input')
-      };
-
-      const validation = {
-          username: /^[a-zA-Z0-9_-]+$/,
-          email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-          password: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
-      };
-
-      let isValid = true;
-
-      Object.entries(inputs).forEach(([key, input]) => {
-          if (!input) return;
-          
-          const value = input.value;
-          const isValidInput = key === 'email' && value === '' ? true : validation[key].test(value);
-          
-          if (!isValidInput) {
-              input.classList.add('error');
-              isValid = false;
-          } else {
-              input.classList.remove('error');
-          }
-      });
-
-      const saveButton = this.shadowRoot.querySelector('#save-btn');
-      if (saveButton) {
-          saveButton.disabled = !isValid;
-      }
-
-      return isValid;
-  }
-
-  setupEventListeners() {
-      this.shadowRoot.addEventListener('input', (e) => {
-          if (e.target.matches('.userEditModal input')) {
-              this.validateInputs();
-          }
-      });
-
-      this.shadowRoot.addEventListener('click', (e) => {
-          if (e.target.matches('#save-btn')) {
-              this.saveUser();
-          } else if (e.target.matches('#delete-account-btn')) {
-              this.deleteUser();
-          }
-      });
-  }
-
-  async saveUser() {
-      if (!this.validateInputs()) return;
-
-      const userData = this.gatherUserData();
-      const url = this.currentEditorMode === 'new' ? '/accounts' : `/accounts/${userData.username}`;
-
-      try {
-          const response = await fetch(url, {
-              method: 'PUT',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(userData)
-          });
-
-          const result = await response.json();
-          this.handleSaveUserResult(result, userData.username);
-      } catch (error) {
-          console.error('Error saving user:', error);
-          this.showAlert('Error saving user', 'error');
-      }
-  }
-
-  gatherUserData() {
-      return {
-          username: this.shadowRoot.querySelector('#username-input').value,
-          email: this.shadowRoot.querySelector('#email-input').value,
-          password: this.shadowRoot.querySelector('#password-input').value,
-          permissions: this.getSelectedPermissions(),
-          serversRestricted: this.shadowRoot.querySelector('#restrict-servers-access').checked,
-          allowedServers: this.getSelectedServersInList()
-      };
-  }
-
-  getSelectedServersInList() {
-      return Array.from(
-          this.shadowRoot.querySelectorAll('#allowed-servers-list .item.active')
-      ).map(item => item.dataset.server);
-  }
-
-  getSelectedPermissions() {
-      return Array.from(
-          this.shadowRoot.querySelectorAll('.permissions input[type=checkbox]:checked')
-      ).map(checkbox => checkbox.id.replace('perm-', ''));
-  }
-
-  showAlert(message, type, duration = 5000) {
-      const alert = document.createElement('div');
-      alert.className = `alert ${type}`;
-      alert.textContent = message;
-      document.body.appendChild(alert);
-      setTimeout(() => alert.remove(), duration);
+    // Dispatch event when resetting values
+    this.handleInputChange();
   }
 }
 
-customElements.define('kubek-settings', KubekSettings);
+customElements.define('custom-input', CustomInput);
 class LanguageSelector extends HTMLElement {
   constructor() {
     super();
@@ -784,17 +804,386 @@ var objlang = {
 langSelector.langs = Object.values(objlang);
 function setlangselector(langs = []) {
   const objtoarray = Object.values(langs);
+  console.log("langs", langs, objtoarray);
   if (!langs.length) {
     langSelector.langs = objtoarray;
   } else {
     langSelector.langs = langs;
   }
 }
+function selectedLanguage(value) {
+  langSelector.selected = value;
+}
 // Listen for language changes
 langSelector.addEventListener('language-change', (event) => {
   console.log('Selected language:', event.detail.langCode);
   console.log('Language data:', event.detail.language);
 });
+class ObjectCategorizer {
+  constructor(categoryArrays, options = {}) {
+      this.validateInput(categoryArrays);
+      
+      const defaultOptions = {
+          uncategorizedKey: 'uncategorized',
+          allowMultipleCategories: false
+      };
+      
+      this.options = { ...defaultOptions, ...options };
+      this.categoryMappings = this.buildCategoryMappings(categoryArrays);
+  }
+
+  validateInput(categoryArrays) {
+      if (!categoryArrays || typeof categoryArrays !== 'object') {
+          throw new Error('Category arrays must be provided as an object');
+      }
+
+      for (const [category, fields] of Object.entries(categoryArrays)) {
+          if (!Array.isArray(fields)) {
+              throw new Error(`Category ${category} must be an array`);
+          }
+      }
+  }
+
+  buildCategoryMappings(categoryArrays) {
+      const mappings = new Map();
+      
+      for (const [category, fields] of Object.entries(categoryArrays)) {
+          fields.forEach(field => {
+              if (mappings.has(field) && !this.options.allowMultipleCategories) {
+                  throw new Error(`Field "${field}" is already mapped to category "${mappings.get(field)}"`);
+              }
+              
+              if (this.options.allowMultipleCategories) {
+                  if (!mappings.has(field)) {
+                      mappings.set(field, new Set());
+                  }
+                  mappings.get(field).add(category);
+              } else {
+                  mappings.set(field, category);
+              }
+          });
+      }
+      
+      return mappings;
+  }
+
+  categorizeObject(inputObject) {
+      if (!inputObject || typeof inputObject !== 'object') {
+          throw new Error('Input must be an object');
+      }
+
+      const result = this.initializeResultObject();
+
+      for (const [key, value] of Object.entries(inputObject)) {
+          if (this.categoryMappings.has(key)) {
+              this.assignValueToCategories(result, key, value);
+          } else {
+              result[this.options.uncategorizedKey][key] = value;
+          }
+      }
+
+      return result;
+  }
+
+  initializeResultObject() {
+      const result = {};
+      const uniqueCategories = new Set(
+          Array.from(this.categoryMappings.values())
+          .flatMap(cat => this.options.allowMultipleCategories ? Array.from(cat) : [cat])
+      );
+
+      uniqueCategories.forEach(category => {
+          result[category] = {};
+      });
+      result[this.options.uncategorizedKey] = {};
+
+      return result;
+  }
+
+  assignValueToCategories(result, key, value) {
+      const categories = this.categoryMappings.get(key);
+      
+      if (this.options.allowMultipleCategories) {
+          categories.forEach(category => {
+              result[category][key] = value;
+          });
+      } else {
+          result[categories][key] = value;
+      }
+  }
+}
+const categoryArrays = {
+  general: [
+      'webserverPort',
+      'allowOnlyIPsList',
+      'IPsAllowed'
+  ],
+  security: [
+      'authorization'
+  ],
+  system: [
+      'eulaAccepted',
+      'configVersion'
+  ],
+  services: [
+      'ftpd',
+      'telegramBot'
+  ]
+};
+const categorizer = new ObjectCategorizer(categoryArrays, {
+  uncategorizedKey: 'other',
+  allowMultipleCategories: true
+});
+function getcategorizeddata(data) {
+  const categorizedData = categorizer.categorizeObject(data);
+  return categorizedData;
+}
+class InputFieldsElement extends HTMLElement {
+  static get observedAttributes() {
+      return ['data-id'];
+  }
+
+  getStyles() {
+      return `
+          :host {
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+              width: 100%;
+              padding: 16px;
+              box-sizing: border-box;
+              color-scheme: light dark;
+          }
+        .hidden {
+            display: none;
+        }
+          .field-container {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+          }
+
+          .primary-btn {
+              padding: 8px 16px;
+              background: #007bff;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              align-self: flex-start;
+          }
+
+          .primary-btn:hover {
+              background: #0056b3;
+          }
+
+          .switch {
+              position: relative;
+              display: inline-block;
+              width: 60px;
+              height: 34px;
+          }
+          
+          .switch input {
+              opacity: 0;
+              width: 0;
+              height: 0;
+          }
+          
+          .slider {
+              position: absolute;
+              cursor: pointer;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background-color: #ccc;
+              transition: .4s;
+              border-radius: 34px;
+          }
+          
+          .slider:before {
+              position: absolute;
+              content: "";
+              height: 26px;
+              width: 26px;
+              left: 4px;
+              bottom: 4px;
+              background-color: white;
+              transition: .4s;
+              border-radius: 50%;
+          }
+          
+          input:checked + .slider {
+              background-color: #2196F3;
+          }
+          
+          input:focus + .slider {
+              box-shadow: 0 0 1px #2196F3;
+          }
+          
+          input:checked + .slider:before {
+              transform: translateX(26px);
+          }
+
+          input[type="text"], input[type="number"] {
+              padding: 8px;
+              border-radius: 4px;
+              border: 1px solid #ccc;
+              font-size: 14px;
+              width: 200px;
+          }
+
+          input[type="text"]:focus, input[type="number"]:focus {
+              outline: none;
+              border-color: #007bff;
+              box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+          }
+      `;
+  }
+
+  constructor() {
+      super();
+      this.SWITCH_ELEMENT = '<label class="switch"><input type="checkbox"$0><span class="slider"></span></label>';
+      this.NUMBER_INPUT = '<input type="number" value="$0">';
+      this.TEXT_INPUT = '<input type="text" value="$0">';
+      this.propertyTypes = new Map();
+      
+      this.attachShadow({ mode: 'open' });
+      this.shadowRoot.innerHTML = `
+          <style>${this.getStyles()}</style>
+          <div id="fields-container"></div>
+          <button id="save-btn" class="primary-btn hidden">Save</button>
+      `;
+  }
+
+  getValueType(value) {
+      if (value === null) return "null";
+      const type = typeof value;
+      return (type === "boolean" || type === "number") ? type : "string";
+  }
+
+  parseValueByType(value, type) {
+      switch (type) {
+          case "null": return null;
+          case "boolean": return value === "true" || value === true;
+          case "number":
+              const num = Number(value);
+              return isNaN(num) ? 0 : num;
+          default: return String(value);
+      }
+  }
+
+  createInput(type, value) {
+      switch (type) {
+          case "boolean":
+              const isChecked = value === true ? " checked" : "";
+              return this.SWITCH_ELEMENT.replace("$0", isChecked);
+          case "number":
+              return this.NUMBER_INPUT.replace("$0", value);
+          case "null":
+              return this.TEXT_INPUT.replace("$0", "");
+          default:
+              return this.TEXT_INPUT.replace("$0", value);
+      }
+  }
+
+  setProperties(properties, typeOverrides = {}) {
+      this.propertyTypes.clear();
+      const container = this.shadowRoot.querySelector('#fields-container');
+      container.innerHTML = '';
+      
+      for (const [key, value] of Object.entries(properties)) {
+          const originalType = typeOverrides[key] || this.getValueType(value);
+          this.propertyTypes.set(key, originalType);
+
+          let displayValue = value;
+          if (originalType === "null") {
+              displayValue = "";
+          }
+
+          const fieldDiv = document.createElement('div');
+          fieldDiv.className = 'field-container';
+          fieldDiv.innerHTML = this.createInput(this.propertyTypes.get(key), displayValue);
+          fieldDiv.dataset.key = key;
+          fieldDiv.dataset.propertyType = this.propertyTypes.get(key);
+          container.appendChild(fieldDiv);
+      }
+  }
+
+  getProperties() {
+      const properties = {};
+      
+      this.shadowRoot.querySelectorAll('#fields-container .field-container').forEach(field => {
+          const key = field.dataset.key;
+          const originalType = this.propertyTypes.get(key);
+          
+          let rawValue;
+          const checkbox = field.querySelector('input[type="checkbox"]');
+          if (checkbox) {
+              rawValue = checkbox.checked;
+          } else {
+              rawValue = field.querySelector('input').value;
+          }
+
+          properties[key] = this.parseValueByType(rawValue, originalType);
+      });
+
+      return properties;
+  }
+
+  connectedCallback() {
+      this.shadowRoot.querySelector('#save-btn').addEventListener('click', () => {
+          const properties = this.getProperties();
+          const dataId = this.getAttribute('data-id');
+          
+          this.dispatchEvent(new CustomEvent('properties-save', {
+              bubbles: true,
+              composed: true,
+              detail: {
+                  id: dataId,
+                  properties
+              }
+          }));
+      });
+  }
+}
+
+customElements.define('input-fields', InputFieldsElement);
+
+/* const generalFields = document.querySelector('#general-fields');
+const securityFields = document.querySelector('#security-fields');
+const systemFields = document.querySelector('#FTP-fields');
+function setPropertiestoInputs(properties, fields) {
+  const typesofproperties = {
+    webserverPort: "number",
+    allowOnlyIPsList: "boolean",
+    IPsAllowed: "string",
+    authorization: "boolean",
+    eulaAccepted: "boolean",
+    configVersion: "string",
+  }
+  switch (fields) {
+    case 'general':
+      generalFields.setProperties(properties, typesofproperties);
+      break;
+    case 'security':
+      securityFields.setProperties(properties, typesofproperties);
+      break;
+    case 'FTP':
+      systemFields.setProperties(properties, typesofproperties);
+      break;
+  }
+}
+
+ */
+
+
+
+
+
+
+
 /*$(document).ready(function () {
   loadUsersList();
   loadKubekSettings();

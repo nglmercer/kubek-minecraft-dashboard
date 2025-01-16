@@ -24,6 +24,7 @@
                                 <span>$1 <sup>by $3</sup></span>
                                 <span style="color: var(--bg-dark-accent-lighter)">$2</span>
                             </div>
+
                             <span class='check material-symbols-rounded'>check</span>
                         </div>
                         <div class="item" data-lang="en">
@@ -43,7 +44,13 @@
                     </div>
                 </td>
                 <td>
-                    <input type="number" placeholder="3000" id="server-port-input">
+                    <custom-input
+                    type="number"
+                    id="server-port-input"
+                    name="server-port-input"
+                    value="3000"
+                    placeholder="3000"
+                    ></custom-input>
                 </td>
             </tr>
             <tr>
@@ -56,10 +63,12 @@
                     </div>
                 </td>
                 <td>
-                    <label class="switch">
-                        <input type="checkbox" id="ips-access-switch">
-                        <span class="slider round"></span>
-                    </label>
+                    <custom-input
+                    type="switch"
+                    id="ips-access-switch"
+                    name="ips-access-switch"
+                    value="true"
+                    ></custom-input>
                 </td>
             </tr>
             <tr>
@@ -72,7 +81,13 @@
                     </div>
                 </td>
                 <td>
-                    <textarea id="subnets-list"></textarea>
+<custom-input
+type="textarea"
+id="subnets-list"
+name="subnets-list"
+value="10.0.0.0/8 
+172.16.0.0/12"
+></custom-input>
                 </td>
             </tr>
         </table>
@@ -89,10 +104,12 @@
                     </div>
                 </td>
                 <td>
-                    <label class="switch">
-                        <input type="checkbox" id="ftp-server-enabled">
-                        <span class="slider round"></span>
-                    </label>
+                    <custom-input
+                    type="switch"
+                    id="ftp-server-enabled"
+                    name="ftp-server-enabled"
+                    value="true"
+                    ></custom-input>
                 </td>
             </tr>
             <tr>
@@ -105,7 +122,12 @@
                     </div>
                 </td>
                 <td>
-                    <input type="text" id="ftp-login-input">
+                    <custom-input
+                    type="text"
+                    id="ftp-login-input"
+                    name="ftp-login-input"
+                    value="kubek"
+                    ></custom-input>
                 </td>
             </tr>
             <tr>
@@ -118,7 +140,12 @@
                     </div>
                 </td>
                 <td>
-                    <input type="password" id="ftp-password-input">
+                    <custom-input
+                    type="password"
+                    id="ftp-password-input"
+                    name="ftp-password-input"
+                    value="kubek"
+                    ></custom-input>
                 </td>
             </tr>
             <tr>
@@ -131,7 +158,12 @@
                     </div>
                 </td>
                 <td>
-                    <input type="number" id="ftp-port-input">
+                    <custom-input
+                    type="number"
+                    id="ftp-port-input"
+                    name="ftp-port-input"
+                    value="21"
+                    ></custom-input>
                 </td>
             </tr>
         </table>
@@ -148,10 +180,12 @@
                     </div>
                 </td>
                 <td>
-                    <label class="switch">
-                        <input type="checkbox" id="auth-enabled">
-                        <span class="slider round"></span>
-                    </label>
+                    <custom-input
+                    type="switch"
+                    id="auth-enabled"
+                    name="auth-enabled"
+                    value="true"                    
+                    ></custom-input>
                 </td>
             </tr>
             <tr>
@@ -293,4 +327,6 @@
         <button class="dark-btn" onclick="KubekSettingsUI.hideUserEditor()">{{commons.cancel}}</button>
     </div>
 </div>
-<kubek-settings></kubek-settings>
+<input-fields data-id="general" id="general-fields"></input-fields>
+<input-fields data-id="security" id="security-fields"></input-fields>
+<input-fields data-id="FTP" id="FTP-fields"></input-fields>
