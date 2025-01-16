@@ -5,7 +5,7 @@
 *:not(.tooltip):not(.modal-console-props) {
   transition: 0.25s !important;
 }
-
+.hidden { display: none; }
 *,
 *:before,
 *:after {

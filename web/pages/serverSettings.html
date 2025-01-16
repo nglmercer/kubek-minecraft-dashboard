@@ -15,7 +15,12 @@
           {{serverSettings.startScript}}
         </td>
         <td>
-          <input type="text" id="start-script">
+          <custom-input
+          type="text"
+          id="start-script"
+          name="start-script"
+          value="start.sh"
+          ></custom-input>
         </td>
       </tr>
       <tr>
@@ -23,10 +28,13 @@
           {{serverSettings.restartOnError}}
         </td>
         <td>
-          <label class="switch">
-            <input type="checkbox" id="restart-on-error">
-            <span class="slider round"></span>
-          </label>
+
+          <custom-input
+          type="boolean"
+          id="restart-on-error"
+          name="restart-on-error"
+          value="true"
+          ></custom-input>
         </td>
       </tr>
       <tr id="restart-attempts-tr">
@@ -34,7 +42,12 @@
           {{serverSettings.restartAttempts}}
         </td>
         <td>
-          <input type="number" id="restart-attempts">
+          <custom-input
+          type="number"
+          id="restart-attempts"
+          name="restart-attempts"
+          value="3"
+          ></custom-input>
         </td>
       </tr>
       <tr>
@@ -42,7 +55,12 @@
           {{serverSettings.stopCommand}}
         </td>
         <td>
-          <input type="text" id="stop-command">
+          <custom-input
+          type="text"
+          id="stop-command"
+          name="stop-command"
+          value="stop"
+          ></custom-input>
         </td>
       </tr>
       <tr>

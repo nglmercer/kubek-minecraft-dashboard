@@ -5,6 +5,7 @@
 .light-dark {
     color-scheme: light dark;
 }
+.hidden { display: none; }
 /* RadioButtons */
 .ssettings-container .radioButtons {
     background: var(--bg-dark-accent);
