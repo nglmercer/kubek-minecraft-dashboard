@@ -227,6 +227,7 @@ function generateNewServerStart(){
 }
 
 // Биндим нажатия на категории ядра
+// next creame component to select elementsa and return the selected value cores-versions-parent
 $(".new-server-container #core-category .item").on("click", function () {
     if (!$(this).hasClass("active")) {
         $(".new-server-container #core-category .item.active").removeClass("active");
