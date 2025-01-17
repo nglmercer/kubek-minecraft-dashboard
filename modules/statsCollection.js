@@ -58,19 +58,23 @@ export const collectStats = () => {
     let usersCount = usersConfig ? Object.keys(usersConfig).length : 0;
     let serversCount = serversConfig ? Object.keys(serversConfig).length : 0;
     let javasInstalled = getAllJavaInstalled();
-    
+    let cpuProps = {};
+
     let platformProps = {
         name: os.type(),
         release: os.release(),
         arch: process.arch,
         version: os.version(),
     };
-    
-    let cpuProps = {
-        model: cpuCommon[0].model,
-        speed: cpuCommon[0].speed,
-        cores: cpuCommon.length,
-    };
+    if (cpuCommon) {
+        cpuProps = {
+            model: cpuCommon[0].model,
+            speed: cpuCommon[0].speed,
+            cores: cpuCommon.length,
+        };
+    } else {
+        cpuProps = cpuCommon;
+    }
     
     return {
         platform: platformProps,
