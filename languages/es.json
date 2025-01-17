@@ -148,7 +148,7 @@
       "fromList": "Seleccionar de la lista",
       "uploadOwn": "Subir tu archivo",
       "finalSettings": "Configuración final",
-      "coreVersion": "Versión del kernel",
+      "coreVersion": "Versión del servidor",
       "javaVersion": "Versión de Java",
       "ramSelect": "Memoria dedicada",
       "serverPort": "Puerto del servidor",
