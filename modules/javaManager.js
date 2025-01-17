@@ -69,6 +69,10 @@ export const getJavaInfoByVersion = (javaVersion) => {
         platformArch = "x64";
     } else if (process.arch === "x32") {
         platformArch = "x86";
+    } else if (process.arch === "arm64") {
+        platformArch = "aarch64";
+    } else if (process.arch === "arm") {
+        platformArch = "arm";
     } else {
         return false;
     }
