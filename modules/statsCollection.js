@@ -1,26 +1,63 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-
 const packageJSON = require("./../package.json");
-
 import * as LOGGER from "./logger.js";
 import * as COMMONS from "./commons.js";
 import * as PREDEFINED from "./predefined.js";
 import pkg from 'node-machine-id';
-const machineIdSync = pkg.machineIdSync;
+const { machineIdSync } = pkg;
 import fs from "fs";
 import os from "os";
+
 let usersConfig = globalThis.usersConfig;
 let serversConfig = globalThis.serversConfig;
 let mainConfig = globalThis.mainConfig;
-console.log(mainConfig);
-export const getUniqueID = machineIdSync;// Собрать статистику о ПК
+
+// Función personalizada para obtener ID en Termux
+const getTermuxMachineId = () => {
+    try {
+        // Intentar usar Android ID si está disponible
+        const androidIdPath = '/data/data/com.termux/files/usr/tmp/android_id';
+        if (fs.existsSync(androidIdPath)) {
+            return fs.readFileSync(androidIdPath, 'utf8').trim();
+        }
+
+        // Fallback: Usar una combinación de información del sistema
+        const hostname = os.hostname();
+        const platform = os.platform();
+        const release = os.release();
+        const uniqueString = `${hostname}-${platform}-${release}`;
+        
+        // Crear un hash simple de la información
+        let hash = 0;
+        for (let i = 0; i < uniqueString.length; i++) {
+            const char = uniqueString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return Math.abs(hash).toString(16);
+    } catch (error) {
+        console.error('Error getting machine ID:', error);
+        return 'fallback-id-' + Date.now();
+    }
+};
+export const getUniqueID = () => {
+    try {
+        // Intentar usar machineIdSync primero
+        return machineIdSync();
+    } catch (error) {
+        // Si falla, usar la implementación personalizada para Termux
+        return getTermuxMachineId();
+    }
+};
+
+// El resto de tu código permanece igual
 export const collectStats = () => {
-    let uniqueID = getUniqueID(); // Remove 'this'
+    let uniqueID = getUniqueID();
     let cpuCommon = os.cpus();
     let usersCount = usersConfig ? Object.keys(usersConfig).length : 0;
     let serversCount = serversConfig ? Object.keys(serversConfig).length : 0;
-    let javasInstalled = getAllJavaInstalled(); // Remove 'this'
+    let javasInstalled = getAllJavaInstalled();
     
     let platformProps = {
         name: os.type(),
@@ -28,13 +65,13 @@ export const collectStats = () => {
         arch: process.arch,
         version: os.version(),
     };
-
+    
     let cpuProps = {
         model: cpuCommon[0].model,
         speed: cpuCommon[0].speed,
         cores: cpuCommon.length,
     };
-
+    
     return {
         platform: platformProps,
         totalRAM: Math.round(os.totalmem() / 1024 / 1024),
@@ -51,6 +88,7 @@ export const collectStats = () => {
         uptime: Math.round(process.uptime())
     };
 };
+
 
 // Получить все установленные версии Java
 export const getAllJavaInstalled = () => {
