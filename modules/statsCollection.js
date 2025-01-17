@@ -66,7 +66,7 @@ export const collectStats = () => {
         arch: process.arch,
         version: os.version(),
     };
-    if (cpuCommon) {
+    if (cpuCommon || cpuCommon.length > 0) {
         cpuProps = {
             model: cpuCommon[0].model,
             speed: cpuCommon[0].speed,
