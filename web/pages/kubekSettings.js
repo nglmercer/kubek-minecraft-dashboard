@@ -836,9 +836,12 @@ function setlangselector(langs = []) {
 }
 function selectedLanguage(value) {
   langSelector.selected = value;
+  localStorage.setItem("userlang", value);
 }
 function getLanguage() {
-  return langSelector.selected;
+  const selectedLang = langSelector.selected;
+  localStorage.setItem("userlang", selectedLang);
+  return selectedLang;
 }
 // Listen for language changes
 langSelector.addEventListener('language-change', (event) => {
