@@ -324,7 +324,12 @@ KubekSettingsUI = class {
 
     // Функция для обновления списка языков
     static refreshLanguagesList = (cb) => {
+        KubekRequests.get("/kubek/rawlanguages", (langs) => {
+          console.log("rawlanguages", langs);
+          localStorage.setItem("rawlanguages", JSON.stringify(langs));
+        });
         KubekRequests.get("/kubek/languages", (langs) => {
+          console.log("langs", langs);  
           setlangselector(langs);
             $("#language-list").html("");
             Object.values(langs).forEach(lang => {

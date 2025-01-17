@@ -63,5 +63,8 @@ router.get("/eula/accept", function (req, res) {
 router.get("/languages", function (req, res) {
     res.send(avaliableLanguages);
 });
+router.get("/rawlanguages", function (req, res) {
+    res.send(rawdatalanguages);
+});
 }
 export { router, initializeWebServer };

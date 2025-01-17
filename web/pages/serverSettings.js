@@ -48,6 +48,7 @@ KubekServerSettingsUI = class {
 
     // Удалить сервер с модалкой подтверждения
     static deleteServer = () => {
+      console.log("deleteServer", selectedServer);
         KubekNotifyModal.create(selectedServer, "{{serverSettings.deleteServer}}", "{{commons.delete}}", "delete", () => {
             KubekRequests.delete("/servers/" + selectedServer, () => {});
         }, KubekPredefined.MODAL_CANCEL_BTN);

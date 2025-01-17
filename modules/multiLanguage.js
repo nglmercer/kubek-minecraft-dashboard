@@ -8,7 +8,8 @@ const __dirname = path.dirname(__filename);
 
 // Available language codes
 globalThis.avaliableLanguages = {};
-
+globalThis.rawdatalanguages = [];
+const all_langs = [];
 // Load available languages
 export const loadAvailableLanguages = () => {
     const languagesPath = path.join(__dirname, "./../languages");
@@ -17,7 +18,8 @@ export const loadAvailableLanguages = () => {
         fs.readdirSync(languagesPath).forEach(file => {
             if (path.extname(file) === ".json") {
                 let langFile = JSON.parse(fs.readFileSync(path.join(languagesPath, file)).toString());
-                
+                rawdatalanguages = all_langs;
+                all_langs.push(langFile);
                 if (typeof langFile.info.code !== "undefined" && 
                     typeof langFile.info.id !== "undefined" && 
                     typeof langFile.info.displayNameEnglish !== "undefined") {

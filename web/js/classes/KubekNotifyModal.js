@@ -41,7 +41,7 @@ class KubekNotifyModal {
     }
 }
 // Definimos el template HTML base para el modal
-const template = document.createElement('template');
+/* const template = document.createElement('template');
 template.innerHTML = `
   <style>
     .notify-modal {
@@ -224,7 +224,7 @@ class NotifyModal extends HTMLElement {
 
 // Registrar el componente
 customElements.define('notify-modal', NotifyModal);
-
+ */
 // Ejemplo de uso:
 /*
 // Crear un modal simple
