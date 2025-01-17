@@ -2,8 +2,14 @@ import * as COMMONS from './commons.js';
 import * as PREDEFINED from './predefined.js';
 import path from "path";    
 import fs from "fs";            
-// Конвертировать версию игры в требуемую версию Java
-// DEPRECATED
+import { execSync } from 'child_process';
+
+// Detectar si estamos en Termux
+const isTermux = () => {
+    return process.platform === 'android' || fs.existsSync('/data/data/com.termux');
+};
+
+// Convertir versión del juego a versión Java requerida
 export const gameVersionToJava = (version) => {
     let sec = parseInt(version.split(".")[1]);
     let ter = parseInt(version.split(".")[2]);
@@ -26,8 +32,45 @@ export const gameVersionToJava = (version) => {
     }
 };
 
-// Получить список доступных на сервере версий Java
+// Instalar Java en Termux
+export const installJavaTermux = async (version) => {
+    try {
+        execSync(`pkg install -y openjdk-${version}`);
+        return true;
+    } catch (error) {
+        console.error('Error instalando Java en Termux:', error);
+        return false;
+    }
+};
+
+// Verificar si una versión específica de Java está instalada en Termux
+export const checkJavaVersionTermux = (version) => {
+    try {
+        const output = execSync('pkg list-installed | grep openjdk').toString();
+        return output.includes(`openjdk-${version}`);
+    } catch (error) {
+        return false;
+    }
+};
+
+// Obtener versiones de Java disponibles
 export const getDownloadableJavaVersions = (cb) => {
+    if (isTermux()) {
+        try {
+            // En Termux, buscamos las versiones disponibles en pkg
+            const output = execSync('pkg search "^openjdk-[0-9]+"').toString();
+            const versions = output.match(/openjdk-(\d+)/g)
+                .map(v => v.replace('openjdk-', ''))
+                .filter(v => parseInt(v) >= 8 && parseInt(v) <= 21);
+            cb(versions);
+        } catch (error) {
+            console.error('Error obteniendo versiones disponibles:', error);
+            cb(false);
+        }
+        return;
+    }
+
+    // Para otras plataformas
     COMMONS.getDataByURL(PREDEFINED.JAVA_LIST_URL, (data) => {
         if (data !== false) {
             let availReleases = data.available_releases;
@@ -41,16 +84,42 @@ export const getDownloadableJavaVersions = (cb) => {
     });
 };
 
-// Получить список доступных Kubek`у локальных версий Java
+// Obtener versiones locales de Java
 export const getLocalJavaVersions = () => {
+    if (isTermux()) {
+        try {
+            const output = execSync('pkg list-installed | grep openjdk').toString();
+            return output.match(/openjdk-(\d+)/g)
+                .map(v => v.replace('openjdk-', ''));
+        } catch (error) {
+            console.error('Error obteniendo versiones locales:', error);
+            return [];
+        }
+    }
+
+    // Para otras plataformas
     let startPath = "./binaries/java";
+    if (!fs.existsSync(startPath)) {
+        return [];
+    }
     let rdResult = fs.readdirSync(startPath);
     rdResult = rdResult.filter(entry => fs.lstatSync(startPath + path.sep + entry).isDirectory());
     return rdResult;
 };
 
-// Получить информацию о Java по версии
+// Obtener información de Java por versión
 export const getJavaInfoByVersion = (javaVersion) => {
+    if (isTermux()) {
+        return {
+            isTermux: true,
+            version: javaVersion,
+            packageName: `openjdk-${javaVersion}`,
+            installCmd: `pkg install openjdk-${javaVersion}`,
+            javaPath: `/data/data/com.termux/files/usr/bin/java`,
+            installed: checkJavaVersionTermux(javaVersion)
+        };
+    }
+
     let platformName = "";
     let fileExtension = "";
     let platformArch = "";
@@ -97,8 +166,25 @@ export const getJavaInfoByVersion = (javaVersion) => {
     }
 };
 
-// Получить путь к скачанной версии Java (возвращает false, если версия не существует)
+// Obtener ruta de Java
 export const getJavaPath = (javaVersion) => {
+    if (isTermux()) {
+        const termuxJavaPath = '/data/data/com.termux/files/usr/bin/java';
+        if (fs.existsSync(termuxJavaPath)) {
+            try {
+                // Verificar que la versión instalada coincide
+                const output = execSync(`${termuxJavaPath} -version 2>&1`).toString();
+                const installedVersion = output.match(/version "(\d+)/)[1];
+                if (installedVersion === javaVersion.toString()) {
+                    return termuxJavaPath;
+                }
+            } catch (error) {
+                console.error('Error verificando versión de Java:', error);
+            }
+        }
+        return false;
+    }
+
     let javaDirPath = "." + path.sep + "binaries" + path.sep + "java" + path.sep + javaVersion;
     let javaSearchPath1 = javaDirPath + path.sep + "bin" + path.sep + "java";
     if(process.platform === "win32"){
@@ -121,4 +207,30 @@ export const getJavaPath = (javaVersion) => {
         }
     }
     return false;
-}
+};
+
+// Verificar si Java está instalado y es funcional
+export const verifyJavaInstallation = async (version) => {
+    if (isTermux()) {
+        try {
+            const javaPath = getJavaPath(version);
+            if (!javaPath) return false;
+            
+            execSync(`${javaPath} -version`);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+    
+    // Para otras plataformas
+    const javaPath = getJavaPath(version);
+    if (!javaPath) return false;
+    
+    try {
+        execSync(`"${javaPath}" -version`);
+        return true;
+    } catch (error) {
+        return false;
+    }
+};

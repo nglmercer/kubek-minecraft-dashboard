@@ -139,14 +139,49 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
         }
     }
 }
+const isTermux = () => {
+    return process.platform === 'android' || fs.existsSync('/data/data/com.termux');
+};
+
+// Escribir archivos de inicio para servidor Java
 export const writeJavaStartFiles = (serverName, coreFileName, startParameters, javaExecutablePath, serverPort) => {
     let fullStartParameters = "-Dfile.encoding=UTF-8 " + startParameters + " -jar " + coreFileName + " nogui";
     let fullJavaExecutablePath = path.resolve(javaExecutablePath);
-    fs.writeFileSync("./servers/" + serverName + "/eula.txt", "eula=true");
-    if (process.platform === "win32") {
-        fs.writeFileSync("./servers/" + serverName + "/start.bat", "@echo off\nchcp 65001>nul\ncd servers\ncd " + serverName + "\n" + '"' + fullJavaExecutablePath + '"' + " " + fullStartParameters);
+    
+    // Asegurar que el directorio existe
+    const serverDir = path.join("./servers", serverName);
+    if (!fs.existsSync(serverDir)){
+        fs.mkdirSync(serverDir, { recursive: true });
+    }
+
+    // Escribir EULA
+    fs.writeFileSync(path.join(serverDir, "eula.txt"), "eula=true");
+
+    // Escribir archivo de inicio según la plataforma
+    if (isTermux()) {
+        // Script de inicio para Termux
+        const startScript = `#!/data/data/com.termux/files/usr/bin/bash
+        cd "$(dirname "$0")"
+        export LD_LIBRARY_PATH=/data/data/com.termux/files/usr/lib
+        "${fullJavaExecutablePath}" ${fullStartParameters}`;
+        
+        fs.writeFileSync(path.join(serverDir, "start.sh"), startScript);
+        // Hacer ejecutable el script
+        fs.chmodSync(path.join(serverDir, "start.sh"), '755');
+    } else if (process.platform === "win32") {
+        // Windows
+        fs.writeFileSync(
+            path.join(serverDir, "start.bat"),
+            `@echo off\nchcp 65001>nul\ncd servers\ncd ${serverName}\n"${fullJavaExecutablePath}" ${fullStartParameters}`
+        );
     } else if (process.platform === "linux") {
-        fs.writeFileSync("./servers/" + serverName + "/start.sh", "cd servers\ncd " + serverName + "\n" + '"' + fullJavaExecutablePath + '"' + " " + fullStartParameters);
+        // Linux
+        fs.writeFileSync(
+            path.join(serverDir, "start.sh"),
+            `cd servers\ncd ${serverName}\n"${fullJavaExecutablePath}" ${fullStartParameters}`
+        );
+        // Hacer ejecutable el script
+        fs.chmodSync(path.join(serverDir, "start.sh"), '755');
     }
     fs.writeFileSync(
         "./servers/" + serverName + "/server.properties",
@@ -161,12 +196,39 @@ export const writeJavaStartFiles = (serverName, coreFileName, startParameters, j
     return true;
 };
 export const writeBedrockStartFiles = (serverName) => {
-    fs.writeFileSync("./servers/" + serverName + "/eula.txt", "eula=true");
-    if (process.platform === "win32") {
-        fs.writeFileSync("./servers/" + serverName + "/start.bat", "pushd %~dp0\nbedrock_server.exe\npopd");
-    } else if (process.platform === "linux") {
-        fs.writeFileSync("./servers/" + serverName + "/start.sh", "LD_LIBRARY_PATH=. ./bedrock_server");
+    const serverDir = path.join("./servers", serverName);
+    
+    // Asegurar que el directorio existe
+    if (!fs.existsSync(serverDir)){
+        fs.mkdirSync(serverDir, { recursive: true });
     }
+
+    // Escribir EULA
+    fs.writeFileSync(path.join(serverDir, "eula.txt"), "eula=true");
+
+    if (isTermux()) {
+        // Script de inicio para Termux
+        const startScript = `#!/data/data/com.termux/files/usr/bin/bash
+            cd "$(dirname "$0")"
+            export LD_LIBRARY_PATH=.
+            ./bedrock_server`;
+        
+        fs.writeFileSync(path.join(serverDir, "start.sh"), startScript);
+        // Hacer ejecutable el script
+        fs.chmodSync(path.join(serverDir, "start.sh"), '755');
+    } else if (process.platform === "win32") {
+        fs.writeFileSync(
+            path.join(serverDir, "start.bat"),
+            "pushd %~dp0\nbedrock_server.exe\npopd"
+        );
+    } else if (process.platform === "linux") {
+        fs.writeFileSync(
+            path.join(serverDir, "start.sh"),
+            "LD_LIBRARY_PATH=. ./bedrock_server"
+        );
+        // Hacer ejecutable el script
+        fs.chmodSync(path.join(serverDir, "start.sh"), '755');
+    }
+
     return true;
 };
-
