@@ -90,3 +90,36 @@ input atribute:
 - readonly: readonly
 custom elements:
 - textarea and split lines with \n (for multiline) return array
+
+
+## Use termux (Android)
+
+1. Install termux
+	- https://f-droid.org/en/packages/com.termux/
+	- https://github.com/termux/termux-app
+2. Install Packages
+	- pkg install nodejs
+	- pkg install git
+	- pkg install nodejs-npm
+4. clone repository
+	- git clone https://github.com/nglmercer/kubek-minecraft-dashboard
+	- cd kubek-minecraft-dashboard
+	- npm install
+	- npm run start
+### Optional
+5. install code-server
+	- pkg install code-server
+	- code-server --auth none --port 8080 &
+
+### install termux shell
+```
+pkg update
+pkg upgrade
+pkg install git
+pkg install nodejs
+pkg install code-server
+git clone https://github.com/nglmercer/kubek-minecraft-dashboard
+cd kubek-minecraft-dashboard
+npm install
+npm run start
+```
