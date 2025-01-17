@@ -19,6 +19,7 @@
         <div class="circle green"></div>
         <span class="text">Запущен</span>
     </div>
+    <status-element status="STOPPED"></status-element>
     <div class="actions">
         <button class="dark-btn icon-only hide-on-change" id="server-start-btn"
                 onclick="KubekServers.startServer(selectedServer)">
@@ -34,12 +35,13 @@
                 onclick="KubekServers.restartServer(selectedServer)">
             <span class="material-symbols-rounded"> restart_alt </span>
         </button>
-        <button class="dark-btn icon-only" id="server-more-btn" onclick="KubekServerHeaderUI.generateDropdown(this)">
+        <button class="dark-btn icon-only" id="server-more-btn">
             <span class="material-symbols-rounded"> more_horiz </span>
         </button>
     </div>
 </div>
-
+<custom-popup class="material-symbols-rounded">
+  </custom-popup>
 <style>
     .main-layout .content-header {
         grid-area: content-header;
@@ -158,4 +160,6 @@
             }, formData);
         });
     }
+
+    //popup.show();
 </script>

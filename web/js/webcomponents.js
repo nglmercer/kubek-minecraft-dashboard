@@ -1070,3 +1070,417 @@ class CustomDialog extends HTMLElement {
 
 // Registrar el componente
 customElements.define('system-monitor', SystemMonitor);
+if (!customElements.get('kubek-plugins-ui')) {
+    class KubekPluginsUIclass extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this._elementList = [];
+        this.render();
+        this.setupEventListeners();
+        this.type = "plugins";
+      }
+    
+      addElement(element) {
+        // Verificar si el elemento ya existe
+        if (!this._elementList.includes(element)) {
+          this._elementList.push(element);
+          this.renderAllLists(this.type);
+          return true; // Elemento añadido exitosamente
+        }
+        return false; // Elemento ya existe
+      }
+    
+      // Nuevo método para eliminar un elemento específico
+      removeElement(element) {
+        const index = this._elementList.indexOf(element);
+        if (index !== -1) {
+          this._elementList.splice(index, 1);
+          this.renderAllLists(this.type);
+          return true; // Elemento eliminado exitosamente
+        }
+        return false; // Elemento no encontrado
+      }
+    
+      get elements() {
+        return this._elementList;
+      }
+    
+      set elements(list) {
+        this._elementList = list;
+        this.renderList('elements-list', list, this.type);
+      }
+      connectedCallback() {
+        this.renderAllLists();
+      }
+    
+      render() {
+        this.shadowRoot.innerHTML = `
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+          <style>
+    
+          :host {
+          }
+            button {
+            appearance: none;
+            outline: none;
+            border: 0;
+            padding: 12px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            display: flex
+        ;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            font-size: 14pt;
+            cursor: pointer;
+          }
+                button:hover {
+            background: var(--bg-dark-accent-light);
+          }
+            .item {
+              background: #222c3a;
+              display: flex;
+              align-items: center;
+              padding-block: 1rem;
+              padding-inline: 6px;
+              justify-content: space-between;
+              width: 100%;
+              border-radius: 10px;
+            }
+            .switch {
+              position: relative;
+              display: inline-block;
+              width: 60px;
+              height: 28px;
+            }
+            .switch input {
+              opacity: 0;
+              width: 0;
+              height: 0;
+            }
+            .slider {
+              position: absolute;
+              cursor: pointer;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background-color: #e0e0e0;
+              transition: .3s;
+              border-radius: 34px;
+            }
+            .slider:before {
+              position: absolute;
+              content: "";
+              height: 20px;
+              width: 20px;
+              left: 4px;
+              bottom: 4px;
+              background-color: white;
+              transition: .3s;
+              border-radius: 50%;
+            }
+            input:checked + .slider {
+              background-color: #2196F3;
+            }
+            input:checked + .slider:before {
+              transform: translateX(32px);
+            }
+            .dark-btn {
+              background-color:transparent;
+              color: white;
+              border: none;
+              padding: 5px 10px;
+              cursor: pointer;
+            }
+              #elements-list {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                gap: 10px;
+                }
+          </style>
+          <div id="elements-list"></div>
+        `;
+      }
+    
+      setupEventListeners() {
+        this.shadowRoot.addEventListener('change', this.handleToggle.bind(this));
+        this.shadowRoot.addEventListener('click', this.handleDelete.bind(this));
+      }
+    
+      createItemHTML(item, itemType) {
+        const isEnabled = !item.endsWith('.dis');
+        const displayName = item.replace('.jar', '').replace('.dis', '');
+        console.log(displayName);
+        return `
+          <div class="item">
+            <div class="item-container">
+                    <label class="switch">
+              <input 
+                type="checkbox" 
+                ${isEnabled ? 'checked' : ''} 
+                data-item="${item}" 
+                data-type="${itemType}"
+              >
+              <span class="slider round"></span>
+            </label>
+            <span class="filename">${displayName}</span>
+            </div>
+            <button 
+              class="dark-btn icon-only" 
+              data-item="${item}" 
+              data-type="${itemType}"
+            >
+              <span class="material-symbols-outlined">
+            delete
+            </span>
+            </button>
+          </div>
+        `;
+      }
+    
+      renderList(containerId, items, type) {
+        const container = this.shadowRoot.getElementById(containerId);
+        const html = items.map(item => this.createItemHTML(item, type)).join('');
+        container.innerHTML = html;
+      }
+    
+      handleToggle(event) {
+        if (!event.target.matches('input[type="checkbox"]')) return;
+    
+        const target = event.target;
+        const item = target.dataset.item;
+        const type = target.dataset.type;
+        const isEnabled = target.checked;
+        
+        const newName = isEnabled ? 
+          item.replace('.dis', '') : 
+          `${item}${item.endsWith('.dis') ? '' : '.dis'}`;
+    
+        this.emitEvent('toggle', { item, type, newName });
+      }
+    
+      handleDelete(event) {
+        const button = event.target.closest('button.dark-btn');
+        if (!button) return;
+        
+        this.emitEvent('delete', {
+          item: button.dataset.item,
+          type: button.dataset.type
+        });
+      }
+    
+      emitEvent(eventName, detail) {
+        this.dispatchEvent(new CustomEvent(eventName, {
+          detail,
+          bubbles: true,
+          composed: true
+        }));
+      }
+    
+      renderAllLists(type = "plugins") {
+        this.renderList('elements-list', this.elements, type);
+        this.setType(type);
+      }
+    
+      setElementList(list) {
+        this.elements = list;
+      }
+      setType(type){
+        this.type = type;
+      }
+      
+    }
+    customElements.define('kubek-plugins-ui', KubekPluginsUIclass);
+    }
+class CustomPopup extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open', delegatesFocus: true });
+        this.container = document.createElement('div');
+        this.lastFocusedElement = null;
+        this.container.style.cssText = `
+        position: fixed;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        background-color: rgba(1,1,1,0.5);
+        display: none;
+        z-index: 1000;
+        color-scheme: light dark;
+        font-family: inherit;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        `;
+    
+        const style = document.createElement('style');
+        style.textContent = `
+        .material-symbols-rounded {
+            font-family: inherit;
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .default-font {
+            font-family: Arial, sans-serif;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        `;
+    
+        this.shadowRoot.appendChild(style);
+        this.shadowRoot.appendChild(this.container);
+    
+        // Agregar manejador de clics fuera del popup
+        this.handleClickOutside = this.handleClickOutside.bind(this);
+    }
+    
+    connectedCallback() {
+        const content = Array.from(this.childNodes);
+        content.forEach(node => this.container.appendChild(node.cloneNode(true)));
+    }
+    
+    handleClickOutside(event) {
+        // Verificar si el clic fue fuera del popup
+        const path = event.composedPath();
+            if (!path.includes(this.container) && !path.includes(this.lastFocusedElement)) {
+            this.hide();
+            }
+    }
+    
+    show(x, y) {
+        this.container.style.display = 'flex';
+        if (x !== undefined && y !== undefined) {
+        this.moveTo(x, y);
+        }
+        // Agregar el event listener cuando se muestra el popup
+        document.addEventListener('click', this.handleClickOutside);
+    }
+    
+    hide() {
+        this.container.style.display = 'none';
+        // Remover el event listener cuando se oculta el popup
+        document.removeEventListener('click', this.handleClickOutside);
+    }
+    
+    moveTo(x, y) {
+        const rect = this.container.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+    
+        if (x + rect.width > viewportWidth) {
+        x = viewportWidth - rect.width - 10;
+        }
+        if (y + rect.height > viewportHeight) {
+        y = viewportHeight - rect.height - 10;
+        }
+        this.container.style.left = `${Math.max(0, x)}px`;
+        this.container.style.top = `${Math.max(0, y)}px`;
+    }
+    
+    addButton(html, callback) {
+        const button = document.createElement('div');
+        button.innerHTML = html;
+        button.style.cssText = `
+        cursor: pointer;
+        `;
+        button.addEventListener('click', callback);
+        this.container.appendChild(button);
+        return button;
+    }
+    
+    showAtElement(element) {
+        const rect = element.getBoundingClientRect();
+        this.show(rect.left, rect.bottom);
+        this.lastFocusedElement = element;
+    }
+    
+    disconnectedCallback() {
+        // Limpiar el event listener cuando el componente es removido
+        document.removeEventListener('click', this.handleClickOutside);
+    }
+}
+
+customElements.define('custom-popup', CustomPopup);
+class StatusElement extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: inline-block;
+                    padding: 5px 10px;
+                    border-radius: 5px;
+                    color: white;
+                    font-family: Arial, sans-serif;
+                }
+                .status {
+                    display: grid;
+                    grid-template-columns: 10px 1fr;
+                    align-items: center;
+                    gap: 5px;
+                }
+                .status-circle {
+                    display: inline-block;
+                    min-width: 10px;
+                    min-height: 10px;
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    margin-right: 5px;
+                }
+                .status-text {
+                    display: inline-block;
+                }
+            </style>
+            <div class="status">
+                <span class="status-circle"></span>
+                <span class="status-text"></span>
+            </div>
+        `;
+        this.statusCircle = this.shadowRoot.querySelector('.status-circle');
+        this.statusText = this.shadowRoot.querySelector('.status-text');
+    }
+
+    static get observedAttributes() {
+        return ['status'];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'status') {
+            this.updateStatus(newValue);
+        }
+    }
+
+    updateStatus(status,statusString) {
+        const statusText = status || 'Unknown';
+        this.statusText.textContent = statusString || statusText;
+
+        // Cambiar el color según el estado
+        this.statusCircle.style.backgroundColor = this.getStatusColor(status);
+    }
+
+    getStatusColor(status) {
+        switch (status) {
+            case "STOPPING":
+            case "STARTING":
+            case "stopping":
+            case "starting":
+                return 'yellow';
+            case "RUNNING":
+            case "running":
+                return 'green';
+            case "STOPPED":
+            case "stopped":
+                return 'red';
+            default:
+                return 'gray';
+        }
+    }
+}
+
+customElements.define('status-element', StatusElement);
