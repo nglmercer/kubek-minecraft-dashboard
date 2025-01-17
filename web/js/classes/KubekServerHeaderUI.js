@@ -7,16 +7,24 @@ class KubekServerHeaderUI {
     }
 
     // Загрузить сервер в хидер по названию
-    static loadServerByName = (server, cb = () => {
-    }) => {
+    static loadServerByName(server, cb = () => {}) {
         KubekServers.getServerInfo(server, (data) => {
             if (data.status !== false) {
-                $(".content-header > .caption").text(server);
+                // Actualizar el título del servidor
+                const captionElement = document.querySelector('.content-header > .caption');
+                if (captionElement) {
+                    captionElement.textContent = server;
+                }
+
+                // Actualizar el estado del servidor
                 this.setServerStatus(data.status);
-                $(".content-header .icon-bg img").attr(
-                    "src",
-                    "/api/servers/" + server + "/icon?" + Date.now()
-                );
+
+                // Actualizar la imagen del ícono del servidor
+                const iconElement = document.querySelector('.content-header .icon-bg img');
+                if (iconElement) {
+                    iconElement.src = `/api/servers/${server}/icon?${Date.now()}`;
+                }
+
                 cb(true);
             } else {
                 cb(false);
@@ -30,24 +38,19 @@ class KubekServerHeaderUI {
         if (typeof KubekPredefined.SERVER_STATUSES_TRANSLATE[status] !== "undefined") {
             currentServerStatus = status;
             console.log("status", status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-            $(".content-header .status .text").text(KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-            $(".content-header .status .circle").removeClass("red yellow green");
             $(".content-header .hide-on-change").hide();
             $(".content-header #server-more-btn").hide();
             if (status === KubekPredefined.SERVER_STATUSES.STARTING || status === KubekPredefined.SERVER_STATUSES.STOPPING) {
-                $(".content-header .status .circle").addClass("yellow");
-                $(".content-header #server-more-btn").show();
                 statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+                $(".content-header #server-more-btn").show();
             } else if (status === KubekPredefined.SERVER_STATUSES.RUNNING) {
-                $(".content-header .status .circle").addClass("green");
+                statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
                 $(".content-header #server-restart-btn").show();
                 $(".content-header #server-stop-btn").show();
                 $(".content-header #server-more-btn").show();
-                statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-                console.log("status", status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
             } else if (status === KubekPredefined.SERVER_STATUSES.STOPPED) {
-                $(".content-header .status .circle").addClass("red");
                 $(".content-header #server-start-btn").show();
+
                 statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
             }
         } else {

@@ -123,3 +123,52 @@ cd kubek-minecraft-dashboard
 npm install
 npm run start
 ```
+
+## spanish description
+	# projecto opensource para crear y hostear servidores de miencraft funciona en windows, linux, android (usando termux) 
+	este proyecto se encarga de facilitar la creación de servidores de miencraft en cualquier sistema operativo usando js, tambien puedes usar docker , y también permite la gestión de los servidores en la interfaz web.
+	este es un fork creado para corregir errores y actualizar las apis que no funcionaban, 
+	- tambien puede hostearlo en github codespaces y project idx
+	- en proceso de migracion del frontend a webcomponents y tecnologias modernas
+	- en proceso de implementacion de mas herramientas para la gestion como un gestor de plugins y mods
+	- puede aportar al proyecto en o darme su feedback, estare completamente abierto a cualquier tipo de contribucion
+	https://github.com/nglmercer/kubek-minecraft-dashboard
+
+
+## next updates
+![temporalimage](image.png)
+### action buttons:
+- start server
+- stop server
+- restart server
+- more options : force stop
+### mediaquery for mobile
+- only show icons
+- delegatesFocus: true 
+- user inherit font (font-family: inherit)=> material-symbols
+### hide icons when status changes
+    static setServerStatus = (status) => {
+        const statusElement = document.querySelector('status-element');
+        if (typeof TRANSLATE[status] !== "undefined") {
+            currentServerStatus = status;
+            console.log("status", status, TRANSLATE[status]);
+            $(".content-header .hide-on-change").hide();
+            $(".content-header #server-more-btn").hide();
+            if (status === STARTING || status === STOPPING) {
+                statusElement.updateStatus(status, TRANSLATE[status]);
+                $(".content-header #server-more-btn").show();
+            } else if (status === RUNNING) {
+                statusElement.updateStatus(status, TRANSLATE[status]);
+                $(".content-header #server-restart-btn").show();
+                $(".content-header #server-stop-btn").show();
+                $(".content-header #server-more-btn").show();
+            } else if (status === STOPPED) {
+                $(".content-header #server-start-btn").show();
+
+                statusElement.updateStatus(status, TRANSLATE[status]);
+            }
+        } else {
+            return false;
+        }
+        return true;
+    }
