@@ -66,11 +66,11 @@ export const collectStats = () => {
         arch: process.arch,
         version: os.version(),
     };
-    if (cpuCommon || cpuCommon.length > 0) {
+    if (cpuCommon && cpuCommon.length > 0) {
         cpuProps = {
-            model: cpuCommon[0].model,
-            speed: cpuCommon[0].speed,
-            cores: cpuCommon.length,
+            model: cpuCommon[0]?.model,
+            speed: cpuCommon[0]?.speed,
+            cores: cpuCommon?.length,
         };
     } else {
         cpuProps = cpuCommon;
