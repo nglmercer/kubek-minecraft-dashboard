@@ -25,9 +25,22 @@ router.get("/hardware/summary", function (req, res) {
     })
 });
 
-// Endpoint для получения версии Kubek
+// Primero, verifica el objeto packageJSON completo
 router.get("/version", function (req, res) {
-    res.send(packageJSON.version);
+    console.log('packageJSON completo:', packageJSON);
+    console.log('Tipo de packageJSON:', typeof packageJSON);
+    console.log('Version:', packageJSON.version);
+    console.log('Tipo de version:', typeof packageJSON.version);
+    
+    if (!packageJSON.version) {
+        res.status(500).json({
+            error: 'Version no disponible',
+            packageJSON: packageJSON
+        });
+        return;
+    }
+    
+    res.json({ version: packageJSON.version });
 });
 
 // Endpoint для получения настроек Kubek

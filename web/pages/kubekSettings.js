@@ -46,8 +46,9 @@ $(function () {
     });
 
     // Загружаем версию Kubek
-    KubekRequests.get("/kubek/version", (version) => {
-        $("#kubek-version").text(version)
+    KubekRequests.get("/kubek/version", (data) => {
+        document.querySelector('#kubek-version').innerHTML = data.version;
+        console.log("version", data);
     });
 });
 
