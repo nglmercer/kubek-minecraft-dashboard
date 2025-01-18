@@ -23,63 +23,106 @@
         placeholder="correo electronico"
         >
         </custom-input>
-        <div class="permisos-container">
-            <custom-input
-            type="switch"
-            id="file_manager"
-            name="file_manager"
-            value="false"
-            ></custom-input>
-            <custom-input
-            type="switch"
-            id="manage_servers"
-            name="manage_servers"
-            value="false"
-            ></custom-input>
-            <custom-input
-            type="switch"
-            id="making_servers"
-            name="making_servers"
-            value="false"
-            ></custom-input>
-            <custom-input
-            type="switch"
-            id="monitor_servers"
-            name="monitor_servers"
-            value="false"
-            ></custom-input>
-            <custom-input
-            type="switch"
-            id="manage_java"
-            name="manage_java"
-            value="false"
-            ></custom-input>
-            <custom-input
-            type="switch"
-            id="manage_plugins"
-            name="manage_plugins"
-            value="false"
-            ></custom-input>
-            <custom-input
-            type="switch"
-            id="system_monitoring"
-            name="system_monitoring"
-            value="false"
-            ></custom-input>
-            <custom-input
-            type="switch"
-            id="kubek_settings"
-            name="kubek_settings"
-            value="false"
-            ></custom-input>
-            <custom-input
-            type="switch"
-            id="accounts"
-            name="accounts"
-            value="false"
-            ></custom-input>
+        <!-- Uso básico -->
+    <dropdown-component >
+    <div class="row">
+      <div class="item">Elemento 1</div>
+      <div class="item">Elemento 2</div>
+    </div>
+    <div class="row">
+      <div class="item">Elemento 3</div>
+      <div class="item">Elemento 4</div>
+    </div>
+  </dropdown-component>
+  
+  <!-- Con texto personalizado para el botón -->
+  <dropdown-component button-text="Ver Más">
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="file_manager"
+        name="file_manager"
+        value="false"
+        ></custom-input>
+        <span class="item">${file_manager}</span>
 
-        </div>
+    </div>
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="manage_servers"
+        name="manage_servers"
+        value="false"
+        ></custom-input>
+        <span class="item">${manage_servers}</span>
+    </div>
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="making_servers"
+        name="making_servers"
+        value="false"
+        ></custom-input>
+        <span class="item">${making_servers}</span>
+    </div>
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="monitor_servers"
+        name="monitor_servers"
+        value="false"
+        ></custom-input>
+        <span class="item">${monitor_servers}</span>
+    </div>
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="manage_java"
+        name="manage_java"
+        value="false"
+        ></custom-input>
+        <span class="item">${manage_java}</span>
+    </div>
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="manage_plugins"
+        name="manage_plugins"
+        value="false"
+        ></custom-input>
+        <span class="item">${manage_plugins}</span>
+    </div>
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="system_monitoring"
+        name="system_monitoring"
+        value="false"
+        ></custom-input>
+        <span class="item">${system_monitoring}</span>
+    </div>
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="kubek_settings"
+        name="kubek_settings"
+        value="false"
+        ></custom-input>
+        <span class="item">${kubek_settings}</span>
+    </div>
+    <div class="row">
+        <custom-input
+        type="switch"
+        id="accounts"
+        name="accounts"
+        value="false"
+        ></custom-input>
+        <span class="item">${accounts}</span>
+    </div>
+
+    </div>
+  </dropdown-component>
+
         <custom-input
         type="password"
         id="password-input"
@@ -87,7 +130,8 @@
         placeholder="coloque aqui la contraseña"
         >
         </custom-input>
-        <custom-dialog 
+        <custom-dialog
+        style="border: 0px solid red;"
         title="nombre del servidor" 
         description="desea borrar este servidor"
         theme="dark">

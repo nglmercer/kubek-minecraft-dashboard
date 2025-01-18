@@ -1,7 +1,7 @@
 class CustomDialog extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: 'open' });
+      this.attachShadow({ mode: 'open', delegatesFocus: true });
       
       // Initialize properties
       this._title = '';
@@ -48,24 +48,25 @@ class CustomDialog extends HTMLElement {
         :host {
           display: block;
           font-family: system-ui, -apple-system, sans-serif;
+          background-color: inherit;
+          color: inherit;
         }
   
         .container {
           padding: 1.5rem;
           border-radius: 8px;
           transition: all 0.3s ease;
+          border: inherit;
         }
   
         .container.light {
-          background-color: #ffffff;
           color: #1a1a1a;
-          border: 1px solid #e5e5e5;
+          border-color: #e5e5e5;
         }
   
         .container.dark {
-          background-color: #1a1a1a;
           color: #ffffff;
-          border: 1px solid #333333;
+          border-color: #333333;
         }
   
         .title {
@@ -304,14 +305,14 @@ class CustomDialog extends HTMLElement {
               return `
                 :host {
                   display: block;
-                  margin: 10px 0;
+                  margin: 5px 0;
                   color-scheme: light dark;
                 }
                 
                 .input-container {
                   display: flex;
                   flex-direction: column;
-                  padding: 8px;
+                  padding: 5px;
                 }
                 
                 input, textarea {
@@ -689,14 +690,14 @@ class CustomDialog extends HTMLElement {
             return `
               :host {
                 display: block;
-                margin: 10px 0;
+                margin: 5px 0;
                 color-scheme: light dark;
               }
               
               .input-container {
                 display: flex;
                 flex-direction: column;
-                padding: 8px;
+                padding: 5px;
               }
               
               input, textarea, select {
@@ -1869,3 +1870,175 @@ class StatusElement extends HTMLElement {
 }
 
 customElements.define('status-element', StatusElement);
+class DropdownComponent extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open', delegatesFocus: true });
+    
+    // Initial render
+    this.render();
+    this.isHidden = false;
+    // Bind methods
+    this.toggleDropdown = this.toggleDropdown.bind(this);
+  }
+  
+  static get observedAttributes() {
+    return ['button-text', "hidden-button"];
+  }
+  
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'button-text') {
+      this.render();
+    } else if (name === 'hidden-button') {
+      const button = this.shadowRoot.querySelector('button');
+      if (newValue !== null) {
+        button.style.display = 'none';
+      } else {
+        button.style.display = 'block';
+      }
+    }
+  }
+  
+  toggleDropdown() {
+    const content = this.shadowRoot.querySelector('.dropdown-content');
+    content.classList.toggle('active');
+    if (content.classList.contains('active')) {
+      this.isHidden = false;
+      this.shadowRoot.querySelector('button').textContent = 'Ocultar';
+    } else {
+      this.isHidden = true;
+      this.shadowRoot.querySelector('button').textContent = 'Mostrar';
+    }
+  }
+  
+  render() {
+    const buttonText = this.getAttribute('button-text');
+    this.shadowRoot.innerHTML = `
+      <style>
+        .dropdown {
+          margin-bottom: 20px;
+        }
+        
+        .dropdown-content {
+          display: none;
+          padding: 6px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+        }
+        
+        .dropdown-content.active {
+          display: block;
+        }
+        
+        button {
+          padding: 10px 20px;
+          background-color: #4CAF50;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        
+        button:hover {
+          background-color: #45a049;
+        }
+        
+        ::slotted(.row) {
+          display: flex;
+          gap: 5px;
+          align-items: center;
+        }
+        
+        ::slotted(.item) {
+          flex: 1;
+          background-color: #f5f5f5;
+          border-radius: 4px;
+        }
+      </style>
+      
+      <div class="dropdown">
+      ${buttonText ? `<button>${buttonText}</button>` : ''}
+        <div class="dropdown-content">
+          <slot></slot>
+        </div>
+      </div>
+    `;
+    
+    // Add event listener to button
+    if (buttonText) {
+      this.shadowRoot.querySelector('button').addEventListener('click', this.toggleDropdown);
+    }
+  }
+  
+  disconnectedCallback() {
+    // Clean up event listeners when element is removed
+    this.shadowRoot.querySelector('button').removeEventListener('click', this.toggleDropdown);
+  }
+}
+
+// Register the custom element
+customElements.define('dropdown-component', DropdownComponent);
+class TranslationSpan extends HTMLElement {
+  constructor() {
+    super();
+    
+    // Crear shadow DOM
+    this.attachShadow({ mode: 'open' });
+    
+    // Crear el elemento span base
+    this.span = document.createElement('span');
+    this.shadowRoot.appendChild(this.span);
+    
+    // Almacenar las traducciones
+    this.translations = new Map();
+    this.currentLang = 'es'; // idioma por defecto
+  }
+  
+  // Método para establecer las traducciones
+  setTranslations(translations) {
+    if (Array.isArray(translations)) {
+      translations.forEach(trans => {
+        if (trans.lang && trans.text) {
+          this.translations.set(trans.lang, trans.text);
+        }
+      });
+    } else if (typeof translations === 'object') {
+      Object.entries(translations).forEach(([lang, text]) => {
+        this.translations.set(lang, text);
+      });
+    }
+    
+    // Actualizar el texto con el idioma actual
+    this.translate(this.currentLang);
+  }
+  
+  // Método para traducir al idioma especificado
+  translate(lang) {
+    if (this.translations.has(lang)) {
+      this.currentLang = lang;
+      this.span.textContent = this.translations.get(lang);
+    }
+  }
+  
+  // Obtener el texto actual
+  getCurrentText() {
+    return this.span.textContent;
+  }
+  
+  // Obtener el idioma actual
+  getCurrentLang() {
+    return this.currentLang;
+  }
+  
+  // Observar cambios en los atributos
+  static get observedAttributes() {
+    return ['lang'];
+  }
+  
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'lang' && oldValue !== newValue) {
+      this.translate(newValue);
+    }
+  }
+}
+customElements.define('translation-span', TranslationSpan);
