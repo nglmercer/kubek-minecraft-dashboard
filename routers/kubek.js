@@ -27,10 +27,10 @@ router.get("/hardware/summary", function (req, res) {
 
 // Primero, verifica el objeto packageJSON completo
 router.get("/version", function (req, res) {
-    console.log('packageJSON completo:', packageJSON);
+/*     console.log('packageJSON completo:', packageJSON);
     console.log('Tipo de packageJSON:', typeof packageJSON);
     console.log('Version:', packageJSON.version);
-    console.log('Tipo de version:', typeof packageJSON.version);
+    console.log('Tipo de version:', typeof packageJSON.version); */
     
     if (!packageJSON.version) {
         res.status(500).json({

@@ -47,6 +47,7 @@ class KubekRefresher {
             //console.log("consoleTextElem", consoleTextElem, typeof consoleTextElem);
             KubekServers.getServerLog(selectedServer, (data) => {
                 console.log("getServerLog", selectedServer, {data});
+                if (!data) return;
                 consoleTextElem.refreshConsoleLog(data.serverLog);
             });
         }
