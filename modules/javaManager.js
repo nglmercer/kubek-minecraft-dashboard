@@ -35,10 +35,14 @@ export const gameVersionToJava = (version) => {
 // Instalar Java en Termux
 export const installJavaTermux = async (version) => {
     try {
+        // Update package lists first
+        execSync('pkg update -y');
+        // Then install Java
         execSync(`pkg install -y openjdk-${version}`);
-        return true;
+        // Verify installation
+        return await verifyJavaInstallation(version);
     } catch (error) {
-        console.error('Error instalando Java en Termux:', error);
+        console.error('Error installing Java in Termux:', error.message);
         return false;
     }
 };
@@ -46,7 +50,9 @@ export const installJavaTermux = async (version) => {
 // Verificar si una versión específica de Java está instalada en Termux
 export const checkJavaVersionTermux = (version) => {
     try {
-        const output = execSync('pkg list-installed | grep openjdk').toString();
+        // Update package database first
+        execSync('pkg update -y');
+        const output = execSync('dpkg -l | grep openjdk').toString();
         return output.includes(`openjdk-${version}`);
     } catch (error) {
         return false;
@@ -88,16 +94,26 @@ export const getDownloadableJavaVersions = (cb) => {
 export const getLocalJavaVersions = () => {
     if (isTermux()) {
         try {
-            const output = execSync('pkg list-installed | grep openjdk').toString();
+            // Try using dpkg instead of pkg list-installed
+            const output = execSync('dpkg -l | grep openjdk').toString();
             return output.match(/openjdk-(\d+)/g)
-                .map(v => v.replace('openjdk-', ''));
+                ?.map(v => v.replace('openjdk-', '')) || [];
         } catch (error) {
-            console.error('Error obteniendo versiones locales:', error);
-            return [];
+            // If the command fails, check if any Java is installed using which
+            try {
+                execSync('which java');
+                // If java exists, try to get its version
+                const versionOutput = execSync('java -version 2>&1').toString();
+                const version = versionOutput.match(/version "(\d+)/);
+                return version ? [version[1]] : [];
+            } catch {
+                console.log('No Java installation found');
+                return [];
+            }
         }
     }
 
-    // Para otras plataformas
+    // Rest of the code for non-Termux platforms...
     let startPath = "./binaries/java";
     if (!fs.existsSync(startPath)) {
         return [];

@@ -56,7 +56,9 @@ router.get("/:server/log", WEBSERVER.serversRouterMiddleware, function (req, res
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server)) {
         if (COMMONS.isObjectsValid(instancesLogs[q.server])) {
-            res.send(SERVERS_CONTROLLER.getServerLog(q.server));
+            const serverLog = SERVERS_CONTROLLER.getServerLog(q.server);
+            console.log("serverLog", serverLog);
+            res.send({ success: true, serverLog: serverLog });
         } else {
             res.send("");
         }
@@ -197,7 +199,9 @@ router.get("/:server/query", WEBSERVER.serversRouterMiddleware, function (req, r
 router.get("/:server/startScript", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
-        return res.send(SERVERS_CONTROLLER.getStartScript(q.server));
+        const startScript = SERVERS_CONTROLLER.getStartScript(q.server);
+        console.log("startScript", startScript);
+        return res.send({ success: true, startScript: startScript });
     }
     res.sendStatus(400);
 });
@@ -208,7 +212,9 @@ router.put("/:server/startScript", WEBSERVER.serversRouterMiddleware, function (
     let q2 = req.query;
     // DEVELOPED by seeeroy
     if (COMMONS.isObjectsValid(q.server, q2.data) && SERVERS_MANAGER.isServerExists(q.server)) {
-        return res.send(SERVERS_CONTROLLER.setStartScript(q.server, Base64.decode(q2.data)));
+        const startScript = SERVERS_CONTROLLER.setStartScript(q.server, Base64.decode(q2.data));
+        console.log("startScript", startScript);
+        return res.send({ success: true, startScript: startScript });
     }
     res.sendStatus(400);
 });

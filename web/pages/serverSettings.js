@@ -18,8 +18,9 @@ KubekServerSettingsUI = class {
 
     // Загрузить start script в интерфейс
     static loadStartScript = () => {
-        KubekRequests.get("/servers/" + selectedServer + "/startScript", (startScript) => {
-            document.querySelector('#start-script').setInputValues(startScript);
+        KubekRequests.get("/servers/" + selectedServer + "/startScript", (data) => {
+          console.log("startScript", data);
+            document.querySelector('#start-script').setInputValues(data.startScript);
         });
     }
 
