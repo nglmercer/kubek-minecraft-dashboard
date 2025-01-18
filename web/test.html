@@ -1,25 +1,143 @@
-<div><style>#div-1 {color: rgb(255, 255, 255); flex-direction: column; mask-position: 0% 0%; display: flex; padding: 8px; background-color: rgb(34, 44, 58);}
-    #div-2 {align-items: center; cursor: pointer; padding-bottom: 14px; padding-left: 16px; padding-right: 16px; padding-top: 14px; display: flex; border-radius: 8px;}
-    #div-3 {flex-direction: column; flex-grow: 1; justify-content: center; display: flex;}
-    #sup-1 {color: rgb(104, 121, 138); font-size: 14px;}
-    #span-2 {color: rgb(104, 121, 138);}
-    #div-4 {background-color: rgb(46, 62, 83); align-items: center; cursor: pointer; padding-bottom: 14px; padding-left: 16px; padding-right: 16px; padding-top: 14px; display: flex; border-radius: 8px;}
-    #div-5 {color: rgb(50, 213, 131); flex-direction: column; flex-grow: 1; justify-content: center; display: flex;}
-    #sup-2 {color: rgb(104, 121, 138); font-size: 14px;}
-    #span-4 {color: rgb(104, 121, 138);}
-    #span-5 {color: rgb(50, 213, 131);}
-    #div-6 {align-items: center; cursor: pointer; padding-bottom: 14px; padding-left: 16px; padding-right: 16px; padding-top: 14px; display: flex; border-radius: 8px;}
-    #div-7 {flex-direction: column; flex-grow: 1; justify-content: center; display: flex;}
-    #sup-3 {color: rgb(104, 121, 138); font-size: 14px;}
-    #span-7 {color: rgb(104, 121, 138);}
-    #div-8 {align-items: center; cursor: pointer; padding-bottom: 14px; padding-left: 16px; padding-right: 16px; padding-top: 14px; display: flex; border-radius: 8px;}
-    #div-9 {flex-direction: column; flex-grow: 1; justify-content: center; display: flex;}
-    #sup-4 {color: rgb(104, 121, 138); font-size: 14px;}
-    #span-9 {color: rgb(104, 121, 138);}
-    #miBoton {
-        position: absolute;
-        left: 0;
-        right: 0;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./js/webcomponents.js"></script>
+</head>
+<body>
+    <dialog-container id="deletedialog" >
+        
+        <custom-input
+        type="text"
+        id="login-username"
+        name="login"
+        placeholder="coloque aqui el nombre de usuario"
+        >
+        </custom-input>
+        <custom-input
+        type="email"
+        id="login-email"
+        name="email"
+        placeholder="correo electronico"
+        >
+        </custom-input>
+        <div class="permisos-container">
+            <custom-input
+            type="switch"
+            id="file_manager"
+            name="file_manager"
+            value="false"
+            ></custom-input>
+            <custom-input
+            type="switch"
+            id="manage_servers"
+            name="manage_servers"
+            value="false"
+            ></custom-input>
+            <custom-input
+            type="switch"
+            id="making_servers"
+            name="making_servers"
+            value="false"
+            ></custom-input>
+            <custom-input
+            type="switch"
+            id="monitor_servers"
+            name="monitor_servers"
+            value="false"
+            ></custom-input>
+            <custom-input
+            type="switch"
+            id="manage_java"
+            name="manage_java"
+            value="false"
+            ></custom-input>
+            <custom-input
+            type="switch"
+            id="manage_plugins"
+            name="manage_plugins"
+            value="false"
+            ></custom-input>
+            <custom-input
+            type="switch"
+            id="system_monitoring"
+            name="system_monitoring"
+            value="false"
+            ></custom-input>
+            <custom-input
+            type="switch"
+            id="kubek_settings"
+            name="kubek_settings"
+            value="false"
+            ></custom-input>
+            <custom-input
+            type="switch"
+            id="accounts"
+            name="accounts"
+            value="false"
+            ></custom-input>
+
+        </div>
+        <custom-input
+        type="password"
+        id="password-input"
+        name="password"
+        placeholder="coloque aqui la contraseña"
+        >
+        </custom-input>
+        <custom-dialog 
+        title="nombre del servidor" 
+        description="desea borrar este servidor"
+        theme="dark">
+      </custom-dialog>
+      </dialog-container>
+      <script type="module">
+        const deleteServerDialog = document.querySelector('#deletedialog');
+        deleteServerDialog.show();
+        // isServersRestricted this is a boolean switch and show a multi select = selectedServersInList this is an array and multi select
+        const customdialog = document.querySelector('custom-dialog');
+        customdialog.options = [
+          {
+            label: "file_manager",
+            callback: () => {
+              console.log("file_manager", getAllInputValues());
+            }
+          },
+          {
+            label: "manage_servers",
+            callback: () => {
+              console.log("manage_servers", getAllInputValues());
+            }
+          }];
+function setAllInputValues(dataObject) {
+  const inputs = document.querySelectorAll('custom-input');
+  
+  inputs.forEach(input => {
+    const id = input.getAttribute('id');
+    const name = input.getAttribute('name');
+    
+    // Buscar el valor en el objeto usando id o name como clave
+    const value = dataObject[id] || dataObject[name];
+    
+    if (value !== undefined) {
+      input.setInputValues(value);
     }
-    </style><div id="div-1"><div id="div-2"> <div id="div-3"> <span id="span-1">English <sup id="sup-1">by Seeroy</sup></span> <span id="span-2">English</span> </div>  </div><div id="div-4"> <div id="div-5"> <span id="span-3">Español <sup id="sup-2">by melser</sup></span> <span id="span-4">Spanish</span> </div> <span id="span-5">check</span> </div><div id="div-6"> <div id="div-7"> <span id="span-6">日本語 <sup id="sup-3">by Rin-ad</sup></span> <span id="span-7">Japanese</span> </div>  </div><div id="div-8"> <div id="div-9"> <span id="span-8">Русский <sup id="sup-4">by Seeroy</sup></span> <span id="span-9">Russian</span> </div>  </div></div></div>
-    <button id="miBoton">Botón</button>
+  });
+}
+function getAllInputValues() {
+  const allData = {};
+  const inputs = document.querySelectorAll('custom-input');
+  
+  inputs.forEach((input) => {
+    const id = input.getAttribute('id');
+    const value = input.getInputValues();
+    allData[id] = value;
+  });
+  
+  return allData;
+}
+      </script>
+</body>
+</html>

@@ -256,53 +256,77 @@ KubekSettingsUI = class {
 
     // Сохранить нового/существующего пользователя
     static saveUser = () => {
-        let login = $(".userEditModal #username-input").val();
-        let password = $(".userEditModal #password-input").val();
-        let email = $(".userEditModal #email-input").val();
-        let isServersRestricted = $(".userEditModal #restrict-servers-access").is(":checked");
-        let selectedServersInList = this.getSelectedServersInList();
-        let permissions = this.getSelectedPermissions().join(",");
-        if (!isServersRestricted) {
-            selectedServersInList = [];
-        }
-        let reqURL;
-        if (currentEditorMode === "new") {
-            if (selectedServersInList.length === 0) {
-                reqURL = "/accounts?login=" + login + "&email=" + email + "&permissions=" + permissions + "&password=" + password;
-            } else {
-                selectedServersInList = selectedServersInList.join(",");
-                reqURL = "/accounts?login=" + login + "&email=" + email + "&servers=" + selectedServersInList + "&permissions=" + permissions + "&password=" + password;
-            }
-            KubekRequests.put(reqURL, (result) => {
-                KubekSettingsUI.hideUserEditor();
-                if (result === true) {
-                    KubekAlerts.addAlert("{{kubekSettings.userAdded}}", "check", login, 5000);
-                } else {
-                    KubekAlerts.addAlert("{{kubekSettings.userNotAdded}}", "warning", login, 5000);
-                }
-                KubekSettingsUI.refreshUsersList();
-            });
-        } else {
-            if (selectedServersInList.length === 0) {
-                reqURL = "/accounts/" + login + "?email=" + email + "&permissions=" + permissions;
-            } else {
-                selectedServersInList = selectedServersInList.join(",");
-                reqURL = "/accounts/" + login + "?email=" + email + "&servers=" + selectedServersInList + "&permissions=" + permissions;
-            }
-            if (password !== "") {
-                reqURL += "&password=" + password;
-            }
-            KubekRequests.put(reqURL, (result) => {
-                KubekSettingsUI.hideUserEditor();
-                if (result === true) {
-                    KubekAlerts.addAlert("{{kubekSettings.userSaved}}", "check", login, 5000);
-                } else {
-                    KubekAlerts.addAlert("{{kubekSettings.userNotEdited}}", "warning", login, 5000);
-                }
-                KubekSettingsUI.refreshUsersList();
-            });
-        }
-    }
+      let login = $(".userEditModal #username-input").val();
+      let password = $(".userEditModal #password-input").val();
+      let email = $(".userEditModal #email-input").val();
+      let isServersRestricted = $(".userEditModal #restrict-servers-access").is(":checked");
+      let selectedServersInList = this.getSelectedServersInList();
+      let permissions = this.getSelectedPermissions().join(",");
+  
+      // Si no están restringidos los servidores, se vacía la lista
+      if (!isServersRestricted) {
+          selectedServersInList = [];
+      }
+  
+      // Crear un objeto con todos los datos relevantes
+      let userData = {
+          login: login,
+          password: password,
+          email: email,
+          isServersRestricted: isServersRestricted,
+          selectedServersInList: selectedServersInList,
+          permissions: permissions,
+          permissionsList: this.getSelectedPermissions(),
+      };
+  
+      // Mostrar el objeto para depuración
+      console.log("Datos a enviar:", userData);
+  
+      let reqURL;
+  
+      if (currentEditorMode === "new") {
+          // Si no hay servidores seleccionados
+          if (selectedServersInList.length === 0) {
+              reqURL = "/accounts?login=" + login + "&email=" + email + "&permissions=" + permissions + "&password=" + password;
+          } else {
+              selectedServersInList = selectedServersInList.join(",");
+              reqURL = "/accounts?login=" + login + "&email=" + email + "&servers=" + selectedServersInList + "&permissions=" + permissions + "&password=" + password;
+          }
+  
+          KubekRequests.put(reqURL, (result) => {
+              KubekSettingsUI.hideUserEditor();
+              if (result === true) {
+                  KubekAlerts.addAlert("{{kubekSettings.userAdded}}", "check", login, 5000);
+              } else {
+                  KubekAlerts.addAlert("{{kubekSettings.userNotAdded}}", "warning", login, 5000);
+              }
+              KubekSettingsUI.refreshUsersList();
+          });
+      } else {
+          // Si no hay servidores seleccionados
+          if (selectedServersInList.length === 0) {
+              reqURL = "/accounts/" + login + "?email=" + email + "&permissions=" + permissions;
+          } else {
+              selectedServersInList = selectedServersInList.join(",");
+              reqURL = "/accounts/" + login + "?email=" + email + "&servers=" + selectedServersInList + "&permissions=" + permissions;
+          }
+  
+          if (password !== "") {
+              reqURL += "&password=" + password;
+          }
+  
+          KubekRequests.put(reqURL, (result) => {
+              KubekSettingsUI.hideUserEditor();
+              if (result === true) {
+                  KubekAlerts.addAlert("{{kubekSettings.userSaved}}", "check", login, 5000);
+              } else {
+                  KubekAlerts.addAlert("{{kubekSettings.userNotEdited}}", "warning", login, 5000);
+              }
+              KubekSettingsUI.refreshUsersList();
+          });
+      }
+  }
+  
 
     // Функция для обновления списка языков
     static refreshLanguagesList = (cb) => {
@@ -313,10 +337,6 @@ KubekSettingsUI = class {
         KubekRequests.get("/kubek/languages", (langs) => {
           console.log("langs", langs);  
           setlangselector(langs);
-            $("#language-list").html("");
-            Object.values(langs).forEach(lang => {
-                $("#language-list").append(LANGUAGE_ITEM.replaceAll("$0", lang.code).replaceAll("$1", lang.displayName).replaceAll("$2", lang.displayNameEnglish).replaceAll("$3", lang.author));
-            });
             cb();
         });
     };
@@ -389,14 +409,8 @@ function refreshLanguagesList(cb) {
   var apiget = (url, callback, apiEndpoint = true) => {
     makeAjaxRequest(url, "GET", "", apiEndpoint, callback);
   }
-  var settingslink = "/kubek/settings"; 
   var languageslink = "/kubek/languages";
   apiget(languageslink, (langs) => {
-/*       $("#language-list").html("");
-      Object.values(langs).forEach(lang => {
-          $("#language-list").append(LANGUAGE_ITEM.replaceAll("$0", lang.code).replaceAll("$1", lang.displayName).replaceAll("$2", lang.displayNameEnglish).replaceAll("$3", lang.author));
-      });
-      cb(); */
       cb();
       console.log("langs", langs);
       setlangselector(langs);
@@ -406,7 +420,6 @@ function refreshLanguagesList(cb) {
 
 
 var langSelector = document.querySelector('language-selector');
-// transform objeto en array
 var objlang = {
   en: {
     code: "en",
@@ -806,12 +819,6 @@ function setPropertiestoInputs(properties, fields) {
 }
 
  */
-
-
-
-
-
-
 
 /*$(document).ready(function () {
   loadUsersList();

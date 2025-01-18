@@ -14,23 +14,11 @@
                             <span class="material-symbols-rounded">translate</span>
                         </div>
                         {{kubekSettings.language}}
-                        <language-selector selected="en"></language-selector>
                     </div>
                 </td>
                 <td>
                     <div class="checksList" id="language-list">
-                        <div class="item" data-lang="$0">
-                            <div class="text" style="display: flex; justify-content: center; flex-direction: column">
-                                <span>$1 <sup>by $3</sup></span>
-                                <span style="color: var(--bg-dark-accent-lighter)">$2</span>
-                            </div>
-
-                            <span class='check material-symbols-rounded'>check</span>
-                        </div>
-                        <div class="item" data-lang="en">
-                            <span class="text">English</span>
-                            <span class='check material-symbols-rounded'>check</span>
-                        </div>
+                        <language-selector selected="en"></language-selector>
                     </div>
                 </td>
             </tr>
@@ -327,6 +315,3 @@ value="10.0.0.0/8
         <button class="dark-btn" onclick="KubekSettingsUI.hideUserEditor()">{{commons.cancel}}</button>
     </div>
 </div>
-<input-fields data-id="general" id="general-fields"></input-fields>
-<input-fields data-id="security" id="security-fields"></input-fields>
-<input-fields data-id="FTP" id="FTP-fields"></input-fields>
