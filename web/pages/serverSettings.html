@@ -113,9 +113,9 @@
       }
       return objfind;
     }
-    const deleteServerDialog = document.querySelector('#deletedialog');
-    
-    const deleteServerBtn = document.querySelector('#deleteServerBtn');
+    var deleteServerDialog = document.querySelector('#deletedialog');
+    var deleteServerBtn = document.querySelector('#deleteServerBtn');
+
     deleteServerBtn.addEventListener('click', ()=>deleteServerDialog.show());
     async function translatedialog(){
       const translations = await getTranslatestore(localStorage.getItem("userlang"));

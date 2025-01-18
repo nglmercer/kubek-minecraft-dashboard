@@ -421,6 +421,7 @@ function refreshLanguagesList(cb) {
       return langs;
   });
 };
+
 if (!customElements.get('custom-input')) {
   class CustomInput extends HTMLElement {
       constructor() {
@@ -838,6 +839,7 @@ function selectedLanguage(value) {
   langSelector.selected = value;
   localStorage.setItem("userlang", value);
 }
+if(!localStorage.getItem("userlang")) localStorage.setItem("userlang", "en");
 function getLanguage() {
   const selectedLang = langSelector.selected;
   localStorage.setItem("userlang", selectedLang);

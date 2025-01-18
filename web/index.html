@@ -171,6 +171,9 @@
                 });
             });
         })
+        KubekRequests.get("/kubek/rawlanguages", (langs) => {
+            localStorage.setItem("rawlanguages", JSON.stringify(langs));
+        });
     });
 </script>
 

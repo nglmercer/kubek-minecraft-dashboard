@@ -51,10 +51,10 @@ export const prepareServerToStart = (serverName) => {
         return false;
     }
     let spawnArgs = [];
-    // Создаём аргументы для spawn и путь к файлу в зависимости от платформы
+    // Create spawn arguments and file path depending on platform
     if (process.platform === "win32") {
         spawnArgs[0] = path.resolve(serverStarterPath);
-    } else if (process.platform === "linux") {
+    } else if (process.platform === "linux" || process.platform === "android") {
         spawnArgs[0] = "sh";
         spawnArgs[1] = [path.resolve(serverStarterPath)];
     } else {
@@ -212,7 +212,7 @@ export const setStartScript = (serverName, data) => {
 export const getStartFilePath = (serverName) => {
     if (process.platform === "win32") {
         return "./servers/" + serverName + "/start.bat";
-    } else if (process.platform === "linux") {
+    } else if (process.platform === "linux" || process.platform === "android") {
         return "./servers/" + serverName + "/start.sh";
     } else {
         return false;
@@ -266,3 +266,4 @@ export const queryServer = (serverName, cb) => {
 }
 
 // DEVELOPED by seeeroy
+//fix android platform
