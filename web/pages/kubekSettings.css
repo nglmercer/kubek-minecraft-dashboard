@@ -164,7 +164,40 @@
     padding: 16px;
     border-radius: 8px;
 }
+.headertemplate {
+    margin: 16px 0;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0 1em;
+    grid-template-areas:
+    "avatar username"
+    "avatar email";
+}
+.headertemplate .avatar {
+    grid-area: avatar;
+    width:  max(64px, 80px); /* Similar al alto */
+    height: min(100%, max(80px, 64px)); /* Similar al ancho */
+    background: var(--bg-dark-accent-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
+.headertemplate .username {
+    align-self: center;
+    grid-area: username;
+    font-size: 16pt;
+    font-weight: 600;
+}
+
+.headertemplate .email {
+    align-self: center;
+    grid-area: email;
+    font-size: 12pt;
+    font-weight: 400;
+}
 .userEditModal .header {
     margin: 16px 0;
     display: grid;

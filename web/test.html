@@ -44,8 +44,7 @@
         name="file_manager"
         value="false"
         ></custom-input>
-        <span class="item">${file_manager}</span>
-
+        <translation-span id="file_manager_span" lang="en">file_manager</translation-span>
     </div>
     <div class="row">
         <custom-input
@@ -54,7 +53,7 @@
         name="manage_servers"
         value="false"
         ></custom-input>
-        <span class="item">${manage_servers}</span>
+        <translation-span id="manage_servers_span" lang="en">manage_servers</translation-span>  
     </div>
     <div class="row">
         <custom-input
@@ -63,7 +62,7 @@
         name="making_servers"
         value="false"
         ></custom-input>
-        <span class="item">${making_servers}</span>
+        <translation-span id="making_servers_span" lang="en">making_servers</translation-span>
     </div>
     <div class="row">
         <custom-input
@@ -72,7 +71,7 @@
         name="monitor_servers"
         value="false"
         ></custom-input>
-        <span class="item">${monitor_servers}</span>
+        <translation-span id="monitor_servers_span" lang="en">monitor_servers</translation-span>
     </div>
     <div class="row">
         <custom-input
@@ -81,7 +80,7 @@
         name="manage_java"
         value="false"
         ></custom-input>
-        <span class="item">${manage_java}</span>
+        <translation-span id="manage_java_span" lang="en">manage_java</translation-span>
     </div>
     <div class="row">
         <custom-input
@@ -90,7 +89,7 @@
         name="manage_plugins"
         value="false"
         ></custom-input>
-        <span class="item">${manage_plugins}</span>
+        <translation-span id="manage_plugins_span" lang="en">manage_plugins</translation-span>
     </div>
     <div class="row">
         <custom-input
@@ -99,7 +98,7 @@
         name="system_monitoring"
         value="false"
         ></custom-input>
-        <span class="item">${system_monitoring}</span>
+        <translation-span id="system_monitoring_span" lang="en">system_monitoring</translation-span>
     </div>
     <div class="row">
         <custom-input
@@ -108,7 +107,7 @@
         name="kubek_settings"
         value="false"
         ></custom-input>
-        <span class="item">${kubek_settings}</span>
+        <translation-span id="kubek_settings_span" lang="en">kubek_settings</translation-span>
     </div>
     <div class="row">
         <custom-input
@@ -117,7 +116,7 @@
         name="accounts"
         value="false"
         ></custom-input>
-        <span class="item">${accounts}</span>
+        <translation-span id="accounts_span" lang="en">accounts</translation-span>
     </div>
 
     </div>
@@ -182,6 +181,17 @@ function getAllInputValues() {
   
   return allData;
 }
+const file_manager = document.querySelector('#file_manager_span');
+file_manager.setTranslations([
+  {
+    lang: "en",
+    text: "File Manager"
+  },
+  {
+    lang: "es",
+    text: "Administrador de Archivos"
+  }
+]);
       </script>
 </body>
 </html>
