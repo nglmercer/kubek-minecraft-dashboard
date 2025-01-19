@@ -1,93 +1,145 @@
+// Current server status, initialized as stopped
 let currentServerStatus = KubekPredefined.SERVER_STATUSES.STOPPED;
 
+/**
+ * Class responsible for managing the server header UI components
+ * and server status updates
+ */
 class KubekServerHeaderUI {
-    // Обновить хидер сервера
-    static refreshServerHeader = (cb) => {
-        this.loadServerByName(selectedServer, cb);
+    /**
+     * Refreshes the server header information
+     * @param {Function} callback - Callback function to execute after refresh
+     */
+    static refreshServerHeader(callback) {
+        this.loadServerByName(selectedServer, callback);
     }
 
-    // Загрузить сервер в хидер по названию
-    static loadServerByName(server, cb = () => {}) {
+    /**
+     * Loads server information by server name and updates the UI
+     * @param {string} server - Name of the server to load
+     * @param {Function} callback - Callback function to execute after loading
+     */
+    static loadServerByName(server, callback = () => {}) {
         KubekServers.getServerInfo(server, (data) => {
             if (data.status !== false) {
-                // Actualizar el título del servidor
+                // Update server title
                 const captionElement = document.querySelector('.content-header > .caption');
                 if (captionElement) {
                     captionElement.textContent = server;
                 }
 
-                // Actualizar el estado del servidor
+                // Update server status
                 this.setServerStatus(data.status);
 
-                // Actualizar la imagen del ícono del servidor
+                // Update server icon
                 const iconElement = document.querySelector('.content-header .icon-bg img');
                 if (iconElement) {
                     iconElement.src = `/api/servers/${server}/icon?${Date.now()}`;
                 }
 
-                cb(true);
+                callback(true);
             } else {
-                cb(false);
+                callback(false);
             }
         });
     }
 
-    // Установить статус сервера в хидер
-    static setServerStatus = (status) => {
+    /**
+     * Updates the server status in the header and shows/hides relevant buttons
+     * @param {string} status - The new server status
+     * @returns {boolean} - Success status of the update
+     */
+    static setServerStatus(status) {
         const statusElement = document.querySelector('status-element');
-        if (typeof KubekPredefined.SERVER_STATUSES_TRANSLATE[status] !== "undefined") {
-            currentServerStatus = status;
-            console.log("status", status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-            $(".content-header .hide-on-change").hide();
-            $(".content-header #server-more-btn").hide();
-            if (status === KubekPredefined.SERVER_STATUSES.STARTING || status === KubekPredefined.SERVER_STATUSES.STOPPING) {
-                statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-                $(".content-header #server-more-btn").show();
-            } else if (status === KubekPredefined.SERVER_STATUSES.RUNNING) {
-                statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-                $(".content-header #server-restart-btn").show();
-                $(".content-header #server-stop-btn").show();
-                $(".content-header #server-more-btn").show();
-            } else if (status === KubekPredefined.SERVER_STATUSES.STOPPED) {
-                $(".content-header #server-start-btn").show();
-
-                statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-            }
-        } else {
+        
+        if (!KubekPredefined.SERVER_STATUSES_TRANSLATE[status]) {
             return false;
         }
+
+        currentServerStatus = status;
+        console.log("status", status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+
+        // Hide all conditional elements
+        const headerElements = document.querySelectorAll('.content-header .hide-on-change');
+        headerElements.forEach(element => element.style.display = 'none');
+        
+        const moreButton = document.querySelector('.content-header #server-more-btn');
+        moreButton.style.display = 'none';
+
+        // Show relevant buttons based on status
+        switch (status) {
+            case KubekPredefined.SERVER_STATUSES.STARTING:
+            case KubekPredefined.SERVER_STATUSES.STOPPING:
+                statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+                moreButton.style.display = 'block';
+                break;
+
+            case KubekPredefined.SERVER_STATUSES.RUNNING:
+                statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+                document.querySelector('.content-header #server-restart-btn').style.display = 'block';
+                document.querySelector('.content-header #server-stop-btn').style.display = 'block';
+                moreButton.style.display = 'block';
+                break;
+
+            case KubekPredefined.SERVER_STATUSES.STOPPED:
+                document.querySelector('.content-header #server-start-btn').style.display = 'block';
+                statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+                break;
+        }
+
         return true;
     }
-
 }
-function initializedrodownload() {
-    const buttonevent = document.querySelector('#server-more-btn');
-    buttonevent.addEventListener('click', () => {
-        const popup = document.querySelector('custom-popup');
-        popup.showAtElement(buttonevent);
+
+/**
+ * Initializes the dropdown menu for server actions
+ */
+function initializeServerDropdown() {
+    const buttonElement = document.querySelector('#server-more-btn');
+    const popupElement = document.querySelector('custom-popup');
+
+    // Add click event listener to show popup
+    buttonElement.addEventListener('click', () => {
+        popupElement.showAtElement(buttonElement);
     });
-    const popup = document.querySelector('custom-popup');
-    const onhoverstylecolor = `
+
+    // Define hover styles for dropdown items
+    const hoverStyles = `
         <style>
-            .div {
+            .dropdown-item {
                 background: var(--bg-dark-accent);
                 border-radius: 8px;
                 padding: 4px 8px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                cursor: pointer;
+                height: 48px;
+                font-size: 12pt;
+                width: 100%;
             }
-            .div:hover {
+            .dropdown-item:hover {
                 background: #2e3e53;
             }
         </style>
     `;
 
-    popup.addButton(`${onhoverstylecolor} <div style=" display: flex ; flex-direction: row; align-items: center; cursor: pointer; height: 48px; font-size: 12pt; width: 100%;" class="div"><span class="material-symbols-rounded">dangerous</span><span class="default-font">Forzar salida</span></div>`, () => {
-        console.log('Button clicked');
-        popup.hide();
-        if (currentServerStatus !== KubekPredefined.SERVER_STATUSES.STOPPED) {
-            KubekRequests.get("/servers/" + selectedServer + "/kill");
+    // Add force quit button to popup
+    popupElement.addButton(
+        `${hoverStyles}<div class="dropdown-item">
+            <span class="material-symbols-rounded">dangerous</span>
+            <span class="default-font">Force Quit</span>
+        </div>`,
+        () => {
+            popupElement.hide();
+            if (currentServerStatus !== KubekPredefined.SERVER_STATUSES.STOPPED) {
+                KubekRequests.get(`/servers/${selectedServer}/kill`);
+            }
         }
-    });
+    );
 }
-setTimeout(() => {
-    initializedrodownload();
-}, 500);
+
+// Initialize dropdown after DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initializeServerDropdown, 500);
+});

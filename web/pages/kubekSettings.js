@@ -5,34 +5,37 @@ currentEditorMode = null;
 currentConfig = null;
 
 $(function () {
-    KubekUI.setTitle("Kubek | {{sections.kubekSettings}}");
-
-    KubekSettingsUI.refreshLanguagesList(() => {
-        KubekSettingsUI.loadConfig();
-        KubekSettingsUI.refreshUsersList();
-    })
-    let allservers = [];
-    // Обновляем список серверов
-    KubekServers.getServersList((servers) => {
-        servers.forEach(server => {
-            console.log("server getServersList", server);
-            const select_servers = document.querySelector('#select_servers');
-           const optionserver = {
-              label: server,
-              value: server
-           }
-            allservers.push(optionserver);
-
-            select_servers.setOptions(allservers);
-        })
-    });
-
-    // Загружаем версию Kubek
-    KubekRequests.get("/kubek/version", (data) => {
-        document.querySelector('#kubek-version').innerHTML = data.version;
-        console.log("version", data);
-    });
+  initializeKubekSettings();
 });
+function initializeKubekSettings() {
+  KubekUI.setTitle("Kubek | {{sections.kubekSettings}}");
+
+  KubekSettingsUI.refreshLanguagesList(() => {
+      KubekSettingsUI.loadConfig();
+      KubekSettingsUI.refreshUsersList();
+  })
+  let allservers = [];
+  // Обновляем список серверов
+  KubekServers.getServersList((servers) => {
+      servers.forEach(server => {
+          console.log("server getServersList", server);
+          const select_servers = document.querySelector('#select_servers');
+         const optionserver = {
+            label: server,
+            value: server
+         }
+          allservers.push(optionserver);
+
+          select_servers.setOptions(allservers);
+      })
+  });
+
+  // Загружаем версию Kubek
+  KubekRequests.get("/kubek/version", (data) => {
+      document.querySelector('#kubek-version').innerHTML = data.version;
+      console.log("version", data);
+  });
+}
 const userModal = document.querySelector('#userModal');
 const dropdown_component = document.querySelector('dropdown-component');
 dropdown_component.toggleDropdown();

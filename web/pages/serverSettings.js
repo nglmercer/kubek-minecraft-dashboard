@@ -1,93 +1,126 @@
-loadedSettings = null;
-KubekServerSettingsUI = class {
-    // Загрузить настройки в интерфейс
+/**
+ * Global variable to store the currently loaded server settings
+ * @type {Object|null}
+ */
+let loadedSettings = null;
+
+/**
+ * Class responsible for managing server settings in the UI
+ */
+class KubekServerSettingsUI {
+    /**
+     * Loads server settings from the backend and updates the UI
+     * Fetches settings like restart behavior, stop command, and max restart attempts
+     */
     static loadSettings = () => {
-        KubekRequests.get("/servers/" + selectedServer + "/info", (kSettings) => {
-            loadedSettings = kSettings;
-            if (kSettings.restartOnError === false) {
-                document.querySelector('#restart-on-error').setInputValues(false);
-            } else {
-                document.querySelector('#restart-on-error').setInputValues(true);
-            }
-            document.querySelector("#stop-command").setInputValues(kSettings.stopCommand);
-            document.querySelector('#restart-attempts').setInputValues(kSettings.maxRestartAttempts);
+        KubekRequests.get(`/servers/${selectedServer}/info`, (serverSettings) => {
+            loadedSettings = serverSettings;
+            
+            // Update restart on error toggle
+            const restartToggle = document.querySelector('#restart-on-error');
+            restartToggle.setInputValues(serverSettings.restartOnError !== false);
+            
+            // Update other settings
+            document.querySelector("#stop-command").setInputValues(serverSettings.stopCommand);
+            document.querySelector('#restart-attempts').setInputValues(serverSettings.maxRestartAttempts);
         });
     }
 
-    // Загрузить start script в интерфейс
+    /**
+     * Loads the server's start script and updates the UI
+     */
     static loadStartScript = () => {
-        KubekRequests.get("/servers/" + selectedServer + "/startScript", (data) => {
-          console.log("startScript", data);
+        KubekRequests.get(`/servers/${selectedServer}/startScript`, (data) => {
+            console.log("Loading start script:", data);
             document.querySelector('#start-script').setInputValues(data.startScript);
         });
     }
 
-    // Сохранить настройки и start script
+    /**
+     * Saves both server settings and start script to the backend
+     * Shows a success message if both operations complete successfully
+     */
     static writeSettings = () => {
+        // Gather current values from UI
         loadedSettings.maxRestartAttempts = document.querySelector('#restart-attempts').getInputValues();
         loadedSettings.restartOnError = document.querySelector('#restart-on-error').getInputValues();
         loadedSettings.stopCommand = document.querySelector("#stop-command").getInputValues();
-        let startScript = document.querySelector('#start-script').getInputValues();
-        KubekRequests.put("/servers/" + selectedServer + "/info?data=" + Base64.encodeURI(JSON.stringify(loadedSettings)), (result) => {
-            KubekRequests.put("/servers/" + selectedServer + "/startScript?data=" + Base64.encodeURI(startScript), (result2) => {
-                if (result !== false && result2 !== false) {
+        const startScript = document.querySelector('#start-script').getInputValues();
+
+        // Save settings and start script
+        const encodedSettings = Base64.encodeURI(JSON.stringify(loadedSettings));
+        const encodedScript = Base64.encodeURI(startScript);
+
+        KubekRequests.put(`/servers/${selectedServer}/info?data=${encodedSettings}`, (settingsResult) => {
+            KubekRequests.put(`/servers/${selectedServer}/startScript?data=${encodedScript}`, (scriptResult) => {
+                if (settingsResult !== false && scriptResult !== false) {
                     KubekAlerts.addAlert("{{fileManager.writeEnd}}", "check", "", 5000);
                 }
             });
         });
+    }
 
-
-    };
-
-    // este metodo es para mostrar el dialogo de confirmacion de borrado
+    /**
+     * Shows a confirmation dialog for server deletion
+     * Executes the delete request if confirmed
+     */
     static deleteServer = () => {
-      console.log("deleteServer", selectedServer);
-        KubekNotifyModal.create(selectedServer, "{{serverSettings.deleteServer}}", "{{commons.delete}}", "delete", () => {
-            KubekRequests.delete("/servers/" + selectedServer, () => {});
-        }, KubekPredefined.MODAL_CANCEL_BTN);
+        console.log("Initiating server deletion for:", selectedServer);
+        KubekNotifyModal.create(
+            selectedServer,
+            "{{serverSettings.deleteServer}}",
+            "{{commons.delete}}",
+            "delete",
+            () => KubekRequests.delete(`/servers/${selectedServer}`, () => {}),
+            KubekPredefined.MODAL_CANCEL_BTN
+        );
     }
 }
-var restartOnErrorswitch = document.querySelector('#restart-on-error');
-restartOnErrorswitch.addEventListener('input-change', (e) => {
-    console.log("restartOnErrorswitch", e.detail);
-  if (e.detail.value === true) {
-    document.querySelector('#restart-attempts-tr').classList.remove('hidden');
-  } else {
-    document.querySelector('#restart-attempts-tr').classList.add('hidden');
-  }
+
+// Event listener for restart-on-error toggle
+const restartOnErrorSwitch = document.querySelector('#restart-on-error');
+restartOnErrorSwitch.addEventListener('input-change', (e) => {
+    console.log("Restart on error setting changed:", e.detail);
+    const restartAttemptsRow = document.querySelector('#restart-attempts-tr');
+    restartAttemptsRow.classList.toggle('hidden', !e.detail.value);
 });
 
-
-  function setAllInputValues(dataObject) {
+/**
+ * Sets values for all custom inputs based on a data object
+ * @param {Object} dataObject - Object containing input values keyed by input id/name
+ */
+function setAllInputValues(dataObject) {
     const inputs = document.querySelectorAll('custom-input');
-    
     inputs.forEach(input => {
-      const id = input.getAttribute('id');
-      const name = input.getAttribute('name');
-      
-      // Buscar el valor en el objeto usando id o name como clave
-      const value = dataObject[id] || dataObject[name];
-      
-      if (value !== undefined) {
-        input.setInputValues(value);
-      }
+        const id = input.getAttribute('id');
+        const name = input.getAttribute('name');
+        const value = dataObject[id] || dataObject[name];
+        
+        if (value !== undefined) {
+            input.setInputValues(value);
+        }
     });
-  }
-  function getAllInputValues() {
+}
+
+/**
+ * Collects values from all custom inputs into an object
+ * @returns {Object} Object containing all input values keyed by input id
+ */
+function getAllInputValues() {
     const allData = {};
     const inputs = document.querySelectorAll('custom-input');
     
     inputs.forEach((input) => {
-      const id = input.getAttribute('id');
-      const value = input.getInputValues();
-      allData[id] = value;
+        const id = input.getAttribute('id');
+        allData[id] = input.getInputValues();
     });
     
     return allData;
-  }
-  (()=>{
+}
+
+// Initialize the page
+(() => {
     KubekUI.setTitle("Kubek | {{sections.serverSettings}}");
-  
     KubekServerSettingsUI.loadSettings();
     KubekServerSettingsUI.loadStartScript();
-  }) ();
+})();
