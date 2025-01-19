@@ -45,3 +45,47 @@ table * {
 #content-preloader .lds-spinner * {
   border-color: var(--bg-dark-accent-light) transparent transparent transparent;
 }
+.save-btn {
+  background-color: #007bff;
+  color: white;
+}
+.save-btn:hover {
+  background-color: #0056b3;
+}
+.cancel-btn {
+  background-color: #e5e5e5;
+  color: black;
+}
+.save-btn:hover {
+  background-color: #0056b3;
+}
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+.delete-btn:hover { 
+  background-color: #bd2130;
+}
+custom-dialog {
+  .save-btn {
+    background-color: #007bff;
+    color: white;
+  }
+  .save-btn:hover {
+    background-color: #0056b3;
+  }
+  .cancel-btn {
+    background-color: #e5e5e5;
+    color: black;
+  }
+  .save-btn:hover {
+    background-color: #0056b3;
+  }
+  .delete-btn {
+    background-color: #dc3545;
+    color: white;
+  }
+  .delete-btn:hover { 
+    background-color: #bd2130;
+  }
+}

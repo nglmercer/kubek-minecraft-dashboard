@@ -76,8 +76,8 @@
 
   <!-- Кнопка сохранения -->
   <button class="primary-btn" onclick="KubekServerSettingsUI.writeSettings()">{{commons.save}}</button>
-  <dialog-container id="deletedialog" >
-    <custom-dialog 
+  <dialog-container id="deletedialog" style="border-radius: 16px;">
+    <custom-dialog style="background-color: #151e27; border-radius: 16px;"
     title="nombre del servidor" 
     description="desea borrar este servidor"
     theme="dark">
@@ -126,6 +126,7 @@
       dialogcontent.options = [
         {
           label: translations.commons.delete,
+          class: "delete-btn",
           callback: () => {
             deleteServerDialog.hide();
             //KubekRequests.delete("/servers/" + selectedServer, () => {});
@@ -133,6 +134,7 @@
         },
         {
           label: translations.commons.cancel,
+          class: "cancel-btn",
           callback: () => {
             deleteServerDialog.hide();
           }

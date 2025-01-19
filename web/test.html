@@ -137,10 +137,10 @@
       </custom-dialog>
       </dialog-container>
       <script type="module">
-        const deleteServerDialog = document.querySelector('#deletedialog');
+        var deleteServerDialog = document.querySelector('#deletedialog');
         deleteServerDialog.show();
         // isServersRestricted this is a boolean switch and show a multi select = selectedServersInList this is an array and multi select
-        const customdialog = document.querySelector('custom-dialog');
+        var customdialog = document.querySelector('custom-dialog');
         customdialog.options = [
           {
             label: "file_manager",
@@ -181,7 +181,7 @@ function getAllInputValues() {
   
   return allData;
 }
-const file_manager = document.querySelector('#file_manager_span');
+var file_manager = document.querySelector('#file_manager_span');
 file_manager.setTranslations([
   {
     lang: "en",

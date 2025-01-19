@@ -466,6 +466,7 @@ class CustomDialog extends HTMLElement {
           display: block;
           font-family: system-ui, -apple-system, sans-serif;
           background-color: inherit;
+          background: inherit;
           color: inherit;
         }
   
@@ -474,6 +475,9 @@ class CustomDialog extends HTMLElement {
           border-radius: 8px;
           transition: all 0.3s ease;
           border: inherit;
+          background: inherit;
+          background-color: inherit;
+          color: inherit;
         }
   
         .container.light {
@@ -515,23 +519,37 @@ class CustomDialog extends HTMLElement {
           font-size: 0.875rem;
           transition: all 0.2s ease;
         }
-  
-        .light button {
-          background-color: #f3f4f6;
-          color: #1a1a1a;
+        button {
+          color: inherit;
+          background-color: inherit;
+        }
+        button:hover {
+          background-color: inherit;
         }
   
-        .light button:hover {
-          background-color: #e5e7eb;
+        .save-btn {
+          background-color: #007bff;
+          color: white;
         }
-  
-        .dark button {
-          background-color: #374151;
-          color: #ffffff;
+        .save-btn:hover {
+          background-color: #0056b3;
         }
-  
-        .dark button:hover {
-          background-color: #4b5563;
+        .cancel-btn {
+          background-color: #e5e5e5;
+          color: black;
+        }
+        .cancel-btn:hover {
+          background-color: #0056b3;
+        }
+        .save-btn:hover {
+          background-color: #0056b3;
+        }
+        .delete-btn {
+          background-color: #dc3545;
+          color: white;
+        }
+        .delete-btn:hover { 
+          background-color: #bd2130;
         }
       `;
     }
@@ -546,7 +564,7 @@ class CustomDialog extends HTMLElement {
           <p class="description">${this._description}</p>
           <div class="options">
             ${this._options.map((option, index) => `
-              <button data-index="${index}">${option.label}</button>
+              <button data-index="${index}" style="${option.style || ''}" class="${option.class || ''}">${option.label}</button>
             `).join('')}
           </div>
         </div>
@@ -614,6 +632,10 @@ class CustomDialog extends HTMLElement {
         :host {
           display: block;
           position: relative;
+          background: inherit;
+          background-color: inherit;
+          color: inherit;
+          border-radius: inherit;
         }
         .dialog-overlay {
           position: fixed;
@@ -629,6 +651,8 @@ class CustomDialog extends HTMLElement {
           opacity: 0;
           visibility: hidden;
           transition: all 0.3s ease;
+          /*blur effect*/
+          backdrop-filter: blur(4px);
         }
         .dialog-overlay.visible {
           opacity: 1;
@@ -637,9 +661,14 @@ class CustomDialog extends HTMLElement {
         .dialog-content {
           transform: scale(0.95);
           transition: transform 0.3s ease;
-          padding: 10px;
+          padding: inherit;
           max-height: 90dvh;
           overflow-y: auto;
+          background: inherit;
+          background-color: inherit;
+          color: inherit;
+          border-radius: inherit;
+          border-radius: 16px;
         }
         .dialog-overlay.visible .dialog-content {
           transform: scale(1);
@@ -860,7 +889,7 @@ class CustomDialog extends HTMLElement {
           }
       
           static get observedAttributes() {
-            return ['type', 'id', 'name', 'value', 'placeholder', 'disabled', 'readonly', 'darkmode', 'options'];
+            return ['type', 'id', 'name', 'value', 'placeholder', 'disabled', 'readonly', 'darkmode', 'options', 'required'];
           }
       
           getStyles() {
@@ -887,8 +916,8 @@ class CustomDialog extends HTMLElement {
                 border-color: ${darkMode ? '#555' : '#ccc'};
                 border-radius: 4px;
                 font-size: 14px;
-                background-color: ${darkMode ? '#333' : '#fff'};
-                color: ${darkMode ? '#fff' : '#000'};
+                background-color: inherit;
+                color: inherit;
               }
               textarea {
                 resize: vertical;
@@ -960,13 +989,27 @@ class CustomDialog extends HTMLElement {
               input.addEventListener('input', this.handleInputChange);
               input.addEventListener('change', this.handleInputChange);
             }
+            // Corregimos el manejo del evento submit
+            const form = this.shadowRoot.querySelectorAll('form');
+            if (form) {
+              form.forEach(form => {
+                form.addEventListener('submit', this.handleSubmit.bind(this));
+              });
+            }
           }
-      
+        
           disconnectedCallback() {
             const input = this.shadowRoot.querySelector('input, textarea, select');
             if (input) {
               input.removeEventListener('input', this.handleInputChange);
               input.removeEventListener('change', this.handleInputChange);
+            }
+            // Limpiamos el evento submit
+            const form = this.shadowRoot.querySelector('#validate-form');
+            if (form) {
+              form.forEach(form => {
+                form.removeEventListener('submit', this.handleSubmit.bind(this));
+              });
             }
           }
       
@@ -988,7 +1031,26 @@ class CustomDialog extends HTMLElement {
               this.render();
             }
           }
-      
+          handleSubmit(e) {
+            e.preventDefault(); // Prevenimos la recarga de la página
+            
+            // Validamos el formulario
+            const form = e.target;
+            const isValid = form.checkValidity();
+            
+            if (isValid) {
+              // Disparamos un evento personalizado con los datos del formulario
+              this.dispatchEvent(new CustomEvent('form-submit', {
+                detail: {
+                  id: this.getAttribute('id'),
+                  name: this.getAttribute('name'),
+                  value: this.getInputValues()
+                },
+                bubbles: true,
+                composed: true
+              }));
+            }
+          }
           render() {
             const type = this.getAttribute('type') || 'text';
             const id = this.getAttribute('id');
@@ -998,12 +1060,15 @@ class CustomDialog extends HTMLElement {
             const disabled = this.hasAttribute('disabled');
             const readonly = this.hasAttribute('readonly');
             const options = this.getAttribute('options') || '[]';
-      
+            const required = this.hasAttribute('required') ? 'required' : '';
+            const allarguments = { type, id, name, value, placeholder, disabled, readonly, options, required };
             this.shadowRoot.innerHTML = `
               <style>${this.getStyles()}</style>
-              <div class="input-container">
-                ${this.renderInput(type, id, name, value, placeholder, disabled, readonly, options)}
-              </div>
+              <form id="validate-form">
+                <div class="input-container">
+                  ${this.renderInput(allarguments)}
+                </div>
+              </form>
             `;
       
             // Reattach event listeners after rendering
@@ -1012,9 +1077,17 @@ class CustomDialog extends HTMLElement {
               input.addEventListener('input', this.handleInputChange);
               input.addEventListener('change', this.handleInputChange);
             }
+            this.shadowRoot.querySelector('#validate-form')
+              .addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log("validate_form", e.target);
+              });
           }
       
-          renderInput(type, id, name, value, placeholder, disabled, readonly, options) {
+          renderInput(allarguments) {
+            const { type, id, name, value, placeholder, disabled, readonly, options, required } = allarguments;
+            const requiredAttr = required ? 'required' : ''; // This will output just 'required' when needed
+            
             switch (type) {
               case 'textarea':
                 return `
@@ -1024,6 +1097,7 @@ class CustomDialog extends HTMLElement {
                     placeholder="${placeholder}"
                     ${disabled ? 'disabled' : ''}
                     ${readonly ? 'readonly' : ''}
+                    ${requiredAttr}
                   >${value}</textarea>
                 `;
               
@@ -1039,6 +1113,7 @@ class CustomDialog extends HTMLElement {
                       ${value === 'true' ? 'checked' : ''}
                       ${disabled ? 'disabled' : ''}
                       ${readonly ? 'readonly' : ''}
+                      ${requiredAttr}
                     >
                     <span class="slider"></span>
                   </label>
@@ -1052,6 +1127,7 @@ class CustomDialog extends HTMLElement {
                     name="${name}"
                     ${disabled ? 'disabled' : ''}
                     ${readonly ? 'readonly' : ''}
+                    ${required ? 'required' : ''}
                   >
                     ${optionsArray.map(option => `
                       <option value="${option.value}" ${option.value === value ? 'selected' : ''}>
@@ -1079,18 +1155,20 @@ class CustomDialog extends HTMLElement {
                   </label>
                 `).join('');
               
-              default:
-                return `
-                  <input
-                    type="${type === 'string' ? 'text' : type}"
-                    id="${id}"
-                    name="${name}"
-                    value="${value}"
-                    placeholder="${placeholder}"
-                    ${disabled ? 'disabled' : ''}
-                    ${readonly ? 'readonly' : ''}
-                  >
-                `;
+                default:
+                  return `
+                    <input
+                      type="${type === 'string' ? 'text' : type}"
+                      id="${id}"
+                      name="${name}"
+                      value="${value}"
+                      placeholder="${placeholder}"
+                      ${disabled ? 'disabled' : ''}
+                      ${readonly ? 'readonly' : ''}
+                      ${requiredAttr}
+                    >
+                  `;
+              
             }
           }
       
@@ -1103,7 +1181,8 @@ class CustomDialog extends HTMLElement {
             }
             
             if (input.tagName.toLowerCase() === 'textarea') {
-              return input.value.split('\n');
+              const value = input.value.trim();
+              return value ? value.split('\n') : [];
             }
           
             if (input.tagName.toLowerCase() === 'select') {
@@ -1116,6 +1195,19 @@ class CustomDialog extends HTMLElement {
             }
           
             const inputvalue = this.parseValueByType(input);
+            const validate_form = this.shadowRoot.querySelectorAll('form');
+            if (validate_form) {
+              validate_form.forEach(form => {
+                const form_validity = form.checkValidity();
+                if (!form_validity) {
+                  form.classList.add('invalid');
+                } else {
+                  form.classList.remove('invalid');
+                }
+                console.log("form_validity", form_validity);
+              });
+            }
+
             return inputvalue;
           }
       
@@ -1123,7 +1215,6 @@ class CustomDialog extends HTMLElement {
             const valueType = typeof input.value;
             const inputType = input.type;
             const value = input.value;
-            console.log("valueType", valueType, value, inputType);
             switch (inputType) {
               case 'number':
                 const num = Number(value);
@@ -2438,7 +2529,7 @@ customElements.define('custom-select', CustomSelect);
 class EnhancedSelect extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open', delegatesFocus: true });
     this.selectedValues = [];
     this.options = [];
     this.multiple = false;
@@ -2509,7 +2600,10 @@ class EnhancedSelect extends HTMLElement {
           gap: 8px;
         }
         .option:hover {
+          background-color: inherit;
           background-color: #f5f5f5;
+          color: inherit;
+          color: #1a1a1a;
         }
         .option.selected {
           background-color: #e8f0fe;
