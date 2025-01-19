@@ -68,7 +68,14 @@ router.put("/", function (req, res) {
     let serversAllowed = [];
     if (COMMONS.isObjectsValid(q2.login, q2.password, q2.permissions)) {
         // Конвертируем permissions в массив
-        permSplit = q2.permissions.split(",");
+        console.log("q2.permissions", q2.permissions);
+        if (!q2.permissions) return res.sendStatus(400);
+        // if q2.permissions is array of strings
+        if (Array.isArray(q2.permissions)) {
+          permSplit = q2.permissions;
+        } else {
+          permSplit = q2.permissions.split(",");
+        }
         // Конвертируем servers в массив
         if (COMMONS.isObjectsValid(q2.servers)) {
             serversAllowed = q2.servers.split(",");

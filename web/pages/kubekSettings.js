@@ -1,6 +1,7 @@
+//import e = require("express");
+
 ACCOUNT_ITEM = "<div class='item' data-account='$0'><div class='iconBg'><span class='material-symbols-rounded'>person</span></div><span>$0</span></div>";
 NEW_ACCOUNT_ITEM = "<div class='item' data-account='newAccItem'><div class='iconBg'><span class='material-symbols-rounded'>add</span></div><span>{{kubekSettings.addNewAccount}}</span></div>";
-LANGUAGE_ITEM = '<div class="item" data-lang="$0"> <div class="text" style="display: flex; justify-content: center; flex-direction: column"> <span>$1 <sup style="color: var(--bg-dark-accent-lighter)">by $3</sup></span> <span style="color: var(--bg-dark-accent-lighter)">$2</span> </div> <span class=\'check material-symbols-rounded\'>check</span> </div>';
 
 currentEditorMode = null;
 currentConfig = null;
@@ -12,27 +13,6 @@ $(function () {
         KubekSettingsUI.loadConfig();
         KubekSettingsUI.refreshUsersList();
     })
-
-    $(".userEditModal input[type='checkbox']").on("change", () => {
-        KubekSettingsUI.validateInputs();
-    });
-
-    $(".userEditModal input[type='email'], .userEditModal input[type='password'], .userEditModal input[type='text']").on("input", () => {
-        KubekSettingsUI.validateInputs();
-    });
-
-    // Скрытие/показ списка разрешённых серверов при переключении... переключателя
-    $(".userEditModal #restrict-servers-access").on("change", function () {
-        $(this).is(":checked") ? $(".userEditModal #allowed-servers-list").show() : $(".userEditModal #allowed-servers-list").hide();
-    });
-
-    $(".userEditModal #delete-account-btn").on("click", function () {
-        let username = $(".userEditModal #username-input").val();
-        KubekRequests.delete("/accounts/" + username, () => {
-            KubekSettingsUI.hideUserEditor();
-            KubekSettingsUI.refreshUsersList();
-        });
-    });
     let allservers = [];
     // Обновляем список серверов
     KubekServers.getServersList((servers) => {
@@ -46,12 +26,7 @@ $(function () {
             allservers.push(optionserver);
 
             select_servers.setOptions(allservers);
-            $(".userEditModal #allowed-servers-list").append('<div class="item" data-server="' + server + '"><span class="text">' + server + '</span><span class="material-symbols-rounded check">check</span></div>');
         })
-
-        $(".userEditModal #allowed-servers-list .item").on("click", function () {
-            $(this).hasClass("active") ? $(this).removeClass("active") : $(this).addClass("active");
-        });
     });
 
     // Загружаем версию Kubek
@@ -60,9 +35,100 @@ $(function () {
         console.log("version", data);
     });
 });
+const userModal = document.querySelector('#userModal');
+const dropdown_component = document.querySelector('dropdown-component');
+dropdown_component.toggleDropdown();
+async function getparsedtranslations(element,subelement, lang = "en") {	
+    const translationsraw = await localStorage.getItem("rawlanguages");
+    let alltranslations = [];
+    for (const [key, value] of Object.entries(JSON.parse(translationsraw))) {
+        console.log("key", key, value);
+        const langmaped = {
+            lang: value.info.code,
+            code: value.info.code,
+            id: value.info.id,
+            translation: value.translations
+            
+        }
+        alltranslations.push(langmaped);
+    }
+    console.log("alltranslations", alltranslations);
+    if (!element && !subelement || !element) return alltranslations;
+    if (!subelement && element) return alltranslations.find(item => item.lang === lang).translation[element];
+    if (subelement && element) {
+        if (alltranslations.find(item => item.lang === lang).translation[element]) {
+            return alltranslations.find(item => item.lang === lang).translation[element][subelement];
+        } else {
+            return alltranslations.find(item => item.lang === lang).translation[element];
+        }
+    }
+}
+const sendmapdata = {
+    login: "string",
+    email: "string",
+    permissions: "array",
+    password: "string",
+    isServersRestricted: "boolean",
+    serversAllowed: "array",
+    permissionsList: ["file_manager", "manage_servers", "making_servers", "monitor_servers", "manage_java", "manage_plugins", "system_monitoring", "kubek_settings", "accounts"],
+};
 
+(async () => {
+    console.log("getparsedtranslations();", await getparsedtranslations("kubekSettings","userEditor", "es"));
+})();
+
+const selected_server_dropdown = document.querySelector('#selected_server_dropdown');
+function getselected_server_dropdown() {
+    const data = document.querySelector('#select_servers').getValue();
+    console.log("data", data);
+    return data;
+}
+function getAllInputValues() {
+    const allData = {};
+    const inputs = document.querySelectorAll('custom-input');
+    
+    inputs.forEach((input) => {
+    const id = input.getAttribute('id');
+    const value = input.getInputValues();
+    allData[id] = value;
+    });
+    
+    return allData;
+}
+
+function getdatabyInputs(inputs, isTrue = true) {
+    const allData = {};
+    let allDatakeys = [];
+    inputs.forEach(input => {
+        allData[input] = document.querySelector(`#${input}`).getInputValues();
+    });
+    /*array de los keys de los inputs*/
+    if (allData) {
+        for (const [key, value] of Object.entries(allData)) {
+            if (value || value === isTrue) {
+                allDatakeys.push(key);
+            }
+        }
+        return { allData, allDatakeys };
+    }
+}
+function isvalidUserForm(elementname) {
+    const usernameForm = document.querySelector(elementname)
+    const isvalid = usernameForm.getvalidation();
+    console.log("isvalid", isvalid);
+    return isvalid;
+}
+
+document.querySelector('#isServersRestricted').addEventListener('input-change', (e) => {
+    console.log("restrict_servers_access", e.detail);
+    if (e.detail.value === true) {
+    document.querySelector('#selected_server_dropdown').show();
+    } else {
+    document.querySelector('#selected_server_dropdown').hide();
+    }
+});
 KubekSettingsUI = class {
-    // Получить конфиг
+    static usermodeeditor = false;
     static getConfig = (cb = () => {
     }) => {
       var urlink = "/kubek/settings";  
@@ -97,7 +163,19 @@ KubekSettingsUI = class {
             cb();
         });
     }
-
+    static getelementsType(){
+      const sendmapdata = {
+          login: "string",
+          email: "string",
+          permissions: "array",
+          password: "string",
+          isServersRestricted: "boolean",
+          serversAllowed: "array",
+          permissionsList: ["file_manager", "manage_servers", "making_servers", "monitor_servers", "manage_java", "manage_plugins", "system_monitoring", "kubek_settings", "accounts"],
+          htmlinputs: ["login_username", "login_email", "login_password", "isServersRestricted"],
+        };
+      return sendmapdata;
+    }
     // Сохранить конфигурацию
     static saveConfig = () => {
         let language = getLanguage();
@@ -168,196 +246,119 @@ KubekSettingsUI = class {
       });
   };
   
-    // Сбросить значения в редакторе пользователей
-    static resetUserEditorValues = () => {
-        $(".userEditModal input[type=checkbox]").removeAttr("checked");
-        $(".userEditModal input[type=text], .userEditModal input[type=email], .userEditModal input[type=password]").val("");
-        $(".userEditModal #allowed-servers-list .item.active").removeClass("active");
-        $(".userEditModal #allowed-servers-list").hide();
-    };
 
     // Открыть редактор в режиме создания нового пользователя
     static showNewUserEditor = () => {
         this.resetUserEditorValues();
-        $(".userEditModal #delete-account-btn").hide();
-        //$(".userEditModal #password-input").show();
-        //$(".userEditModal #password-rules").show();
-        $(".userEditModal #save-btn").attr("disabled", true);
-        //this.showUserEditor();
-        const userModal = document.querySelector('#userModal');
+        const custom_dialog = document.querySelector('custom-dialog');
+        custom_dialog.options = [
+          {
+              label: "{{commons.save}}",
+              class: "save-btn",
+              callback: () => {
+                  console.log("save");
+                  this.saveUserdata("new");
+              }
+          },
+          {
+              label: "{{commons.cancel}}",
+              class: "cancel-btn",
+              callback: () => {
+                  userModal.hide();
+                  console.log("cancel");
+              }
+          },
+        ];
         userModal.show();
+        this.resetUserEditorValues();
         currentEditorMode = "new";
+        this.usermodeeditor = "new";
     }
 
     // Получить данные по username и передать их в редактор
     static openUserEditorByUsername = (username) => {
         KubekRequests.get("/accounts/" + username, (data) => {
           console.log("data openUserEditorByUsername", data);
-            this.showExistingUserEditor(data.username, data.email, data.permissions, data.serversAccessRestricted, data.serversAllowed);
-        });
-    };
-
-    // Загрузить данные пользователя в поля редактора
-    static showExistingUserEditor = (username, email, permissions, serversRestricted, allowedServersList) => {
-        this.resetUserEditorValues();
-        $(".userEditModal #delete-account-btn").show();
-        //$(".userEditModal #password-input").hide();
-        //$(".userEditModal #password-rules").hide();
-        $(".userEditModal #username-input").val(username);
-        $(".userEditModal #email-input").val(email);
-        permissions.forEach((permItem) => {
-            $(".userEditModal #perm-" + permItem).attr("checked", true);
-        });
-        if (serversRestricted === true) {
-            $(".userEditModal #restrict-servers-access").attr("checked", true);
-            $(".userEditModal #allowed-servers-list").show();
-            allowedServersList.forEach((allowedServer) => {
-                $(".userEditModal #allowed-servers-list .item[data-server='" + allowedServer + "']").addClass("active");
+            //this.showExistingUserEditor(data.username, data.email, data.permissions, data.serversAccessRestricted, data.serversAllowed);
+            if (!data) return;
+            const userModal = document.querySelector('#userModal');
+            userModal.show();
+            const allelements = this.getelementsType();
+            allelements.htmlinputs.forEach(element => {
+              const htmlelement = document.querySelector(`#${element}`);
+              // data.permissions is array of strings
+              console.log("htmlelement", htmlelement, element);
+              if (!data || !htmlelement) return;
+              if (element === "login_username") {
+                htmlelement.setInputValues(data.username);
+              } else if (element === "login_email") {
+                htmlelement.setInputValues(data.email);
+              } else if (element === "isServersRestricted") {
+                htmlelement.setInputValues(data.serversAccessRestricted);
+              } else if (element === "login_password") {
+                htmlelement.setInputValues(data.secret);
+                console.log("secret", data.secret);
+              }
             });
-        }
-        this.showUserEditor();
-        currentEditorMode = "existing";
-    }
+            allelements.permissionsList.forEach(element => {
+              const htmlelement = document.querySelector(`#${element}`);
+              //console.log("htmlelement", htmlelement, element);
+              data.permissions.forEach(permission => {
+                if (permission === element) {
+                  htmlelement.setInputValues(true);
+                }
+                //console.log("permission", permission, "element", element);
+              });
+            });
 
-    // Показать интерфейс редактора
-    static showUserEditor = () => {
-        $(".blurScreen").show();
-        $(".userEditModal").show();
-    }
-
-    // Скрыть интерфейс редактор
-    static hideUserEditor = () => {
-        $(".blurScreen").hide();
-        $(".userEditModal").hide();
-    }
-
-    // Получить список выбранных серверов (для restrict access)
-    static getSelectedServersInList = () => {
-        let servers = [];
-        $(".userEditModal #allowed-servers-list .item.active").each((i, item) => {
-            servers.push($(item).data("server"));
-        });
-        return servers;
+            const custom_dialog = document.querySelector('custom-dialog');
+            custom_dialog.options = [
+              {
+                label: "{{commons.save}}",
+                class: "save-btn",
+                callback: () => {
+                  console.log("save");
+                  this.saveUserdata("existing");
+                }
+              },
+              {
+                label: "{{commons.cancel}}",
+                class: "cancel-btn",
+                callback: () => {
+                  console.log("cancel");
+                  userModal.hide();
+                }
+              },
+              {
+                label: "{{commons.delete}}",
+                class: "delete-btn",
+                callback: () => {
+                  console.log("delete");
+                  KubekRequests.delete("/accounts/" + username, () => {
+                      KubekSettingsUI.hideUserEditor();
+                      KubekSettingsUI.refreshUsersList();
+                  });
+                  userModal.hide();
+                }
+              }
+            ];
+            console.log("custom_dialog", custom_dialog);
+            const select_servers = document.querySelector('#select_servers');
+              select_servers.setSelectedValues(data.serversAllowed);
+          });
     };
+    static resetUserEditorValues = () => {
+      const allelements = this.getelementsType();
+      allelements.htmlinputs.forEach(element => {
+        const htmlelement = document.querySelector(`#${element}`);
+        htmlelement.resetInputValues();
+      });
+      allelements.permissionsList.forEach(element => {
 
-    // Валидировать поля ввода
-    static validateInputs = () => {
-        let username = $(".userEditModal #username-input").val();
-        let email = $(".userEditModal #email-input").val();
-        let password = $(".userEditModal #password-input").val();
-
-        if (username.match(KubekPredefined.LOGIN_REGEX) != null) {
-            $(".userEditModal #username-input").removeClass("error");
-        } else {
-            $(".userEditModal #username-input").addClass("error");
-            $(".userEditModal #save-btn").attr("disabled", true);
-            return;
-        }
-
-        if (email === "" || email.match(KubekPredefined.EMAIL_REGEX) != null) {
-            $(".userEditModal #email-input").removeClass("error");
-        } else {
-            $(".userEditModal #email-input").addClass("error");
-            $(".userEditModal #save-btn").attr("disabled", true);
-            return;
-        }
-
-        if (password.match(KubekPredefined.PASSWORD_REGEX) != null || (currentEditorMode !== "new" && password === "")) {
-            $(".userEditModal #password-input").removeClass("error");
-        } else {
-            $(".userEditModal #password-input").addClass("error");
-            $(".userEditModal #save-btn").attr("disabled", true);
-            return;
-        }
-
-        $(".userEditModal #save-btn").removeAttr("disabled");
+        const htmlelement = document.querySelector(`#${element}`);
+        htmlelement.resetInputValues();
+      });
     }
-
-    // Получить список выбранных пермсов
-    static getSelectedPermissions = () => {
-        let perms = [];
-        $(".userEditModal .permissions input[type=checkbox]:checked").each((i, el) => {
-            perms.push($(el)[0].id.replace("perm-", ""));
-        });
-        return perms;
-    }
-
-    // Сохранить нового/существующего пользователя
-    static saveUser = () => {
-      let login = $(".userEditModal #username-input").val();
-      let password = $(".userEditModal #password-input").val();
-      let email = $(".userEditModal #email-input").val();
-      let isServersRestricted = $(".userEditModal #restrict-servers-access").is(":checked");
-      let selectedServersInList = this.getSelectedServersInList();
-      let permissions = this.getSelectedPermissions().join(",");
-  
-      // Si no están restringidos los servidores, se vacía la lista
-      if (!isServersRestricted) {
-          selectedServersInList = [];
-      }
-  
-      // Crear un objeto con todos los datos relevantes
-      let userData = {
-          login: login,
-          password: password,
-          email: email,
-          isServersRestricted: isServersRestricted,
-          selectedServersInList: selectedServersInList,
-          permissions: permissions,
-          permissionsList: this.getSelectedPermissions(),
-      };
-  
-      // Mostrar el objeto para depuración
-      console.log("Datos a enviar:", userData);
-      localStorage.setItem("userData_adduser", JSON.stringify(userData));
-  
-      let reqURL;
-  
-      if (currentEditorMode === "new") {
-          // Si no hay servidores seleccionados
-          if (selectedServersInList.length === 0) {
-              reqURL = "/accounts?login=" + login + "&email=" + email + "&permissions=" + permissions + "&password=" + password;
-          } else {
-              selectedServersInList = selectedServersInList.join(",");
-              reqURL = "/accounts?login=" + login + "&email=" + email + "&servers=" + selectedServersInList + "&permissions=" + permissions + "&password=" + password;
-          }
-          localStorage.setItem("userData_adduser_request", reqURL);
-          KubekRequests.put(reqURL, (result) => {
-              KubekSettingsUI.hideUserEditor();
-              if (result === true) {
-                  KubekAlerts.addAlert("{{kubekSettings.userAdded}}", "check", login, 5000);
-              } else {
-                  KubekAlerts.addAlert("{{kubekSettings.userNotAdded}}", "warning", login, 5000);
-              }
-              KubekSettingsUI.refreshUsersList();
-          });
-      } else {
-          // Si no hay servidores seleccionados
-          if (selectedServersInList.length === 0) {
-              reqURL = "/accounts/" + login + "?email=" + email + "&permissions=" + permissions;
-          } else {
-              selectedServersInList = selectedServersInList.join(",");
-              reqURL = "/accounts/" + login + "?email=" + email + "&servers=" + selectedServersInList + "&permissions=" + permissions;
-          }
-  
-          if (password !== "") {
-              reqURL += "&password=" + password;
-          }
-          localStorage.setItem("userData_edituser_request", reqURL);
-          KubekRequests.put(reqURL, (result) => {
-              KubekSettingsUI.hideUserEditor();
-              if (result === true) {
-                  KubekAlerts.addAlert("{{kubekSettings.userSaved}}", "check", login, 5000);
-              } else {
-                  KubekAlerts.addAlert("{{kubekSettings.userNotEdited}}", "warning", login, 5000);
-              }
-              KubekSettingsUI.refreshUsersList();
-          });
-      }
-  }
-  
-
-    // Функция для обновления списка языков
     static refreshLanguagesList = (cb) => {
         KubekRequests.get("/kubek/rawlanguages", (langs) => {
           console.log("rawlanguages", langs);
@@ -369,6 +370,55 @@ KubekSettingsUI = class {
             cb();
         });
     };
+    static saveUserdata(usermode = "new"){
+      let reqURL;
+      const serversAllowed = getselected_server_dropdown();
+      console.log("getAllInputValues", getAllInputValues());
+      console.log("getdatabyInputs", getdatabyInputs(sendmapdata.permissionsList));
+      const permissions = getdatabyInputs(sendmapdata.permissionsList).allDatakeys;   
+      const {login_username, login_email, login_password} = getAllInputValues();
+      const existemail = login_email || "";
+      if (usermode === "new") {
+        if (serversAllowed && serversAllowed.length < 1) {
+            reqURL = "/accounts?login=" + login_username + "&email=" + existemail + "&permissions=" + permissions + "&password=" + login_password;
+        } else {
+            reqURL = "/accounts?login=" + login_username + "&email=" + existemail + "&servers="  + serversAllowed +  "&permissions=" + permissions + "&password=" + login_password;
+        }
+        if (isvalidUserForm("#login_username") && isvalidUserForm("#login_password")) {
+            KubekRequests.put(reqURL, (result) => {
+                console.log("result", result);
+                if (result === true) {
+                    KubekAlerts.addAlert("{{kubekSettings.userAdded}}", "check", login_username, 5000);
+                    userModal.hide();
+                } else {
+                    KubekAlerts.addAlert("{{kubekSettings.userNotAdded}}", "warning", login_username, 5000);
+                }
+                KubekSettingsUI.refreshUsersList();
+            });
+
+        }
+        console.log("reqURL", reqURL);
+      } else if (usermode === "existing") {
+        if (serversAllowed && serversAllowed.length < 1) {
+            reqURL = "/accounts/" + login_username + "?email=" + existemail + "&permissions=" + permissions;
+        } else {
+            reqURL = "/accounts/" + login_username + "?email=" + existemail + "&servers=" + serversAllowed + "&permissions=" + permissions;
+        }
+        if (login_password !== "") {
+            reqURL += "&password=" + login_password;
+        } 
+      console.log("reqURL to update", reqURL);
+      KubekRequests.put(reqURL, (result) => {
+          if (result === true) {
+              KubekAlerts.addAlert("{{kubekSettings.userSaved}}", "check", login_username, 5000);
+          } else {
+              KubekAlerts.addAlert("{{kubekSettings.userNotEdited}}", "warning", login_username, 5000);
+          }
+          KubekSettingsUI.refreshUsersList();
+      });
+      }
+
+    }
 }
 function setAllInputValues(dataObject) {
   const inputs = document.querySelectorAll('custom-input');
@@ -385,17 +435,12 @@ function setAllInputValues(dataObject) {
     }
   });
 }
-function getAllInputValues() {
-  const allData = {};
+
+function resetAllInputValues() {
   const inputs = document.querySelectorAll('custom-input');
-  
   inputs.forEach((input) => {
-    const id = input.getAttribute('id');
-    const value = input.getInputValues();
-    allData[id] = value;
+    input.resetInputValues();
   });
-  
-  return allData;
 }
 var makeAjaxRequest = (url, type, data = "", apiEndpoint = true, cb = () => {}) => {
   if (apiEndpoint) {
@@ -490,860 +535,3 @@ langSelector.addEventListener('language-change', (event) => {
   console.log('Selected language:', event.detail.langCode);
   console.log('Language data:', event.detail.language);
 });
-/* class ObjectCategorizer {
-  constructor(categoryArrays, options = {}) {
-      this.validateInput(categoryArrays);
-      
-      const defaultOptions = {
-          uncategorizedKey: 'uncategorized',
-          allowMultipleCategories: false
-      };
-      
-      this.options = { ...defaultOptions, ...options };
-      this.categoryMappings = this.buildCategoryMappings(categoryArrays);
-  }
-
-  validateInput(categoryArrays) {
-      if (!categoryArrays || typeof categoryArrays !== 'object') {
-          throw new Error('Category arrays must be provided as an object');
-      }
-
-      for (const [category, fields] of Object.entries(categoryArrays)) {
-          if (!Array.isArray(fields)) {
-              throw new Error(`Category ${category} must be an array`);
-          }
-      }
-  }
-
-  buildCategoryMappings(categoryArrays) {
-      const mappings = new Map();
-      
-      for (const [category, fields] of Object.entries(categoryArrays)) {
-          fields.forEach(field => {
-              if (mappings.has(field) && !this.options.allowMultipleCategories) {
-                  throw new Error(`Field "${field}" is already mapped to category "${mappings.get(field)}"`);
-              }
-              
-              if (this.options.allowMultipleCategories) {
-                  if (!mappings.has(field)) {
-                      mappings.set(field, new Set());
-                  }
-                  mappings.get(field).add(category);
-              } else {
-                  mappings.set(field, category);
-              }
-          });
-      }
-      
-      return mappings;
-  }
-
-  categorizeObject(inputObject) {
-      if (!inputObject || typeof inputObject !== 'object') {
-          throw new Error('Input must be an object');
-      }
-
-      const result = this.initializeResultObject();
-
-      for (const [key, value] of Object.entries(inputObject)) {
-          if (this.categoryMappings.has(key)) {
-              this.assignValueToCategories(result, key, value);
-          } else {
-              result[this.options.uncategorizedKey][key] = value;
-          }
-      }
-
-      return result;
-  }
-
-  initializeResultObject() {
-      const result = {};
-      const uniqueCategories = new Set(
-          Array.from(this.categoryMappings.values())
-          .flatMap(cat => this.options.allowMultipleCategories ? Array.from(cat) : [cat])
-      );
-
-      uniqueCategories.forEach(category => {
-          result[category] = {};
-      });
-      result[this.options.uncategorizedKey] = {};
-
-      return result;
-  }
-
-  assignValueToCategories(result, key, value) {
-      const categories = this.categoryMappings.get(key);
-      
-      if (this.options.allowMultipleCategories) {
-          categories.forEach(category => {
-              result[category][key] = value;
-          });
-      } else {
-          result[categories][key] = value;
-      }
-  }
-}
-const categoryArrays = {
-  general: [
-      'webserverPort',
-      'allowOnlyIPsList',
-      'IPsAllowed'
-  ],
-  security: [
-      'authorization'
-  ],
-  system: [
-      'eulaAccepted',
-      'configVersion'
-  ],
-  services: [
-      'ftpd',
-      'telegramBot'
-  ]
-};
-const categorizer = new ObjectCategorizer(categoryArrays, {
-  uncategorizedKey: 'other',
-  allowMultipleCategories: true
-});
-function getcategorizeddata(data) {
-  const categorizedData = categorizer.categorizeObject(data);
-  return categorizedData;
-}
-class InputFieldsElement extends HTMLElement {
-  static get observedAttributes() {
-      return ['data-id'];
-  }
-
-  getStyles() {
-      return `
-          :host {
-              display: flex;
-              flex-direction: column;
-              gap: 16px;
-              width: 100%;
-              padding: 16px;
-              box-sizing: border-box;
-              color-scheme: light dark;
-          }
-        .hidden {
-            display: none;
-        }
-          .field-container {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-          }
-
-          .primary-btn {
-              padding: 8px 16px;
-              background: #007bff;
-              color: white;
-              border: none;
-              border-radius: 4px;
-              cursor: pointer;
-              align-self: flex-start;
-          }
-
-          .primary-btn:hover {
-              background: #0056b3;
-          }
-
-          .switch {
-              position: relative;
-              display: inline-block;
-              width: 60px;
-              height: 34px;
-          }
-          
-          .switch input {
-              opacity: 0;
-              width: 0;
-              height: 0;
-          }
-          
-          .slider {
-              position: absolute;
-              cursor: pointer;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background-color: #ccc;
-              transition: .4s;
-              border-radius: 34px;
-          }
-          
-          .slider:before {
-              position: absolute;
-              content: "";
-              height: 26px;
-              width: 26px;
-              left: 4px;
-              bottom: 4px;
-              background-color: white;
-              transition: .4s;
-              border-radius: 50%;
-          }
-          
-          input:checked + .slider {
-              background-color: #2196F3;
-          }
-          
-          input:focus + .slider {
-              box-shadow: 0 0 1px #2196F3;
-          }
-          
-          input:checked + .slider:before {
-              transform: translateX(26px);
-          }
-
-          input[type="text"], input[type="number"] {
-              padding: 8px;
-              border-radius: 4px;
-              border: 1px solid #ccc;
-              font-size: 14px;
-              width: 200px;
-          }
-
-          input[type="text"]:focus, input[type="number"]:focus {
-              outline: none;
-              border-color: #007bff;
-              box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
-          }
-      `;
-  }
-
-  constructor() {
-      super();
-      this.SWITCH_ELEMENT = '<label class="switch"><input type="checkbox"$0><span class="slider"></span></label>';
-      this.NUMBER_INPUT = '<input type="number" value="$0">';
-      this.TEXT_INPUT = '<input type="text" value="$0">';
-      this.propertyTypes = new Map();
-      
-      this.attachShadow({ mode: 'open' });
-      this.shadowRoot.innerHTML = `
-          <style>${this.getStyles()}</style>
-          <div id="fields-container"></div>
-          <button id="save-btn" class="primary-btn hidden">Save</button>
-      `;
-  }
-
-  getValueType(value) {
-      if (value === null) return "null";
-      const type = typeof value;
-      return (type === "boolean" || type === "number") ? type : "string";
-  }
-
-  parseValueByType(value, type) {
-      switch (type) {
-          case "null": return null;
-          case "boolean": return value === "true" || value === true;
-          case "number":
-              const num = Number(value);
-              return isNaN(num) ? 0 : num;
-          default: return String(value);
-      }
-  }
-
-  createInput(type, value) {
-      switch (type) {
-          case "boolean":
-              const isChecked = value === true ? " checked" : "";
-              return this.SWITCH_ELEMENT.replace("$0", isChecked);
-          case "number":
-              return this.NUMBER_INPUT.replace("$0", value);
-          case "null":
-              return this.TEXT_INPUT.replace("$0", "");
-          default:
-              return this.TEXT_INPUT.replace("$0", value);
-      }
-  }
-
-  setProperties(properties, typeOverrides = {}) {
-      this.propertyTypes.clear();
-      const container = this.shadowRoot.querySelector('#fields-container');
-      container.innerHTML = '';
-      
-      for (const [key, value] of Object.entries(properties)) {
-          const originalType = typeOverrides[key] || this.getValueType(value);
-          this.propertyTypes.set(key, originalType);
-
-          let displayValue = value;
-          if (originalType === "null") {
-              displayValue = "";
-          }
-
-          const fieldDiv = document.createElement('div');
-          fieldDiv.className = 'field-container';
-          fieldDiv.innerHTML = this.createInput(this.propertyTypes.get(key), displayValue);
-          fieldDiv.dataset.key = key;
-          fieldDiv.dataset.propertyType = this.propertyTypes.get(key);
-          container.appendChild(fieldDiv);
-      }
-  }
-
-  getProperties() {
-      const properties = {};
-      
-      this.shadowRoot.querySelectorAll('#fields-container .field-container').forEach(field => {
-          const key = field.dataset.key;
-          const originalType = this.propertyTypes.get(key);
-          
-          let rawValue;
-          const checkbox = field.querySelector('input[type="checkbox"]');
-          if (checkbox) {
-              rawValue = checkbox.checked;
-          } else {
-              rawValue = field.querySelector('input').value;
-          }
-
-          properties[key] = this.parseValueByType(rawValue, originalType);
-      });
-
-      return properties;
-  }
-
-  connectedCallback() {
-      this.shadowRoot.querySelector('#save-btn').addEventListener('click', () => {
-          const properties = this.getProperties();
-          const dataId = this.getAttribute('data-id');
-          
-          this.dispatchEvent(new CustomEvent('properties-save', {
-              bubbles: true,
-              composed: true,
-              detail: {
-                  id: dataId,
-                  properties
-              }
-          }));
-      });
-  }
-}
-
-customElements.define('input-fields', InputFieldsElement); */
-
-/* const generalFields = document.querySelector('#general-fields');
-const securityFields = document.querySelector('#security-fields');
-const systemFields = document.querySelector('#FTP-fields');
-function setPropertiestoInputs(properties, fields) {
-  const typesofproperties = {
-    webserverPort: "number",
-    allowOnlyIPsList: "boolean",
-    IPsAllowed: "string",
-    authorization: "boolean",
-    eulaAccepted: "boolean",
-    configVersion: "string",
-  }
-  switch (fields) {
-    case 'general':
-      generalFields.setProperties(properties, typesofproperties);
-      break;
-    case 'security':
-      securityFields.setProperties(properties, typesofproperties);
-      break;
-    case 'FTP':
-      systemFields.setProperties(properties, typesofproperties);
-      break;
-  }
-}
-
- */
-
-/*$(document).ready(function () {
-  loadUsersList();
-  loadKubekSettings();
-  $.get("/kubek/tgOTP", function (otp) {
-    $(".tgbot-otp").val(otp);
-  });
-  $("#tgbot-checkbox").change(function () {
-    if ($(this).is(":checked")) {
-      $("#tgbot-token-item").show();
-      $("#tgbot-otp-item").show();
-    } else {
-      $("#tgbot-token-item").hide();
-      $("#tgbot-otp-item").hide();
-    }
-  });
-  $("#auth-checkbox").change(function () {
-    if ($(this).is(":checked")) {
-      $("#auth-users-item").show();
-      showModal("needtosave-auth-warn-modal", "fadeIn");
-      startNSAModalTimeout();
-    } else {
-      $("#auth-users-item").hide();
-    }
-  });
-  $("#ftpserver-checkbox").change(function () {
-    if ($(this).is(":checked")) {
-      $("#ftp-login-item").show();
-      $("#ftp-pass-item").show();
-    } else {
-      $("#ftp-login-item").hide();
-      $("#ftp-pass-item").hide();
-    }
-  });
-
-  $("#blurrange-range").change(function () {
-    window.localStorage.setItem("blurrange", $(this).val());
-    refreshBlurRange();
-  });
-
-  $("#backgrounds-select").change(function () {
-    window.localStorage.setItem(
-      "background",
-      $(this).find("option:selected").val()
-    );
-    refreshBackgroundImage();
-  });
-  $("#toastspos-select").change(function () {
-    window.localStorage.setItem(
-      "toastspos",
-      $(this).find("option:selected").val()
-    );
-    refreshToastsPosition();
-    Toaster("Test", 800, false, "success");
-  });
-  $("#fontfamily-select").change(function () {
-    window.localStorage.setItem(
-      "fontfamily",
-      $(this).find("option:selected").val()
-    );
-    refreshFont();
-  });
-
-  $("#noupdatenotify-checkbox").change(function () {
-    window.localStorage.setItem(
-      "noupdatenotify",
-      $(this).is(":checked").toString()
-    );
-  });
-  $("#norounded-checkbox").change(function () {
-    window.localStorage.setItem("norounded", $(this).is(":checked").toString());
-    refreshNoRounded();
-  });
-  $("#nolowpriority-checkbox").change(function () {
-    window.localStorage.setItem(
-      "nolowpriority",
-      $(this).is(":checked").toString()
-    );
-  });
-  $("#nobackdrop-checkbox").change(function () {
-    window.localStorage.setItem(
-      "nobackdrop",
-      $(this).is(":checked").toString()
-    );
-    refreshNoBackdrop();
-  });
-  $("#simplify-checkbox").change(function () {
-    window.localStorage.setItem("simplify", $(this).is(":checked").toString());
-    refreshSimplify();
-  });
-});
-
-function loadKubekSettings() {
-  $.get("/kubek/config", function (data) {
-    kubekCfg = data;
-    if (kubekCfg["ftpd"] == true) {
-      $("#ftpserver-checkbox").attr("checked", true);
-    }
-
-    if (window.localStorage.getItem("simplify") == "true") {
-      $("#simplify-checkbox").attr("checked", true);
-    }
-
-    if (window.localStorage.getItem("nobackdrop") == "true") {
-      $("#nobackdrop-checkbox").attr("checked", true);
-    }
-
-    if (window.localStorage.getItem("blurrange") != null) {
-      $("#blurrange-range").val(window.localStorage.getItem("blurrange"));
-    }
-
-    if (window.localStorage.getItem("norounded") == "true") {
-      $("#norounded-checkbox").attr("checked", true);
-    }
-
-    if (window.localStorage.getItem("noupdatenotify") == "true") {
-      $("#noupdatenotify-checkbox").attr("checked", true);
-    }
-
-    if (window.localStorage.getItem("nolowpriority") == "true") {
-      $("#nolowpriority-checkbox").attr("checked", true);
-    }
-
-    $.get("/kubek/bgList", function (bgList) {
-      bgList.forEach(function (bg, i) {
-        iv = i + 1;
-        $("#backgrounds-select").append(
-          "<option value='" + bg + "'>Image " + iv + "</option>"
-        );
-      });
-      if (window.localStorage.background != null) {
-        $(
-          "#backgrounds-select option[value='" +
-            window.localStorage.background +
-            "']"
-        ).prop("selected", true);
-      }
-    });
-
-    if (window.localStorage.getItem("toastspos") != null) {
-      $(
-        "#toastspos-select option[value='" +
-          window.localStorage.getItem("toastspos") +
-          "']"
-      ).prop("selected", true);
-    }
-
-    if (window.localStorage.getItem("fontfamily") != null) {
-      $(
-        "#fontfamily-select option[value='" +
-          window.localStorage.getItem("fontfamily") +
-          "']"
-      ).prop("selected", true);
-    }
-
-    if (kubekCfg["tgbot-enabled"] == true) {
-      $("#tgbot-checkbox").attr("checked", true);
-      $("#tgbot-token-item").show();
-      $("#tgbot-otp-item").show();
-      $(".tgbot-token").val(kubekCfg["tgbot-token"]);
-    }
-
-    if (kubekCfg["auth"] == true) {
-      $("#auth-checkbox").attr("checked", true);
-    }
-
-    if (kubekCfg["save-logs"] == true) {
-      $("#savelogs-checkbox").attr("checked", true);
-    }
-
-    if (kubekCfg["internet-access"] == true) {
-      $("#allowintacc-checkbox").attr("checked", true);
-    }
-
-    $(".ftppass").val(kubekCfg["ftpd-password"]);
-    $(".ftpuser").val(kubekCfg["ftpd-user"]);
-    $(".webserverport").val(kubekCfg["webserver-port"]);
-    $(".socketport").val(kubekCfg["socket-port"]);
-
-    $.get("/kubek/support-uid", function (supuid) {
-      $("#supuid").text(supuid);
-    });
-
-    if ($("#tgbot-checkbox").is(":checked")) {
-      $("#tgbot-token-item").show();
-      $("#tgbot-otp-item").show();
-    } else {
-      $("#tgbot-token-item").hide();
-      $("#tgbot-otp-item").hide();
-    }
-    if ($("#auth-checkbox").is(":checked")) {
-      $("#auth-users-item").show();
-    } else {
-      $("#auth-users-item").hide();
-    }
-    if ($("#ftpserver-checkbox").is(":checked")) {
-      $("#ftp-login-item").show();
-      $("#ftp-pass-item").show();
-    } else {
-      $("#ftp-login-item").hide();
-      $("#ftp-pass-item").hide();
-    }
-  });
-
-  $("#user-edit-modal .password-input").keyup(function () {
-    passwd = $("#user-edit-modal .password-input").val();
-    if (passwd.match(PASSWORD_REGEX) != null) {
-      $("#user-edit-modal .passwd-err").hide();
-    } else {
-      $("#user-edit-modal .passwd-err").show();
-    }
-  });
-}
-
-function shutdownKubek() {
-  showModal("turnoff-warn-modal", "fadeIn", function () {
-    $.get("/kubek/shutdown");
-  });
-}
-
-function setNewUserMode(bool) {
-  if (bool) {
-    $("#user-edit-modal #user-edit-modal-label").text("{{adding-usr-ks}}");
-    $("#user-edit-modal .input-bg").show();
-    $("#user-edit-modal .passwd-err").hide();
-    $("#user-edit-modal .buttons-cont").hide();
-    modalModeNewUser = true;
-  } else {
-    $("#user-edit-modal #user-edit-modal-label").text("{{editing-usr-ks}}");
-    $("#user-edit-modal .input-bg").hide();
-    $("#user-edit-modal .passwd-err").hide();
-    $("#user-edit-modal .buttons-cont").show();
-    modalModeNewUser = false;
-  }
-  setModalDefaultValues();
-}
-
-function setModalDefaultValues() {
-  $("#user-edit-modal input[type=checkbox]:not(:disabled)").each(function () {
-    $(this).prop("checked", false);
-  });
-  $(
-    "#user-edit-modal input[type=text], #user-edit-modal input[type=password], #user-edit-modal input[type=email]"
-  ).each(function () {
-    $(this).val("");
-  });
-}
-
-function openNewUserModal() {
-  setNewUserMode(true);
-  setModalDefaultValues();
-  showModal("user-edit-modal", "fadeIn", function () {
-    saveUser();
-  });
-}
-
-function saveUser() {
-  usrname = $("#user-edit-modal .usrname-input").val();
-  mail = $("#user-edit-modal .mail-input").val();
-  if (mail == "" || mail.match(EMAIL_REGEX)) {
-    if (usrname.match(LOGIN_REGEX)) {
-      perms = [];
-      $("#user-edit-modal input[type=checkbox]:checked:not(:disabled)").each(
-        function () {
-          perm = $(this).data("perm");
-          perms.push(perm);
-        }
-      );
-      perms = perms.join(",");
-      if (modalModeNewUser == true) {
-        passwd = $("#user-edit-modal .password-input").val();
-        if (passwd.match(PASSWORD_REGEX)) {
-          if (mail == "") {
-            reqUrl =
-              "/auth/newUser?login=" +
-              usrname +
-              "&permissions=" +
-              perms +
-              "&password=" +
-              passwd;
-          } else {
-            reqUrl =
-              "/auth/newUser?login=" +
-              usrname +
-              "&mail=" +
-              mail +
-              "&permissions=" +
-              perms +
-              "&password=" +
-              passwd;
-          }
-          $.get(reqUrl, function (res) {
-            if (res == "Users count is limited to 5 users") {
-              Toaster("{{users-limited-count-ks}}", 3000, false, "warning");
-            }
-            loadUsersList();
-          });
-        }
-      } else {
-        $.get(
-          "/auth/editUser?login=" +
-            usrname +
-            "&mail=" +
-            mail +
-            "&permissions=" +
-            perms,
-          function () {
-            loadUsersList();
-          }
-        );
-      }
-    }
-  }
-}
-
-function setModalDataByUserInfo(userInfo) {
-  setModalDefaultValues();
-  currEdit = userInfo.username;
-  $("#user-edit-modal .usrname-input").val(userInfo.username);
-  $("#user-edit-modal .mail-input").val(userInfo.mail);
-  perms = userInfo.permissions;
-  $("#user-edit-modal input[type=checkbox]").each(function () {
-    perm = $(this).data("perm");
-    if (perms.includes(perm)) {
-      $(this).prop("checked", true);
-    }
-  });
-}
-
-function saveKubekSettings() {
-  ftpd = $("#ftpserver-checkbox").is(":checked");
-  auth = $("#auth-checkbox").is(":checked");
-  savelogs = $("#savelogs-checkbox").is(":checked");
-  allowint = $("#allowintacc-checkbox").is(":checked");
-  tgbot = $("#tgbot-checkbox").is(":checked");
-  if (tgbot == false || $(".tgbot-token").val() != "") {
-    if (kubekCfg["tgbot-enabled"] != tgbot && tgbot == true) {
-      showModal("about-otp-modal", "fadeIn", function () {
-        saveSettingsStage2();
-      });
-    } else {
-      saveSettingsStage2();
-    }
-  }
-}
-
-function saveSettingsStage2() {
-  if (kubekCfg["ftpd"] != ftpd) {
-    showModal("ftp-need-res-modal", "fadeIn", function () {
-      saveSettingsStage3();
-    });
-  } else {
-    saveSettingsStage3();
-  }
-}
-
-function saveSettingsStage3() {
-  if (kubekCfg["internet-access"] != allowint) {
-    showModal("othip-need-res-modal", "fadeIn", function () {
-      saveSettingsStage35();
-    });
-  } else {
-    saveSettingsStage35();
-  }
-}
-
-function saveSettingsStage35() {
-  if (
-    kubekCfg["webserver-port"] != $(".webserverport").val() ||
-    kubekCfg["socket-port"] != $(".socketport").val()
-  ) {
-    if (
-      $(".webserverport").val() >= 80 &&
-      $(".webserverport").val() <= 65500 &&
-      $(".socketport").val() >= 81 &&
-      $(".socketport").val() <= 65500
-    ) {
-      showModal("othport-need-res-modal", "fadeIn", function () {
-        saveSettingsStage4();
-      });
-    }
-  } else {
-    saveSettingsStage4();
-  }
-}
-
-function saveSettingsStage4() {
-  kubekCfg["ftpd"] = ftpd;
-  kubekCfg["auth"] = auth;
-  kubekCfg["tgbot-enabled"] = tgbot;
-  kubekCfg["internet-access"] = allowint;
-  kubekCfg["save-logs"] = savelogs;
-  kubekCfg["ftpd-password"] = $(".ftppass").val();
-  kubekCfg["ftpd-user"] = $(".ftpuser").val();
-  kubekCfg["tgbot-token"] = $(".tgbot-token").val();
-  kubekCfg["socket-port"] = $(".socketport").val();
-  kubekCfg["webserver-port"] = $(".webserverport").val();
-  kubekCfg["tgbot-chatid"] = [];
-  $.get(
-    "/kubek/saveConfig?data=" + encodeURI(JSON.stringify(kubekCfg)),
-    function (data) {
-      $.get("/kubek/setFTPDStatus?value=" + ftpd, function (data) {
-        location.reload();
-      });
-    }
-  );
-}
-
-function changeAdminPass() {
-  oldPass = $("#admin-edit-modal .opassword-input").val();
-  newPass = $("#admin-edit-modal .npassword-input").val();
-  if (oldPass != "" && newPass != "") {
-    $.get(
-      "/auth/changeAdminPass?oldPass=" + oldPass + "&newPass=" + newPass,
-      function (ret) {
-        if (ret == true) {
-          window.location = "/";
-        } else {
-          $("#admin-edit-modal .opassword-input").val("");
-          $("#admin-edit-modal .npassword-input").val("");
-        }
-      }
-    );
-  }
-}
-
-function deleteCurrUserAccount() {
-  $.get("/auth/deleteUser?login=" + currEdit, function () {
-    loadUsersList();
-    $("#user-edit-modal").hide();
-  });
-}
-
-function regenCurrUserHash() {
-  $.get("/auth/regenUserHash?login=" + currEdit, function () {
-    loadUsersList();
-    $("#user-edit-modal").hide();
-  });
-}
-
-function openEditAdminModal() {
-  showModal("admin-edit-modal", "fadeIn", function () {
-    changeAdminPass();
-  });
-}
-
-function openEditUserModal(username) {
-  setNewUserMode(false);
-  $.get("/auth/getUserInfo?username=" + username, function (usrdata) {
-    setModalDataByUserInfo(usrdata);
-    showModal("user-edit-modal", "fadeIn", function () {
-      saveUser();
-    });
-  });
-}
-
-function loadUsersList() {
-  $("#users-list tr:not(.addusr)").each(function () {
-    $(this).remove();
-  });
-  htmlc = "";
-  $.get("/auth/listUsers", function (users) {
-    htmlc =
-      htmlc +
-      '<tr class="bg-white dark:bg-gray-800 cursor-pointer" onclick="openEditAdminModal()"><th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"><div class="flex items-center"><i class="ri-user-2-fill text-xl"></i><span style="margin-left: 16px"></span></div></th><td class="px-6 py-4">{{admin-acc-ks}}</td></tr>';
-    for (const [key, value] of Object.entries(users)) {
-      usr = value;
-      if (usr.mail == "undefined" || usr.mail == null || usr.mail == "") {
-        usr.mail = "{{mail-no-ks}}";
-      }
-      if (usr.username != "kubek") {
-        htmlc =
-          htmlc +
-          '<tr class="bg-white dark:bg-gray-800 cursor-pointer" onclick="openEditUserModal(' +
-          "'" +
-          usr.username +
-          "'" +
-          ')"><th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"><div class="flex items-center"><i class="ri-user-fill text-xl"></i><span style="margin-left: 16px"></span></div></th><td class="px-6 py-4">' +
-          usr.username +
-          "</td></tr>";
-      }
-    }
-    $("#users-list").append(htmlc);
-  });
-}
-
-function startNSAModalTimeout(){
-  $("#needtosave-auth-warn-modal button").hide();
-  $("#needtosave-auth-warn-modal .nsatimeout-span").text(nsatimeout + "s");
-  setInterval(function(){
-    if(nsatimeout > 1){
-      nsatimeout--;
-      $("#needtosave-auth-warn-modal .nsatimeout-span").text(nsatimeout + "s");
-    } else {
-      $("#needtosave-auth-warn-modal .nsatimeout-span").hide();
-      $("#needtosave-auth-warn-modal button").show();
-    }
-  }, 1000);
-}*/

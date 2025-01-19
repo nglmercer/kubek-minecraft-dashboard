@@ -994,11 +994,6 @@ class CustomDialog extends HTMLElement {
             }
             // Corregimos el manejo del evento submit
             const form = this.shadowRoot.querySelectorAll('form');
-            if (form) {
-              form.forEach(form => {
-                form.addEventListener('submit', this.handleSubmit.bind(this));
-              });
-            }
           }
         
           disconnectedCallback() {
@@ -1009,11 +1004,6 @@ class CustomDialog extends HTMLElement {
             }
             // Limpiamos el evento submit
             const form = this.shadowRoot.querySelector('#validate-form');
-            if (form) {
-              form.forEach(form => {
-                form.removeEventListener('submit', this.handleSubmit.bind(this));
-              });
-            }
           }
       
           handleInputChange(event) {
@@ -2489,7 +2479,7 @@ class CustomSelect extends HTMLElement {
   selectOption(optionElement) {
     const value = optionElement.dataset.value;
     const selectedOption = this.options.find(opt => opt.value === value);
-    
+    console.log("selectedOption", selectedOption, value);
     if (!selectedOption) return;
     
     this.selectedValue = value;
@@ -2656,6 +2646,7 @@ class EnhancedSelect extends HTMLElement {
     optionsList.addEventListener('click', (e) => {
       const optionElement = e.target.closest('.option');
       if (optionElement) {
+        console.log("optionElement", optionElement);
         if (this.multiple) {
           this.toggleOption(optionElement);
         } else {
@@ -2717,7 +2708,7 @@ class EnhancedSelect extends HTMLElement {
   selectOption(optionElement) {
     const value = optionElement.dataset.value;
     const selectedOption = this.options.find(opt => opt.value === value);
-    
+    console.log("selectedOption", selectedOption, value);
     if (!selectedOption) return;
     
     this.selectedValues = [value];
@@ -2728,7 +2719,10 @@ class EnhancedSelect extends HTMLElement {
       detail: selectedOption
     }));
   }
-
+  setSelectedValues(values) {
+    this.selectedValues = values;
+    this.updateSelections();
+  }
   updateSelections() {
     const options = this.shadowRoot.querySelectorAll('.option');
     options.forEach(option => {
