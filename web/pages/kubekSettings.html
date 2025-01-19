@@ -316,7 +316,7 @@ value="10.0.0.0/8
     </div>
 </div>
 <!-- newModalwebcomponent -->
-<dialog-container id="deletedialog" >
+<dialog-container id="userModal" style="padding: 4px; margin: 4px;">
     <h2 id="kubekSettings.userEditor"> {{kubekSettings.userEditor}} </h2>
     <form id="verify-form">
         <div class="headertemplate">
@@ -325,7 +325,7 @@ value="10.0.0.0/8
             </div>
             <custom-input
             type="text"
-            id="login-username"
+            id="login_username"
             name="login"
             placeholder="{{kubekSettings.enterUsername}}"
             class="username"
@@ -336,7 +336,7 @@ value="10.0.0.0/8
             </custom-input>
             <custom-input
             type="email"
-            id="login-email"
+            id="login_email"
             name="email"
             placeholder="{{kubekSettings.enterEmail}}"
             class="email"
@@ -347,7 +347,7 @@ value="10.0.0.0/8
         </div>
     
     <!-- Con texto personalizado para el botón -->
-        <dropdown-component>
+        <dropdown-component style=" border-color: gray; color: rgba(128, 128, 128, 0.4); gap: 0.5rem;">
             <h3>{{kubekSettings.permissionsList}}</h3>
         <div class="row">
             <custom-input
@@ -433,28 +433,32 @@ value="10.0.0.0/8
     
         </div>
         </dropdown-component>
-        <div style="display: flex; flex-direction: row; align-items: center; margin: 12px 0;">
+        <div style="display: flex; flex-direction: row; align-items: center; margin: 12px 0; gap: 0.5rem;">
             <translation-span id="kubekSettings.passwordRules" lang="en">{{kubekSettings.restrictServersAccess}}</translation-span>
             <custom-input
             type="switch"
-            id="restrict_servers_access"
-            name="restrict_servers_access"
+            id="isServersRestricted"
+            name="isServersRestricted"
             value="false"
             ></custom-input>
         </div>
-        <dropdown-component id="selected_server_dropdown">
+        <dropdown-component id="selected_server_dropdown" style=" border-color: gray; color: rgba(128, 128, 128, 0.4);gap: 0.5rem;">
             <enhanced-select multiple
             style="border: 0px;"
             id="select_servers"
             name="select_servers"
             ></enhanced-select>
         </dropdown-component>
-        <translation-span id="kubekSettings.passwordRules" lang="en">{{kubekSettings.passwordRules}}</translation-span>
+        <span id="kubekSettings.passwordRules" lang="en">{{kubekSettings.passwordRules}}</span>
         <custom-input
+        style="border: 2px solid #29292950; border-radius: 4px; padding: 0; margin: 0;"
         type="password"
-        id="password-input"
+        id="login_password"
         name="password"
         placeholder="{{kubekSettings.enterPassword}}"
+        required
+        title="{{kubekSettings.enterPassword}}"
+        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}" 
         >
         </custom-input>
     </form>
@@ -466,8 +470,8 @@ value="10.0.0.0/8
   </custom-dialog>
   </dialog-container>
 <script>
-    const deleteServerDialog = document.querySelector('#deletedialog');
-    deleteServerDialog.show();
+     const userModal = document.querySelector('#userModal');
+    //userModal.show();
     const dropdown_component = document.querySelector('dropdown-component');
     dropdown_component.toggleDropdown();
     const allelements = document.querySelectorAll('translation-span');
@@ -496,26 +500,54 @@ value="10.0.0.0/8
             }
         }
     }
-
+    const sendmapdata = {
+        login: "string",
+        email: "string",
+        permissions: "array",
+        password: "string",
+        isServersRestricted: "boolean",
+        serversAllowed: "array",
+        permissionsList: ["file_manager", "manage_servers", "making_servers", "monitor_servers", "manage_java", "manage_plugins", "system_monitoring", "kubek_settings", "accounts"],
+    };
     const custom_dialog = document.querySelector('custom-dialog');
     custom_dialog.options = [
         {
             label: "{{commons.save}}",
-            style: "background-color: #007bff; color: white;",
             class: "save-btn",
             callback: () => {
                 console.log("save");
-                getselected_server_dropdown();
+                const selectedServersInList = getselected_server_dropdown();
                 console.log("getAllInputValues", getAllInputValues());
-                verifyForm();
-                
+                console.log("getdatabyInputs", getdatabyInputs(sendmapdata.permissionsList));
+                const permissions = getdatabyInputs(sendmapdata.permissionsList).allDatakeys;   
+                let reqURL;
+                const {login_username, login_email, login_password} = getAllInputValues();
+                if (selectedServersInList && selectedServersInList.length < 1) {
+                    reqURL = "/accounts?login=" + login_username + "&email=" + login_email + "&permissions=" + permissions + "&password=" + login_password;
+                } else {
+                    reqURL = "/accounts?login=" + login_username + "&email=" + login_email + "&permissions=" + selectedServersInList + "&permissions="  + permissions + "&password=" + login_password;
+                }
+                if (isvalidUserForm("#login_username") && isvalidUserForm("#login_password")) {
+                    KubekRequests.put(reqURL, (result) => {
+                        console.log("result", result);
+                        if (result === true) {
+                            KubekAlerts.addAlert("{{kubekSettings.userAdded}}", "check", login_username, 5000);
+                            userModal.hide();
+                        } else {
+                            KubekAlerts.addAlert("{{kubekSettings.userNotAdded}}", "warning", login_username, 5000);
+                        }
+                        KubekSettingsUI.refreshUsersList();
+                    });
+
+                }
+                console.log("reqURL", reqURL);
             }
         },
         {
             label: "{{commons.cancel}}",
-            style: "background-color: #e5e5e5; color: black;",
             class: "cancel-btn",
             callback: () => {
+                userModal.hide();
                 console.log("cancel");
                 getselected_server_dropdown();
                 console.log("getAllInputValues", getAllInputValues());
@@ -525,32 +557,48 @@ value="10.0.0.0/8
     (async () => {
         console.log("getparsedtranslations();", await getparsedtranslations("kubekSettings","userEditor", "es"));
     })();
-    function verifyForm() {
-        const form = document.querySelector('#verify-form');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            console.log("verifyForm", e.target);
-        });
-    }
+
     const selected_server_dropdown = document.querySelector('#selected_server_dropdown');
     function getselected_server_dropdown() {
         const data = document.querySelector('#select_servers').getValue();
         console.log("data", data);
+        return data;
     }
     function getAllInputValues() {
-    const allData = {};
-    const inputs = document.querySelectorAll('custom-input');
-    
-    inputs.forEach((input) => {
-      const id = input.getAttribute('id');
-      const value = input.getInputValues();
-      allData[id] = value;
-    });
-    
-    return allData;
-  }
-  var restrict_servers_access = document.querySelector('#restrict_servers_access');
-  restrict_servers_access.addEventListener('input-change', (e) => {
+        const allData = {};
+        const inputs = document.querySelectorAll('custom-input');
+        
+        inputs.forEach((input) => {
+        const id = input.getAttribute('id');
+        const value = input.getInputValues();
+        allData[id] = value;
+        });
+        
+        return allData;
+    }
+    function getdatabyInputs(inputs, isTrue = true) {
+        const allData = {};
+        let allDatakeys = [];
+        inputs.forEach(input => {
+            allData[input] = document.querySelector(`#${input}`).getInputValues();
+        });
+        /*array de los keys de los inputs*/
+        if (allData) {
+            for (const [key, value] of Object.entries(allData)) {
+                if (value || value === isTrue) {
+                    allDatakeys.push(key);
+                }
+            }
+            return { allData, allDatakeys };
+        }
+    }
+    function isvalidUserForm(elementname) {
+        const usernameForm = document.querySelector(elementname)
+        const isvalid = usernameForm.getvalidation();
+        console.log("isvalid", isvalid);
+        return isvalid;
+    }
+  document.querySelector('#isServersRestricted').addEventListener('input-change', (e) => {
     console.log("restrict_servers_access", e.detail);
     if (e.detail.value === true) {
       document.querySelector('#selected_server_dropdown').show();
@@ -558,4 +606,6 @@ value="10.0.0.0/8
       document.querySelector('#selected_server_dropdown').hide();
     }
   });
+
+  /* fillform and show modal */
 </script>

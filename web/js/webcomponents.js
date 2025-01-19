@@ -661,7 +661,6 @@ class CustomDialog extends HTMLElement {
         .dialog-content {
           transform: scale(0.95);
           transition: transform 0.3s ease;
-          padding: inherit;
           max-height: 90dvh;
           overflow-y: auto;
           background: inherit;
@@ -669,6 +668,9 @@ class CustomDialog extends HTMLElement {
           color: inherit;
           border-radius: inherit;
           border-radius: 16px;
+          padding: inherit;
+          margin: inherit;
+          padding: 8px;
         }
         .dialog-overlay.visible .dialog-content {
           transform: scale(1);
@@ -889,7 +891,7 @@ class CustomDialog extends HTMLElement {
           }
       
           static get observedAttributes() {
-            return ['type', 'id', 'name', 'value', 'placeholder', 'disabled', 'readonly', 'darkmode', 'options', 'required', 'title'];
+            return ['type', 'id', 'name', 'value', 'placeholder', 'disabled', 'readonly', 'darkmode', 'options', 'required', 'title', 'pattern'];
           }
       
           getStyles() {
@@ -898,15 +900,16 @@ class CustomDialog extends HTMLElement {
             return `
               :host {
                 display: block;
-                margin: 5px 0;
+                margin: inherit;
                 color-scheme: light dark;
+                margin: 0.5rem;
+                padding: 0.5rem;
               }
               
               .input-container {
                 display: flex;
                 flex-direction: column;
                 padding: inherit;
-                padding: 5px;
               }
               
               input, textarea, select {
@@ -1062,7 +1065,8 @@ class CustomDialog extends HTMLElement {
             const options = this.getAttribute('options') || '[]';
             const required = this.hasAttribute('required') ? 'required' : '';
             const title = this.getAttribute('title') || '';
-            const allarguments = { type, id, name, value, placeholder, disabled, readonly, options, required, title };
+            const pattern = this.getAttribute('pattern') || '';
+            const allarguments = { type, id, name, value, placeholder, disabled, readonly, options, required, title, pattern };
             this.shadowRoot.innerHTML = `
               <style>${this.getStyles()}</style>
               <form id="validate-form">
@@ -1081,7 +1085,7 @@ class CustomDialog extends HTMLElement {
           }
       
           renderInput(allarguments) {
-            const { type, id, name, value, placeholder, disabled, readonly, options, required, title } = allarguments;
+            const { type, id, name, value, placeholder, disabled, readonly, options, required, title, pattern } = allarguments;
             const requiredAttr = required ? 'required' : ''; // This will output just 'required' when needed
             
             switch (type) {
@@ -1095,6 +1099,7 @@ class CustomDialog extends HTMLElement {
                     ${readonly ? 'readonly' : ''}
                     ${requiredAttr}
                       ${title ? `title="${title}" oninvalid="this.setCustomValidity('${title}')" oninput="this.setCustomValidity('')"` : ''}
+                      ${pattern ? `pattern="${pattern}"` : ''}
                   >${value}</textarea>
                 `;
               
@@ -1112,6 +1117,7 @@ class CustomDialog extends HTMLElement {
                       ${readonly ? 'readonly' : ''}
                       ${requiredAttr}
                       ${title ? `title="${title}" oninvalid="this.setCustomValidity('${title}')" oninput="this.setCustomValidity('')"` : ''}
+                      ${pattern ? `pattern="${pattern}"` : ''}
                     >
                     <span class="slider"></span>
                   </label>
@@ -1127,6 +1133,7 @@ class CustomDialog extends HTMLElement {
                     ${readonly ? 'readonly' : ''}
                     ${required ? 'required' : ''}
                       ${title ? `title="${title}" oninvalid="this.setCustomValidity('${title}')" oninput="this.setCustomValidity('')"` : ''}
+                      ${pattern ? `pattern="${pattern}"` : ''}
                   >
                     ${optionsArray.map(option => `
                       <option value="${option.value}" ${option.value === value ? 'selected' : ''}>
@@ -1166,7 +1173,7 @@ class CustomDialog extends HTMLElement {
                       ${readonly ? 'readonly' : ''}
                       ${requiredAttr}
                       ${title ? `title="${title}" oninvalid="this.setCustomValidity('${title}')" oninput="this.setCustomValidity('')"` : ''}
-                      
+                      ${pattern ? `pattern="${pattern}"` : ''}
                     >
                   `;
               
@@ -2183,7 +2190,7 @@ class DropdownComponent extends HTMLElement {
       if (newValue !== null) {
         button.style.display = 'none';
       } else {
-        button.style.display = 'block';
+        button.style.display = 'grid';
       }
     }
   }
@@ -2230,12 +2237,14 @@ class DropdownComponent extends HTMLElement {
         .dropdown-content {
           display: none;
           padding: 6px;
-          border: 1px solid #ddd;
+          border: 1px solid;
+          border-color: inherit;
           border-radius: 4px;
+          gap: 0.5rem;
         }
         
         .dropdown-content.active {
-          display: block;
+          display: grid;
         }
         
         button {
@@ -2253,7 +2262,7 @@ class DropdownComponent extends HTMLElement {
         
         ::slotted(.row) {
           display: flex;
-          gap: 5px;
+          gap: 1rem;
           align-items: center;
         }
         

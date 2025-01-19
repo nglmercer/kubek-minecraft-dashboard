@@ -133,26 +133,41 @@ KubekSettingsUI = class {
         });
     }
 
-    // Обновить список пользователей
     static refreshUsersList = () => {
-        $("#accounts-list").html("");
-        KubekRequests.get("/accounts", (accounts) => {
+      const accountsListElement = document.getElementById("accounts-list");
+      accountsListElement.innerHTML = ""; // Limpiar la lista existente
+  
+      KubekRequests.get("/accounts", (accounts) => {
           console.log("accounts", accounts);
-            $("#accounts-list").append(NEW_ACCOUNT_ITEM);
-            accounts.forEach((account) => {
-                $("#accounts-list").append(ACCOUNT_ITEM.replaceAll("$0", account));
-            });
-
-            $("#accounts-list .item").on("click", function () {
-                let account = $(this).data("account");
-                if (account === "newAccItem") {
-                    KubekSettingsUI.showNewUserEditor();
-                } else {
-                    KubekSettingsUI.openUserEditorByUsername(account);
-                }
-            });
-        });
-    }
+  
+          // Agregar el nuevo elemento de cuenta
+          const newAccountItemElement = document.createElement("div");
+          newAccountItemElement.innerHTML = NEW_ACCOUNT_ITEM;
+          accountsListElement.appendChild(newAccountItemElement);
+  
+          // Iterar sobre las cuentas y agregar elementos a la lista
+          accounts.forEach((account) => {
+              const accountItemElement = document.createElement("div");
+              accountItemElement.innerHTML = ACCOUNT_ITEM.replaceAll("$0", account);
+              accountItemElement.dataset.account = account; // Agregar un atributo "data-account"
+              accountsListElement.appendChild(accountItemElement);
+          });
+  
+          // Agregar evento click a los elementos de la lista
+          const items = accountsListElement.querySelectorAll(".item");
+          items.forEach((item) => {
+              item.addEventListener("click", function () {
+                  const account = this.dataset.account; // Obtener el valor de "data-account"
+                  if (account === "newAccItem") {
+                      KubekSettingsUI.showNewUserEditor();
+                  } else {
+                      KubekSettingsUI.openUserEditorByUsername(account);
+                  }
+              });
+          });
+      });
+  };
+  
     // Сбросить значения в редакторе пользователей
     static resetUserEditorValues = () => {
         $(".userEditModal input[type=checkbox]").removeAttr("checked");
@@ -168,7 +183,9 @@ KubekSettingsUI = class {
         //$(".userEditModal #password-input").show();
         //$(".userEditModal #password-rules").show();
         $(".userEditModal #save-btn").attr("disabled", true);
-        this.showUserEditor();
+        //this.showUserEditor();
+        const userModal = document.querySelector('#userModal');
+        userModal.show();
         currentEditorMode = "new";
     }
 
@@ -292,6 +309,7 @@ KubekSettingsUI = class {
   
       // Mostrar el objeto para depuración
       console.log("Datos a enviar:", userData);
+      localStorage.setItem("userData_adduser", JSON.stringify(userData));
   
       let reqURL;
   
@@ -303,7 +321,7 @@ KubekSettingsUI = class {
               selectedServersInList = selectedServersInList.join(",");
               reqURL = "/accounts?login=" + login + "&email=" + email + "&servers=" + selectedServersInList + "&permissions=" + permissions + "&password=" + password;
           }
-  
+          localStorage.setItem("userData_adduser_request", reqURL);
           KubekRequests.put(reqURL, (result) => {
               KubekSettingsUI.hideUserEditor();
               if (result === true) {
@@ -325,7 +343,7 @@ KubekSettingsUI = class {
           if (password !== "") {
               reqURL += "&password=" + password;
           }
-  
+          localStorage.setItem("userData_edituser_request", reqURL);
           KubekRequests.put(reqURL, (result) => {
               KubekSettingsUI.hideUserEditor();
               if (result === true) {
