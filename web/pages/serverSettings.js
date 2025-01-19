@@ -1,6 +1,4 @@
 loadedSettings = null;
-
-
 KubekServerSettingsUI = class {
     // Загрузить настройки в интерфейс
     static loadSettings = () => {

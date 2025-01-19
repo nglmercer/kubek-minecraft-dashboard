@@ -1,5 +1,3 @@
-//import e = require("express");
-
 ACCOUNT_ITEM = "<div class='item' data-account='$0'><div class='iconBg'><span class='material-symbols-rounded'>person</span></div><span>$0</span></div>";
 NEW_ACCOUNT_ITEM = "<div class='item' data-account='newAccItem'><div class='iconBg'><span class='material-symbols-rounded'>add</span></div><span>{{kubekSettings.addNewAccount}}</span></div>";
 
@@ -38,31 +36,7 @@ $(function () {
 const userModal = document.querySelector('#userModal');
 const dropdown_component = document.querySelector('dropdown-component');
 dropdown_component.toggleDropdown();
-async function getparsedtranslations(element,subelement, lang = "en") {	
-    const translationsraw = await localStorage.getItem("rawlanguages");
-    let alltranslations = [];
-    for (const [key, value] of Object.entries(JSON.parse(translationsraw))) {
-        console.log("key", key, value);
-        const langmaped = {
-            lang: value.info.code,
-            code: value.info.code,
-            id: value.info.id,
-            translation: value.translations
-            
-        }
-        alltranslations.push(langmaped);
-    }
-    console.log("alltranslations", alltranslations);
-    if (!element && !subelement || !element) return alltranslations;
-    if (!subelement && element) return alltranslations.find(item => item.lang === lang).translation[element];
-    if (subelement && element) {
-        if (alltranslations.find(item => item.lang === lang).translation[element]) {
-            return alltranslations.find(item => item.lang === lang).translation[element][subelement];
-        } else {
-            return alltranslations.find(item => item.lang === lang).translation[element];
-        }
-    }
-}
+
 const sendmapdata = {
     login: "string",
     email: "string",
@@ -491,7 +465,31 @@ function refreshLanguagesList(cb) {
       return langs;
   });
 };
-
+async function getparsedtranslations(element,subelement, lang = "en") {	
+  const translationsraw = await localStorage.getItem("rawlanguages");
+  let alltranslations = [];
+  for (const [key, value] of Object.entries(JSON.parse(translationsraw))) {
+      console.log("key", key, value);
+      const langmaped = {
+          lang: value.info.code,
+          code: value.info.code,
+          id: value.info.id,
+          translation: value.translations
+          
+      }
+      alltranslations.push(langmaped);
+  }
+  console.log("alltranslations", alltranslations);
+  if (!element && !subelement || !element) return alltranslations;
+  if (!subelement && element) return alltranslations.find(item => item.lang === lang).translation[element];
+  if (subelement && element) {
+      if (alltranslations.find(item => item.lang === lang).translation[element]) {
+          return alltranslations.find(item => item.lang === lang).translation[element][subelement];
+      } else {
+          return alltranslations.find(item => item.lang === lang).translation[element];
+      }
+  }
+}
 
 var langSelector = document.querySelector('language-selector');
 var objlang = {

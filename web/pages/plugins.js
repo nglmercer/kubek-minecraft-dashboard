@@ -1,21 +1,37 @@
+// Configuración inicial de la UI
 KubekUI.setTitle("Kubek | {{sections.plugins}}");
-var KubekPluginsUI = class {
-// Загрузить плагин/мод на сервер
-  static uploadItem(itemType){
-    const baseelement = "#server-" + itemType
-    const a_inputElement = document.querySelector(baseelement + "-input");
-    const a_uploadURL = "/" + itemType + "s/" + selectedServer;
-    a_inputElement.click();
-    a_inputElement.addEventListener("change", () => {
-      const a_formData = new FormData(document.querySelector(baseelement + "-form"));
-      KubekRequests.post(a_uploadURL, () => {
-        getpluginsandmods(itemType);
-        console.log(a_uploadURL, a_inputElement, selectedServer, a_formData);
-      }, a_formData);
+
+// Constantes para mejorar la mantenibilidad
+const UI_SELECTORS = {
+  PLUGINS: '#plugins-ui',
+  MODS: '#mods-ui'
+};
+
+const ITEM_TYPES = {
+  PLUGINS: 'plugins',
+  MODS: 'mods'
+};
+
+// Clase para manejar la subida de archivos
+class KubekPluginsUI {
+  static uploadItem(itemType) {
+    const baseelement = `#server-${itemType}`;
+    const inputElement = document.querySelector(`${baseelement}-input`);
+    const uploadURL = `/${itemType}s/${selectedServer}`;
+
+    inputElement.click();
+    inputElement.addEventListener("change", () => {
+      const formData = new FormData(document.querySelector(`${baseelement}-form`));
+      KubekRequests.post(uploadURL, () => {
+        pluginsAndModsController.refresh(itemType);
+        console.log('Upload completed:', { uploadURL, selectedServer, formData });
+      }, formData);
     });
   }
 }
-var pluginsmanagerclass = class PluginsAndModsManager {
+
+// Clase principal para gestionar el estado de plugins y mods
+class PluginsAndModsManager {
   constructor() {
     this._state = {
       plugins: [],
@@ -24,7 +40,7 @@ var pluginsmanagerclass = class PluginsAndModsManager {
     this._listeners = new Set();
   }
 
-  // Getter methods
+  // Getters
   get plugins() {
     return [...this._state.plugins];
   }
@@ -33,18 +49,17 @@ var pluginsmanagerclass = class PluginsAndModsManager {
     return [...this._state.mods];
   }
 
-  // Subscribe to state changes
+  // Gestión de suscripciones
   subscribe(callback) {
     this._listeners.add(callback);
     return () => this._listeners.delete(callback);
   }
 
-  // Notify all listeners of state changes
   _notifyListeners() {
     this._listeners.forEach(listener => listener(this._state));
   }
 
-  // Update state methods
+  // Métodos para actualizar el estado
   setPlugins(plugins) {
     this._state.plugins = [...plugins];
     this._notifyListeners();
@@ -55,7 +70,7 @@ var pluginsmanagerclass = class PluginsAndModsManager {
     this._notifyListeners();
   }
 
-  // Async methods to fetch data
+  // Métodos asíncronos para obtener datos
   async fetchPlugins() {
     return new Promise((resolve) => {
       KubekPlugins.getPluginsList((plugins) => {
@@ -79,113 +94,109 @@ var pluginsmanagerclass = class PluginsAndModsManager {
   }
 }
 
-// Create a single instance of the manager
-var pluginsManager = new pluginsmanagerclass();
-
-async function getpluginsandmods(type) {
-  const verifytype = type.includes("plugin") ? "plugins" : "mods";
-  try {
-
-    if (verifytype === "plugins") {
-    const plugins = await pluginsManager.fetchPlugins();
-    console.log(plugins, "plugins", pluginsManager.plugins);
-    if (plugins) {
-      pluginsManager.setPlugins(plugins);
-      }
-    } else {
-    const mods = await pluginsManager.fetchMods();
-    if (mods) {
-      pluginsManager.setMods(mods);
-      }
-    console.log(mods, "mods", pluginsManager.mods);
-    }
-    setpluginsandmods(type);
-    updateplugin(type);
-  } catch (error) {
-    console.error('Error fetching plugins/mods:', error);
+// Controlador principal para la lógica de negocio
+class PluginsAndModsController {
+  constructor() {
+    this.manager = new PluginsAndModsManager();
+    this.pluginsUI = document.querySelector(UI_SELECTORS.PLUGINS);
+    this.modsUI = document.querySelector(UI_SELECTORS.MODS);
+    this.initializeUI();
   }
-}
 
+  validateItemType(type) {
+    const normalizedType = type.toLowerCase().trim();
+    if (normalizedType.includes('plugin')) return ITEM_TYPES.PLUGINS;
+    if (normalizedType.includes('mod')) return ITEM_TYPES.MODS;
+    throw new Error(`Invalid item type: ${type}`);
+  }
 
-// Usage example:
-var kubekModsUI = document.querySelector('#mods-ui');
-var kubekPluginsUI = document.querySelector('#plugins-ui');
-var updateplugin  = (type) => {
-  console.log("updateplugin", type, pluginsManager.mods);
-  if (kubekPluginsUI.renderAllLists)   kubekPluginsUI.renderAllLists(type);
-}
+  async refresh(type) {
+    const validType = this.validateItemType(type);
+    try {
+      if (validType === ITEM_TYPES.PLUGINS) {
+        const plugins = await this.manager.fetchPlugins();
+        console.log('Fetched plugins:', plugins);
+      } else {
+        const mods = await this.manager.fetchMods();
+        console.log('Fetched mods:', mods);
+      }
+      this.updateUI(validType);
+    } catch (error) {
+      console.error(`Error refreshing ${validType}:`, error);
+    }
+  }
 
-["plugins", "mods"].forEach(type => {
-  const elements = {
-    "plugins": document.querySelector('#plugins-ui'),
-    "mods": document.querySelector('#mods-ui')
-  };
-  if (elements[type]) {
-    elements[type].renderAllLists(type);
-    elements[type].setType(type);
-    ["toggle", "delete"].forEach(eventName => {
-      elements[type].addEventListener(eventName, event => {
-        const detail = event.detail;
-        console.log(detail);
-        const itemname = detail.item;
-        if (eventName === "delete") {
-          deletefile(itemname, detail.type);
-        } else if (eventName === "toggle") {
-          togglepluginormod(itemname, detail.type, detail.newName);
+  updateUI(type) {
+    const validType = this.validateItemType(type);
+    const ui = validType === ITEM_TYPES.PLUGINS ? this.pluginsUI : this.modsUI;
+    
+    if (!ui) {
+      console.error(`UI element for ${validType} not found`);
+      return;
+    }
+
+    const items = validType === ITEM_TYPES.PLUGINS ? 
+      this.manager.plugins : 
+      this.manager.mods;
+
+    console.log(`Updating ${validType} UI with:`, items);
+    ui.setElementList(items);
+    ui.renderAllLists(validType);
+  }
+
+  deleteItem(item, itemType) {
+    const validType = this.validateItemType(itemType);
+    const itemPath = `/${validType}/${item}`;
+
+    KubekFileManager.delete(itemPath, (success) => {
+      if (success) {
+        const ui = validType === ITEM_TYPES.PLUGINS ? this.pluginsUI : this.modsUI;
+        ui.removeElement(item);
+        console.log(`${validType} item deleted:`, item);
+      }
+    });
+  }
+
+  toggleItem(item, itemType, newName) {
+    const validType = this.validateItemType(itemType);
+    
+    if (newName) {
+      const filePath = `/${validType}/${item}`;
+      KubekFileManager.renameFile(filePath, newName, (success) => {
+        if (success) {
+          console.log(`${validType} item renamed:`, { from: item, to: newName });
+          this.refresh(validType);
         }
       });
+    }
+  }
+
+  initializeUI() {
+    [ITEM_TYPES.PLUGINS, ITEM_TYPES.MODS].forEach(type => {
+      const ui = type === ITEM_TYPES.PLUGINS ? this.pluginsUI : this.modsUI;
+      
+      if (ui) {
+        ui.setType(type);
+        ui.renderAllLists(type);
+
+        // Configurar event listeners
+        ['toggle', 'delete'].forEach(eventName => {
+          ui.addEventListener(eventName, event => {
+            const { item, type: eventType, newName } = event.detail;
+            
+            if (eventName === 'delete') {
+              this.deleteItem(item, eventType);
+            } else if (eventName === 'toggle') {
+              this.toggleItem(item, eventType, newName);
+            }
+          });
+        });
+      }
     });
   }
-
-});
-kubekPluginsUI.renderAllLists("plugins");
-kubekModsUI.renderAllLists("mods");
-function setpluginsandmods(type) {
-  const verifytype = type.includes("plugin") ? "plugins" : "mods";
-  if (!kubekPluginsUI) return;
-
-  if (verifytype === "plugins") {
-    console.log('Before setting plugins list:', pluginsManager.plugins);
-    kubekPluginsUI.setElementList(pluginsManager.plugins);
-    console.log('After setting plugins list:', pluginsManager.plugins);
-
-  } else if (verifytype === "mods") {
-    console.log('Before setting mods list:', pluginsManager.mods);
-    kubekModsUI.setElementList(pluginsManager.mods);
-    console.log('After setting mods list:', pluginsManager.mods);
-  }
-  updateplugin(type);
 }
-function deletefile(item, itemType){
-  const verifytype = itemType.includes("plugin") ? "plugins" : "mods";
-  if (verifytype !== "plugins" && verifytype !== "mods") {
-    console.log("Invalid item type", itemType);
-    return;
-  }
-// after refreshing the list
-  const itemtodelete = '/'+ verifytype + '/'+ item;
-  console.log(itemtodelete);
-  // params filePath string and callback function
-  KubekFileManager.delete(itemtodelete, (data) => {
-    console.log("File deleted successfully", data);
-    if (data)     kubekPluginsUI.removeElement(item);
-    // KubekPluginsUI.refreshAllLists();
-  });
-}
-function togglepluginormod(item, itemType, newName) {
-  if (itemType !== "plugins" && itemType !== "mods") {
-    console.log("Invalid item type", itemType);
-    return;
-  }
-  if (newName) {
-    const filePath = `/${itemType}/${item}`;
-    // params filePath string, newName string and callback function
-    KubekFileManager.renameFile(filePath, newName, (data) => {
-      console.log("File renamed successfully", data);
-      // KubekPluginsUI.refreshAllLists();
-    });
-    console.log(item, itemType, newName, filePath);
-  }
-}
-getpluginsandmods("plugins");
-getpluginsandmods("mods");
+
+// Inicialización
+const pluginsAndModsController = new PluginsAndModsController();
+pluginsAndModsController.refresh(ITEM_TYPES.PLUGINS);
+pluginsAndModsController.refresh(ITEM_TYPES.MODS);
