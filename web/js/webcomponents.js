@@ -2093,7 +2093,25 @@ class DropdownComponent extends HTMLElement {
       if (button) button.textContent = 'Mostrar';
     }
   }
-  
+  hide() {
+    const content = this.shadowRoot.querySelector('.dropdown-content');
+    const button =this.shadowRoot.querySelector('button')
+    this.isHidden = true;
+    if (button) button.textContent = 'Mostrar';
+    if (content.classList.contains('active')) {
+      content.classList.remove('active');
+    }
+  }
+  show() {
+    const content = this.shadowRoot.querySelector('.dropdown-content');
+    const button =this.shadowRoot.querySelector('button')
+
+    this.isHidden = false;
+    if (button) button.textContent = 'Ocultar';
+    if (!content.classList.contains('active')) {
+      content.classList.add('active');
+    }
+  }
   render() {
     const buttonText = this.getAttribute('button-text');
     this.shadowRoot.innerHTML = `
@@ -2417,3 +2435,229 @@ class CustomSelect extends HTMLElement {
 }
 
 customElements.define('custom-select', CustomSelect);
+class EnhancedSelect extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.selectedValues = [];
+    this.options = [];
+    this.multiple = false;
+  }
+
+  static get observedAttributes() {
+    return ['multiple'];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'multiple') {
+      this.multiple = newValue !== null;
+      // Reset selections when switching modes
+      this.selectedValues = [];
+      this.render();
+      this.updateSelections();
+    }
+  }
+
+  connectedCallback() {
+    this.multiple = this.hasAttribute('multiple');
+    this.render();
+    this.addEventListeners();
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          font-family: Arial, sans-serif;
+        }
+        .select-container {
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          max-width: 300px;
+          padding: 8px;
+        }
+        .preview-container {
+          margin-bottom: 12px;
+          padding: 8px;
+          border-bottom: 1px solid #eee;
+          min-height: 50px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .preview-container img {
+          max-width: 100%;
+          max-height: 150px;
+          object-fit: contain;
+        }
+        .options-list {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .option {
+          padding: 8px 12px;
+          cursor: pointer;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+          border: 2px solid transparent;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .option:hover {
+          background-color: #f5f5f5;
+        }
+        .option.selected {
+          background-color: #e8f0fe;
+          color: #1a73e8;
+          border-color: #1a73e8;
+          font-weight: 500;
+        }
+        .option img {
+          width: 24px;
+          height: 24px;
+          object-fit: cover;
+          border-radius: 2px;
+        }
+      </style>
+      <div class="select-container">
+        <div class="preview-container" style="display: none;"></div>
+        <div class="options-list"></div>
+      </div>
+    `;
+  }
+
+  addEventListeners() {
+    const optionsList = this.shadowRoot.querySelector('.options-list');
+    optionsList.addEventListener('click', (e) => {
+      const optionElement = e.target.closest('.option');
+      if (optionElement) {
+        if (this.multiple) {
+          this.toggleOption(optionElement);
+        } else {
+          this.selectOption(optionElement);
+        }
+      }
+    });
+  }
+
+  updatePreview(selectedOptions) {
+    const previewContainer = this.shadowRoot.querySelector('.preview-container');
+    previewContainer.innerHTML = '';
+
+    if (!Array.isArray(selectedOptions)) {
+      selectedOptions = selectedOptions ? [selectedOptions] : [];
+    }
+
+    if (selectedOptions.length > 0) {
+      previewContainer.style.display = 'flex';
+      selectedOptions.forEach(option => {
+        if (option.img || option.image) {
+          const img = document.createElement('img');
+          img.src = option.img || option.image;
+          img.alt = option.label;
+          previewContainer.appendChild(img);
+        } else if (option.html) {
+          const div = document.createElement('div');
+          div.innerHTML = option.html;
+          previewContainer.appendChild(div);
+        } else {
+          previewContainer.style.display = 'none';
+        }
+      });
+    } else {
+      previewContainer.style.display = 'none';
+    }
+  }
+
+  toggleOption(optionElement) {
+    const value = optionElement.dataset.value;
+    const index = this.selectedValues.indexOf(value);
+    
+    if (index === -1) {
+      this.selectedValues.push(value);
+    } else {
+      this.selectedValues.splice(index, 1);
+    }
+    
+    this.updateSelections();
+    
+    const selectedOptions = this.options.filter(opt => this.selectedValues.includes(opt.value));
+    this.updatePreview(selectedOptions);
+
+    this.dispatchEvent(new CustomEvent('change', {
+      detail: selectedOptions
+    }));
+  }
+
+  selectOption(optionElement) {
+    const value = optionElement.dataset.value;
+    const selectedOption = this.options.find(opt => opt.value === value);
+    
+    if (!selectedOption) return;
+    
+    this.selectedValues = [value];
+    this.updateSelections();
+    this.updatePreview(selectedOption);
+
+    this.dispatchEvent(new CustomEvent('change', {
+      detail: selectedOption
+    }));
+  }
+
+  updateSelections() {
+    const options = this.shadowRoot.querySelectorAll('.option');
+    options.forEach(option => {
+      option.classList.toggle('selected', this.selectedValues.includes(option.dataset.value));
+    });
+  }
+
+  setOptions(options) {
+    this.options = options;
+    const optionsList = this.shadowRoot.querySelector('.options-list');
+    
+    optionsList.innerHTML = options.map(option => {
+      let optionContent = '';
+      
+      if (option.img || option.image) {
+        optionContent += `<img src="${option.img || option.image}" alt="${option.label}">`;
+      }
+      
+      optionContent += `<span>${option.label}</span>`;
+
+      return `
+        <div class="option ${this.selectedValues.includes(option.value) ? 'selected' : ''}" 
+             data-value="${option.value}">
+          ${optionContent}
+        </div>
+      `;
+    }).join('');
+
+    if (this.selectedValues.length > 0) {
+      if (this.multiple) {
+        const selectedOptions = options.filter(opt => this.selectedValues.includes(opt.value));
+        this.updatePreview(selectedOptions);
+      } else {
+        const selectedOption = options.find(opt => opt.value === this.selectedValues[0]);
+        if (selectedOption) {
+          this.updatePreview(selectedOption);
+        }
+      }
+    }
+  }
+
+  getValue() {
+    return this.multiple ? this.selectedValues : this.selectedValues[0] || null;
+  }
+
+  getSelectedOptions() {
+    const selected = this.options.filter(opt => this.selectedValues.includes(opt.value));
+    return this.multiple ? selected : selected[0] || null;
+  }
+}
+
+customElements.define('enhanced-select', EnhancedSelect);

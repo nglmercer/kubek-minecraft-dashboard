@@ -430,13 +430,22 @@ value="10.0.0.0/8
 
     </div>
     </dropdown-component>
-    <translation-span id="kubekSettings.passwordRules" lang="en">{{kubekSettings.passwordRules}}</translation-span>
+    <div style="display: flex; flex-direction: row; align-items: center; margin: 12px 0;">
+        <translation-span id="kubekSettings.passwordRules" lang="en">{{kubekSettings.restrictServersAccess}}</translation-span>
+        <custom-input
+        type="switch"
+        id="restrict_servers_access"
+        name="restrict_servers_access"
+        value="false"
+        ></custom-input>
+    </div>
     <dropdown-component id="selected_server_dropdown">
-        <custom-select
+        <enhanced-select multiple
         id="select_servers"
         name="select_servers"
-        ></custom-select>
+        ></enhanced-select>
     </dropdown-component>
+    <translation-span id="kubekSettings.passwordRules" lang="en">{{kubekSettings.passwordRules}}</translation-span>
     <custom-input
     type="password"
     id="password-input"
@@ -506,7 +515,6 @@ value="10.0.0.0/8
         console.log("getparsedtranslations();", await getparsedtranslations("kubekSettings","userEditor", "es"));
     })();
     const selected_server_dropdown = document.querySelector('#selected_server_dropdown');
-    selected_server_dropdown.toggleDropdown();
     function getselected_server_dropdown() {
         const data = document.querySelector('#select_servers').getValue();
         console.log("data", data);
@@ -523,4 +531,13 @@ value="10.0.0.0/8
     
     return allData;
   }
+  var restrict_servers_access = document.querySelector('#restrict_servers_access');
+  restrict_servers_access.addEventListener('input-change', (e) => {
+    console.log("restrict_servers_access", e.detail);
+    if (e.detail.value === true) {
+      document.querySelector('#selected_server_dropdown').show();
+    } else {
+      document.querySelector('#selected_server_dropdown').hide();
+    }
+  });
 </script>
