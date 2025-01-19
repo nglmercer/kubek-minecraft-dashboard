@@ -2244,3 +2244,176 @@ class TranslationSpan extends HTMLElement {
 
 // Registrar el componente
 customElements.define('translation-span', TranslationSpan);
+
+class CustomSelect extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.selectedValue = null;
+    this.options = [];
+  }
+
+  connectedCallback() {
+    this.render();
+    this.addEventListeners();
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          font-family: Arial, sans-serif;
+        }
+        .select-container {
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          max-width: 300px;
+          padding: 8px;
+        }
+        .preview-container {
+          margin-bottom: 12px;
+          padding: 8px;
+          border-bottom: 1px solid #eee;
+          min-height: 50px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .preview-container img {
+          max-width: 100%;
+          max-height: 150px;
+          object-fit: contain;
+        }
+        .options-list {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .option {
+          padding: 8px 12px;
+          cursor: pointer;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+          border: 2px solid transparent;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .option:hover {
+          background-color: #f5f5f5;
+        }
+        .option.selected {
+          background-color: #e8f0fe;
+          color: #1a73e8;
+          border-color: #1a73e8;
+          font-weight: 500;
+        }
+        .option img {
+          width: 24px;
+          height: 24px;
+          object-fit: cover;
+          border-radius: 2px;
+        }
+      </style>
+      <div class="select-container">
+        <div class="preview-container" style="display: none;"></div>
+        <div class="options-list"></div>
+      </div>
+    `;
+  }
+
+  addEventListeners() {
+    const optionsList = this.shadowRoot.querySelector('.options-list');
+    optionsList.addEventListener('click', (e) => {
+      const optionElement = e.target.closest('.option');
+      if (optionElement) {
+        this.selectOption(optionElement);
+      }     
+    });
+  }
+
+  updatePreview(option) {
+    const previewContainer = this.shadowRoot.querySelector('.preview-container');
+    previewContainer.style.display = 'inline-block';
+    previewContainer.innerHTML = '';
+
+    if (option) {
+      if (option.img || option.image) {
+        const img = document.createElement('img');
+        img.src = option.img || option.image;
+        img.alt = option.label;
+        previewContainer.appendChild(img);
+      } else if (option.html) {
+        previewContainer.innerHTML = option.html;
+      } else {
+        previewContainer.style.display = 'none';
+      }
+    }
+  }
+
+  selectOption(optionElement) {
+    const value = optionElement.dataset.value;
+    const selectedOption = this.options.find(opt => opt.value === value);
+    
+    if (!selectedOption) return;
+    
+    this.selectedValue = value;
+    
+    // Actualizar selección visual
+    const options = this.shadowRoot.querySelectorAll('.option');
+    options.forEach(option => {
+      option.classList.toggle('selected', option === optionElement);
+    });
+
+    // Actualizar preview
+    this.updatePreview(selectedOption);
+
+    // Emitir evento de cambio con el objeto completo
+    this.dispatchEvent(new CustomEvent('change', {
+      detail: selectedOption
+    }));
+  }
+
+  setOptions(options) {
+    this.options = options;
+    const optionsList = this.shadowRoot.querySelector('.options-list');
+    
+    optionsList.innerHTML = options.map(option => {
+      let optionContent = '';
+      
+      // Añadir imagen en miniatura si existe
+      if (option.img || option.image) {
+        optionContent += `<img src="${option.img || option.image}" alt="${option.label}">`;
+      }
+      
+      // Añadir etiqueta
+      optionContent += `<span>${option.label}</span>`;
+
+      return `
+        <div class="option ${this.selectedValue === option.value ? 'selected' : ''}" 
+             data-value="${option.value}">
+          ${optionContent}
+        </div>
+      `;
+    }).join('');
+
+    // Si hay una opción seleccionada, actualizar el preview
+    if (this.selectedValue) {
+      const selectedOption = options.find(opt => opt.value === this.selectedValue);
+      if (selectedOption) {
+        this.updatePreview(selectedOption);
+      }
+    }
+  }
+
+  getValue() {
+    return this.selectedValue;
+  }
+
+  getSelectedOption() {
+    return this.options.find(opt => opt.value === this.selectedValue);
+  }
+}
+
+customElements.define('custom-select', CustomSelect);

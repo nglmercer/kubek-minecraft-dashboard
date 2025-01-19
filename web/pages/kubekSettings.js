@@ -33,10 +33,19 @@ $(function () {
             KubekSettingsUI.refreshUsersList();
         });
     });
-
+    let allservers = [];
     // Обновляем список серверов
     KubekServers.getServersList((servers) => {
         servers.forEach(server => {
+            console.log("server getServersList", server);
+            const select_servers = document.querySelector('#select_servers');
+           const optionserver = {
+              label: server,
+              value: server
+           }
+            allservers.push(optionserver);
+
+            select_servers.setOptions(allservers);
             $(".userEditModal #allowed-servers-list").append('<div class="item" data-server="' + server + '"><span class="text">' + server + '</span><span class="material-symbols-rounded check">check</span></div>');
         })
 
@@ -166,6 +175,7 @@ KubekSettingsUI = class {
     // Получить данные по username и передать их в редактор
     static openUserEditorByUsername = (username) => {
         KubekRequests.get("/accounts/" + username, (data) => {
+          console.log("data openUserEditorByUsername", data);
             this.showExistingUserEditor(data.username, data.email, data.permissions, data.serversAccessRestricted, data.serversAllowed);
         });
     };

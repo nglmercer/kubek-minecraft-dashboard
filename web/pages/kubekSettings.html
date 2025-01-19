@@ -431,6 +431,12 @@ value="10.0.0.0/8
     </div>
     </dropdown-component>
     <translation-span id="kubekSettings.passwordRules" lang="en">{{kubekSettings.passwordRules}}</translation-span>
+    <dropdown-component id="selected_server_dropdown">
+        <custom-select
+        id="select_servers"
+        name="select_servers"
+        ></custom-select>
+    </dropdown-component>
     <custom-input
     type="password"
     id="password-input"
@@ -476,22 +482,45 @@ value="10.0.0.0/8
             }
         }
     }
-    (async () => {
-        console.log("getparsedtranslations();", await getparsedtranslations("kubekSettings","userEditor", "es"));
-    })();
+
     const custom_dialog = document.querySelector('custom-dialog');
     custom_dialog.options = [
         {
             label: "{{commons.save}}",
             callback: () => {
                 console.log("save");
+                getselected_server_dropdown();
+                console.log("getAllInputValues", getAllInputValues());
             }
         },
         {
             label: "{{commons.cancel}}",
             callback: () => {
                 console.log("cancel");
+                getselected_server_dropdown();
+                console.log("getAllInputValues", getAllInputValues());
             }
         },
     ];
+    (async () => {
+        console.log("getparsedtranslations();", await getparsedtranslations("kubekSettings","userEditor", "es"));
+    })();
+    const selected_server_dropdown = document.querySelector('#selected_server_dropdown');
+    selected_server_dropdown.toggleDropdown();
+    function getselected_server_dropdown() {
+        const data = document.querySelector('#select_servers').getValue();
+        console.log("data", data);
+    }
+    function getAllInputValues() {
+    const allData = {};
+    const inputs = document.querySelectorAll('custom-input');
+    
+    inputs.forEach((input) => {
+      const id = input.getAttribute('id');
+      const value = input.getInputValues();
+      allData[id] = value;
+    });
+    
+    return allData;
+  }
 </script>
