@@ -454,6 +454,7 @@ KubekFileManagerUI = class {
         currentPath.pop();
         currentPath.pop();
         currentPath = currentPath.join("/") + "/";
+        console.log("currentPath", currentPath);
         KubekFileManagerUI.refreshDir(false);
     };
 

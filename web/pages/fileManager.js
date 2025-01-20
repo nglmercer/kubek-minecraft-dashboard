@@ -54,55 +54,45 @@ class KubekFileManagerUI {
 
             tableListElement.innerHTML = "";
             console.log("currentPath", currentPath, "data", data);
-            // Process current path for breadcrumb  
-            const currentPathSplit = currentPath.split("/").filter(element => element !== "");
-            const breadcrumb = document.getElementById("fm-breadcrumb");
-            breadcrumb.innerHTML = "";
-            
-            // Build breadcrumb
-            breadcrumb.insertAdjacentHTML('beforeend', "<span>/</span><a>" + selectedServer + "</a>");
-            
-            if (currentPath !== "/") {
-                currentPathSplit.forEach(item => {
-                    breadcrumb.insertAdjacentHTML('beforeend', `<span>/</span><a>${item}</a>`);
-                });
-            }
-
+            const explorer = document.querySelector('file-explorer');
+            explorer.data = data;
+            document.getElementById('path-display').textContent = `Current Path: ${currentPath}`;
             // Bind breadcrumb events
             this.bindBreadcrumbClicks();
 
-            // Add upper directory item if not in root
-            if (currentPath !== "/") {
-                tableListElement.insertAdjacentHTML('beforeend', UPPER_DIR_ITEM);
-            }
-
-            // Add file/directory items
-            if (data.length > 0) {
-                data.forEach(file => {
-                    const fileIcon = file.type === "file" ? "description" : "folder";
-                    const modifyDate = moment(new Date(file.modify)).format("DD.MM.YYYY HH:mm:ss");
-                    const fileSize = KubekUtils.humanizeFileSize(file.size);
-                    
-                    const itemHtml = DIR_ITEM_PLACEHOLDER
-                        .replaceAll("$0", file.name)
-                        .replaceAll("$1", file.path)
-                        .replaceAll("$2", fileIcon)
-                        .replaceAll("$3", modifyDate)
-                        .replaceAll("$4", fileSize)
-                        .replaceAll("$5", file.type);
-                    
-                    tableListElement.insertAdjacentHTML('beforeend', itemHtml);
-                });
-            }
 
             // Bind file list events
             this.bindFMFilesList(bindEvent);
 
-            // Restore scroll position
             document.getElementById("fm-table").scrollTop = scrollData;
         });
     }
+    static initaddeventlisteners() {
+        const explorer = document.querySelector('file-explorer');
+        explorer.addEventListener('item-dblclick', (e) => {
+            explorer.setAttribute('current-path', currentPath);
+            console.log('Double click en:', e.detail.item);
+            if (!e.detail.item) { this.upperDir(); return; }
+                const { path, name, type } = e.detail.item;
+                explorer.setAttribute('current-path', currentPath);
+                console.log("verify", editableExtensions.includes(KubekUtils.pathExt(name)));
+                if (type === 'directory') {
+                    const verifycurrentpath = currentPath.endsWith("/") ? currentPath : currentPath + "/";
+                    currentPath = verifycurrentpath + name;
 
+                    KubekFileManagerUI.refreshDir();
+                } else if (type === 'file' && 
+                         editableExtensions.includes(KubekUtils.pathExt(name))) {
+                    KubekFileManagerUI.editFile(currentPath + name);
+                }
+        });
+
+        explorer.addEventListener('item-contextmenu', (e) => {
+            console.log('Click derecho en:', e.detail.item);
+            if (!e.detail.item) return;
+            console.log('Posición:', e.detail.x, e.detail.y);
+        });
+    }
     static bindFMFilesList(bindEvent) {
         const baseOptions = [
             {
@@ -205,7 +195,7 @@ class KubekFileManagerUI {
             // Bind click/double-click
             row.addEventListener(bindEvent, function(e) {
                 const data = getElementData(e.target);
-                
+                console.log("data", data);
                 if (data.type === "directory") {
                     currentPath = currentPath + data.filename;
                     KubekFileManagerUI.refreshDir();
@@ -265,6 +255,7 @@ class KubekFileManagerUI {
         pathParts.pop();
         currentPath = pathParts.join("/") + "/";
         KubekFileManagerUI.refreshDir(false);
+        console.log("currentPath", currentPath);
     }
 
     static uploadFile() {
@@ -287,12 +278,6 @@ class KubekFileManagerUI {
         });
     }
 
-    static openEmptyEditor() {
-        this.closeEditor();
-        currentEditorLang = "plaintext";
-        document.querySelector(".blurScreen").style.display = "block";
-        document.querySelector(".fileEditor").style.display = "block";
-    }
 
     static editFile(path) {
         const fileExt = KubekUtils.pathExt(path);
@@ -388,6 +373,7 @@ class KubekFileManagerUI {
         document.querySelector(".blurScreen").style.display = "none";
     }
 }
+KubekFileManagerUI.initaddeventlisteners();
 KubekFileManagerUI.refreshDir();
 // Event listener for code editing
 document.getElementById("code-edit").addEventListener("input", function() {

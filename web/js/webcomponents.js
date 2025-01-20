@@ -2839,3 +2839,175 @@ class EnhancedSelect extends HTMLElement {
 }
 
 customElements.define('enhanced-select', EnhancedSelect);
+class FileExplorer extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open', delegatesFocus: true });
+    this.currentPath = './';
+    this._data = [];
+  }
+
+  // Utility function to normalize paths
+  normalizePath(path) {
+    // Remove duplicate slashes
+    return path.replace(/\/+/g, '/');
+  }
+
+  // Utility function to format file sizes
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    
+    // Calculate the appropriate size unit
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    // Return formatted size with up to 2 decimal places
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  static get observedAttributes() {
+    return ['current-path'];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'current-path' && oldValue !== newValue) {
+      this.currentPath = this.normalizePath(newValue);
+      this.render();
+      // Actualizar el display del path
+      document.getElementById('path-display').textContent = `Current Path: ${this.currentPath}`;
+    }
+  }
+
+  set data(value) {
+    if (!value) return;
+    // Normalize paths in the data before setting
+    this._data = value.map(item => ({
+      ...item,
+      path: this.normalizePath(item.path)
+    }));
+    this.render();
+  }
+
+  get data() {
+    return this._data;
+  }
+
+  connectedCallback() {
+    this.render();
+    this.addEventListeners();
+  }
+
+  addEventListeners() {
+    this.shadowRoot.addEventListener('dblclick', (e) => {
+      const row = e.target.closest('tr');
+      if (row) {
+        const item = this._data[row.dataset.index];
+        this.dispatchEvent(new CustomEvent('item-dblclick', {
+          detail: { item },
+          bubbles: true,
+          composed: true
+        }));
+      }
+    });
+
+    this.shadowRoot.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const row = e.target.closest('tr');
+      if (row) {
+        const item = this._data[row.dataset.index];
+        this.dispatchEvent(new CustomEvent('item-contextmenu', {
+          detail: {
+            item,
+            x: e.clientX,
+            y: e.clientY
+          },
+          bubbles: true,
+          composed: true
+        }));
+      }
+    });
+  }
+
+  render() {
+    const style = `
+      <style>
+        :host {
+          display: block;
+          font-family: Arial, sans-serif;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        th, td {
+          padding: 8px;
+          text-align: left;
+          border-bottom: 1px solid rgb(46, 62, 83, 0.5);
+        }
+        tr:hover {
+          background-color: #222;
+          cursor: pointer;
+        }
+        .icon {
+          width: 20px;
+          height: 20px;
+          display: inline-block;
+          margin-right: 5px;
+        }
+        .directory {
+          color: #2196F3;
+        }
+        .file {
+          color: #607D8B;
+        }
+      </style>
+    `;
+    
+    const content = `
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Path</th>
+            <th>Size</th>
+            <th>Modified</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${this._data.map((item, index) => `
+            <tr data-index="${index}" class="${item.type}">
+              <td>
+                <span class="icon">${item.type === 'directory' ? '📁' : '📄'}</span>
+                ${item.name}
+              </td>
+              <td>${item.path}</td>
+              <td>${item.type === 'directory' ? '-' : this.formatFileSize(item.size)}</td>
+              <td>${this.formatDate(item.modify)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    
+    this.shadowRoot.innerHTML = style + content;
+  }
+  formatDate(dateString) {
+    const date = new Date(dateString);
+    
+    // Get date components
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    // Format as "YYYY-MM-DD HH:mm:ss"
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+}
+
+customElements.define('file-explorer', FileExplorer);
