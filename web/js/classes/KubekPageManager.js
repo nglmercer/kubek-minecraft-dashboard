@@ -3,6 +3,7 @@ let loadedScript;
 class KubekPageManager {
     // Load page
     static gotoPage(page) {
+        console.log("gotoPage", page);
         this.loadPageContent(page);
     }
 
@@ -63,6 +64,7 @@ class KubekPageManager {
 
     // Set browser URL
     static setPageURL(page) {
+        localStorage.setItem("active-page", page);
         window.history.replaceState(
             "",
             "",

@@ -1,24 +1,42 @@
 class KubekUI {
-    // Загрузить секцию в блок
-    static loadSection = (name, container = "body", cb = () => {
-    }) => {
-        $.get("/sections/" + name + ".html", (code) => {
-            $(container).append(code);
-            cb();
-        });
+    // Cargar sección en bloque - Reemplazamos $.get por fetch
+    static loadSection = (name, container = "body", cb = () => {}) => {
+        fetch(`/sections/${name}.html`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(code => {
+                console.log("Loading section:", name, container);
+                //$(container).append(code);
+                document.querySelector(container).insertAdjacentHTML('beforeend', code);
+
+                //container.appendChild(code);
+                //document.querySelector(container).appendChild(code);
+                cb();
+            })
+            .catch(error => {
+                console.error('Error loading section:', error);
+            });
     }
 
-    // Управление прелоудером
     static showPreloader() {
-        $("body #main-preloader").show();
-        animateCSSJ("body #main-preloader", "fadeIn").then(() => {
-        });
+        const preloader = document.querySelector("body #main-preloader");
+        if (preloader) {
+            preloader.style.display = "block";
+            animateCSSJ("body #main-preloader", "fadeIn");
+        }
     }
 
     static hidePreloader() {
-        animateCSSJ("body #main-preloader", "fadeOut").then(() => {
-            $("body #main-preloader").hide();
-        });
+        const preloader = document.querySelector("body #main-preloader");
+        if (preloader) {
+            animateCSSJ("body #main-preloader", "fadeOut").then(() => {
+                preloader.style.display = "none";
+            });
+        }
     }
 
     static setActiveItemByPage(page) {
@@ -40,7 +58,6 @@ class KubekUI {
         this.setActiveItemByPage(page);
     }
 
-    // Load the selected server
     static loadSelectedServer = () => {
         if (typeof window.localStorage.selectedServer !== "undefined") {
             selectedServer = window.localStorage.selectedServer;
@@ -53,7 +70,6 @@ class KubekUI {
                 }
             });
         } else {
-            // Если это первый запуск
             KubekServers.getServersList((list) => {
                 window.localStorage.selectedServer = list[0];
                 window.location.reload();
@@ -61,7 +77,6 @@ class KubekUI {
         }
     }
 
-    // Load the list of servers
     static loadServersList() {
         const sidebar = document.querySelector("#servers-list-sidebar");
         if (sidebar) {
@@ -87,13 +102,11 @@ class KubekUI {
         }
     }
 
-    // Handle connection lost
     static connectionLost() {
         KubekAlerts.addAlert("{{commons.connectionLost}}", "warning", moment().format("DD.MM / HH:MM:SS"), 6000);
         this.showPreloader();
     }
 
-    // Handle connection restored
     static connectionRestored() {
         KubekAlerts.addAlert("{{commons.connectionRestored}}", "check", moment().format("DD.MM / HH:MM:SS"), 3000);
         setTimeout(() => {
@@ -101,7 +114,6 @@ class KubekUI {
         }, 1000);
     }
 
-    // Toggle sidebar for mobile mode
     static toggleSidebar() {
         const sidebar = document.querySelector(".main-layout .sidebar");
         const blurScreen = document.querySelector(".blurScreen");
@@ -117,7 +129,6 @@ class KubekUI {
         }
     }
 
-    // Set the document title
     static setTitle(title) {
         document.title = title;
     }
@@ -143,4 +154,3 @@ const animateCSSJ = (element, animation, fast = true, prefix = "animate__") => {
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });
 };
-

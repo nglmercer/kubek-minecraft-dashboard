@@ -53,6 +53,8 @@
     <script src="js/classes/KubekJavaManager.js"></script>
     <script src="js/classes/KubekTasksUI.js"></script>
     <script src="js/classes/KubekNotifyModal.js"></script>
+    <script src="/sections/sidebar.js"></script>
+
 </head>
 
 <body>
@@ -113,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function () {
             KubekServers.getServersList((servers) => {
                 if (servers.length === 0) {
                     if (act !== "newServer") {
-                        // Загружаем страницу welcome
                         KubekPageManager.gotoPage("welcome");
                     } else {
                         KubekPageManager.gotoPage("newServer");
@@ -133,11 +134,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
                     // Ищем act и загружаем страницу
-                    if (act !== null) {
+                    if (act !== null && localStorage.getItem("active-page") !== act) {
                         console.log("[UI]", "act is not null, trying to load", act);
                         KubekPageManager.gotoPage(act);
                     } else {
-                        console.log("[UI]", "act is null, loading console");
+                        console.log("[UI]", "act is null, loading console", act);
                         KubekPageManager.gotoPage("console");
                     }
                 }
@@ -161,90 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
-<!-- <script>
-    console.log("[UI] Starting Kubek UI...");
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    let act = urlParams.get("act");
-    let selectedServer = "";
-    let consoleRamUsageBar, consoleCpuUsageBar;
 
-    $(function () {
-        KubekRequests.get("/kubek/settings", (settings) => {
-           if(settings.eulaAccepted === false){
-               KubekUI.loadSection("eula", "body" , () => {
-                  $(".eulaModal").show();
-                  $(".blurScreen").show();
-               });
-           }
-        });
-
-        KubekRequests.get("/updates", (update) => {
-            if(update.hasUpdate === true){
-
-                KubekAlerts.addAlert("{{commons.updateAvailable}}", "update", update.version.new, 6000, "colored", () => {
-                    KubekNotifyModal.create("<h2>{{commons.updateAvailable}}</h2><div style='display: flex; align-items: center; justify-content: center;'>" + update.version.current + " <span class='material-symbols-rounded' style='font-size: 18pt; margin: 0 12px;'>navigate_next</span> " + update.version.new + "</div>", update.body.replaceAll("\n", "<br>"), "{{commons.goto}}", "update", () => {
-                        window.open(update.url, "_blank");
-                    }, KubekPredefined.MODAL_CANCEL_BTN);
-                });
-            }
-
-        });
-
-        // Загружаем все секции
-        KubekUI.loadSection("content-header", ".main-layout", () => {
-            KubekUI.loadSelectedServer();
-            KubekUI.loadSection("sidebar", ".main-layout", () => {
-                KubekUI.loadServersList();
-
-                KubekServers.getServersList((servers) => {
-                    if(servers.length === 0){
-                        if(act !== "newServer"){
-                            // Загружаем страницу welcome
-                            KubekPageManager.gotoPage("welcome");
-                        } else {
-                            KubekPageManager.gotoPage("newServer");
-                        }
-                        $("#main-menu-sidebar").hide();
-                        $("#servers-list-sidebar .sidebar-item:not(.server-item)").addClass("animate__animated animate__headShake");
-                        $("#servers-list-sidebar .sidebar-item:not(.server-item)").css("animation-iteration-count", "infinite");
-                        $(".content-header").hide();
-                    } else {
-                        // Проверим существование сервера
-                        KubekServers.getServersList((serversList) => {
-                            if(!serversList.includes(selectedServer)){
-                                window.localStorage.selectedServer = serversList[0];
-                                window.location.reload();
-                            }
-                        });
-                        // Ищем act и загружаем страницу
-                        if (act !== null) {
-                            console.log("[UI]", "act is not null, trying to load", act);
-                            KubekPageManager.gotoPage(act);
-                        } else {
-                            console.log("[UI]", "act is null, loading console");
-                            KubekPageManager.gotoPage("console");
-                        }
-                    }
-                })
-
-                KubekUI.loadSection("header", ".main-layout", () => {
-                    KubekUI.hidePreloader();
-                    KubekRefresher.refreshConsoleLog();
-                    KubekRefresher.addRefreshServerLogInterval();
-                    KubekRefresher.addRefreshServerHeaderInterval();
-                    KubekRefresher.addRefreshUsageInterval();
-                    KubekRefresher.addRefreshTasksInterval();
-                    // TODO
-                });
-            });
-        })
-        KubekRequests.get("/kubek/rawlanguages", (langs) => {
-            localStorage.setItem("rawlanguages", JSON.stringify(langs));
-        });
-    });
-</script>
- -->
 <style>
     body,
     html {
