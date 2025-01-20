@@ -37,16 +37,12 @@ $(function () {
 function validateNewServerInputs(){
     // Проверка на выбор файла ядра
     if($(".new-server-container #core-upload").css("display") !== "none" && $("#server-core-input")[0].value === ""){
-        $(".new-server-container #create-server-btn").prop("disabled", true);
-        $(".new-server-container #create-server-btn .text").text("{{newServerWizard.noCoreFile}}");
         return;
     }
 
     // Проверка имени сервера
     let sName = $(".new-server-container #server-name-input").val();
     if(!SERVER_NAME_REGEXP.test(sName)){
-        $(".new-server-container #create-server-btn").prop("disabled", true);
-        $(".new-server-container #create-server-btn .text").text("{{newServerWizard.noServerName}}");
         $(".new-server-container #server-name-input").addClass("error");
         return;
     } else {
@@ -55,8 +51,6 @@ function validateNewServerInputs(){
 
     // Проверка имени сервера на существование
     if(allServersList.includes(sName)){
-        $(".new-server-container #create-server-btn").prop("disabled", true);
-        $(".new-server-container #create-server-btn .text").text("{{newServerWizard.serverAlreadyExists}}");
         $(".new-server-container #server-name-input").addClass("error");
         return;
     } else {
@@ -66,8 +60,6 @@ function validateNewServerInputs(){
     // Проверка ввода памяти
     let memInput = $(".new-server-container #server-mem");
     if(memInput.val() < memInput.attr("min") && memInput.val() > memInput.attr("max") && memInput !== ""){
-        $(".new-server-container #create-server-btn").prop("disabled", true);
-        $(".new-server-container #create-server-btn .text").text("{{newServerWizard.noMemory}}");
         $(".new-server-container #server-mem").addClass("error");
         return;
     } else {
@@ -77,8 +69,6 @@ function validateNewServerInputs(){
     // Проверка ввода порта
     let portInput = $(".new-server-container #server-port");
     if(portInput.val() < portInput.attr("min") && portInput.val() > portInput.attr("max") && portInput !== ""){
-        $(".new-server-container #create-server-btn").prop("disabled", true);
-        $(".new-server-container #create-server-btn .text").text("{{newServerWizard.noPort}}");
         $(".new-server-container #server-port").addClass("error");
         return;
     } else {
@@ -88,15 +78,11 @@ function validateNewServerInputs(){
     // Проверка выбора версии и ядра
     if($(".new-server-container #core-upload").css("display") === "none"){
         if($(".new-server-container #cores-grid .item.active").length === 1 && $(".new-server-container #cores-versions .item.active").length === 1){
-            $(".new-server-container #create-server-btn").prop("disabled", true);
-            $(".new-server-container #create-server-btn .text").text("{{newServerWizard.noCoreSelected}}");
             return;
         }
     }
 
     // Если все проверки прошли
-    $(".new-server-container #create-server-btn").prop("disabled", false);
-    $(".new-server-container #create-server-btn .text").text("Создать " + sName);
 }
 
 // Функция для обновления списка ядер
@@ -114,7 +100,6 @@ function refreshServerCoresList(cb = () => {
         for (const [, core] of Object.entries(cores)) {
             $(".new-server-container #cores-grid").append(CORE_GRID_ITEM_PLACEHOLDER.replaceAll("$0", core.displayName).replaceAll("$1", core.name));
         }
-        // Делаем первый элемент активным и загружаем ID ядра в переменную
         $(".new-server-container #cores-grid .card:first-child").addClass("active");
         currentSelectedCore = $(".new-server-container #cores-grid .card:first-child").data("id");
 
@@ -146,27 +131,30 @@ function refreshCoreVersionsList(cb = () => {
     currentSelectedVersion = "";
     KubekCoresManager.getCoreVersions(currentSelectedCore, (versions) => {
         if (!versions) {
-            console.log(versions);
-            $(".new-server-container #cores-versions .item").off("click");
             cb(false);
             return;
         }
-        $(".new-server-container #cores-versions .item").off("click");
+        console.log("versions", versions);
 
         // Очищаем список
-        $(".new-server-container #cores-versions").html("");
+        const allversions = []
+
         // Загружаем новый список
         versions.forEach((ver) => {
-            $(".new-server-container #cores-versions").append("<div class='item'>" + ver + "</div>");
+            const optionserver = {
+                label: ver,
+                value: ver
+             }
+             allversions.push(optionserver);
         });
+        const customselect_versions = document.querySelector('#customselect_versions');
+        console.log("customselect_versions", customselect_versions);
+        customselect_versions.setOptions(allversions);
         // Делаем первый элемент активным и загружаем версию в переменную
-        $(".new-server-container #cores-versions .item:first-child").addClass("active");
-        currentSelectedVersion = $(".new-server-container #cores-versions .item:first-child").text();
 
         // Биндим нажатия на версии
         $(".new-server-container #cores-versions .item").on("click", function () {
             if (!$(this).hasClass("active")) {
-                $(".new-server-container #cores-versions .item.active").removeClass("active");
                 $(this).addClass("active");
                 currentSelectedVersion = $(this).text();
                 validateNewServerInputs();
@@ -190,27 +178,22 @@ function uploadCore() {
 function refreshJavaList(cb) {
     $("#java-list-placeholder").show();
     $("#javas-list").hide();
+    const javas_list = document.querySelector('#javas_list');
+    const alljavas = []
     KubekJavaManager.getAllJavas((javas) => {
-        $(".new-server-container #javas-list").html("");
-        javas.installed.forEach((installed) => {
-            $(".new-server-container #javas-list").append(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "installed").replaceAll("$1", installed).replaceAll("$2", installed));
-        });
-        javas.kubek.forEach((installed) => {
-            $(".new-server-container #javas-list").append(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "kubek").replaceAll("$1", installed).replaceAll("$2", "Temurin Java " + installed + " ({{commons.installed}})"));
-        });
-        javas.online.forEach((online) => {
-            $(".new-server-container #javas-list").append(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "online").replaceAll("$1", online).replaceAll("$2", "Temurin Java " + online));
-        });
-        $(".new-server-container #javas-list .item:first-child").addClass("active");
-
-        // Биндим нажатия на версии
-        $(".new-server-container #javas-list .item").on("click", function () {
-            if (!$(this).hasClass("active")) {
-                $(".new-server-container #javas-list .item.active").removeClass("active");
-                $(this).addClass("active");
-                validateNewServerInputs();
-            }
-        })
+        console.log("javas", javas);
+        const parseToOptions = (data) => {
+            return Object.entries(data).flatMap(([state, items]) =>
+              items.map(item => ({
+                label: item,
+                value: item,
+                state
+              }))
+            );
+          };
+        alljavas.push(...parseToOptions(javas));
+        javas_list.setOptions(alljavas);
+        localStorage.setItem("javas", JSON.stringify(javas));
         $("#java-list-placeholder").hide();
         $("#javas-list").show();
         cb(true);
@@ -234,11 +217,9 @@ $(".new-server-container #core-category .item").on("click", function () {
         $(this).addClass("active");
         if ($(this).data("item") === "list") {
             $(".new-server-container #cores-grid").show();
-            $(".new-server-container #cores-versions-parent").show();
             $(".new-server-container #core-upload").hide();
         } else {
             $(".new-server-container #cores-grid").hide();
-            $(".new-server-container #cores-versions-parent").hide();
             $(".new-server-container #core-upload").show();
         }
         validateNewServerInputs();
@@ -251,16 +232,20 @@ function prepareServerCreation(){
     $(".new-server-container #create-server-btn").attr("disabled", "true");
     $(".new-server-container #create-server-btn .material-symbols-rounded:not(.spinning)").hide();
     $(".new-server-container #create-server-btn .material-symbols-rounded.spinning").show();
-
-    let serverName = $(".new-server-container #server-name-input").val();
+    let serverName = document.querySelector('#server_name_input').getInputValues();
+    let memory = $(".new-server-container #server-mem").val();
     let serverPort = $(".new-server-container #server-port").val();
     let serverCore = "";
     let serverVersion = "";
     let javaVersion = "";
     let startScript = "";
-
-    javaVersion = $(".new-server-container #javas-list .item.active").data("data");
-    startScript = generateNewServerStart();
+    const serverVersion_select = document.querySelector('#customselect_versions');
+    serverVersion = serverVersion_select.getValue();
+    const javaversion_select = document.querySelector('#javas_list');
+    console.log("javas_list", javaversion_select);
+    javaVersion = javaversion_select.getValue();
+    console.log("javaVersion", javaVersion, serverName, serverPort, serverCore, serverVersion, startScript,memory);
+/*     startScript = generateNewServerStart();
 
     if($(".new-server-container #core-upload").css("display") === "none"){
         serverCore = currentSelectedCore;
@@ -273,7 +258,7 @@ function prepareServerCreation(){
         KubekRequests.post("/cores/" + serverName, () => {
             startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
         }, formData);
-    }
+    } */
 }
 
 function startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort){
