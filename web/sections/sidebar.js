@@ -14,5 +14,22 @@ document.addEventListener("DOMContentLoaded", () => {
         newServerBtn.addEventListener('click', () => {
         window.location = '/?act=newServer';
         });
-    }, 1000);
+        const sidebar = document.querySelector('sidebar-menu');
+        sidebar.toggleSidebar();
+        sidebar.addEventListener('page-change', (event) => {
+          const page = event.detail.page;
+          console.log('Changing to page:', page);
+          // Add your page change logic here
+        });
+      
+        sidebar.addEventListener('new-server', () => {
+          console.log('Creating new server');
+          // Add your new server logic here
+        });
+      
+        sidebar.addEventListener('toggle-sidebar', () => {
+          console.log('Toggling sidebar');
+          // Add your sidebar toggle logic here
+        });
+    }, 222);
 });

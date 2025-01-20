@@ -3011,3 +3011,225 @@ class FileExplorer extends HTMLElement {
 }
 
 customElements.define('file-explorer', FileExplorer);
+class SidebarComponent extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open', delegatesFocus: true });
+    this.isVisible = true;
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  toggleSidebar(isVisible) {
+    this.isVisible = !this.isVisible;
+    const sidebar = this.shadowRoot.querySelector('.sidebar');
+    this.isVisible = isVisible || this.isVisible;
+    if (this.isVisible) {
+      sidebar.style.transform = 'translateX(0)';
+      sidebar.style.opacity = '1';
+      setTimeout(() => {
+        sidebar.style.display = 'block';
+      }, 222);
+    } else {
+      sidebar.style.transform = 'translateX(-100%)';
+      sidebar.style.opacity = '0';
+      setTimeout(() => {
+        sidebar.style.display = 'none';
+      }, 222);
+    }
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          top: 0;
+          transform: translateY(25%);
+          font-family: inherit;
+          z-index: 4;
+        }
+
+        .sidebar {
+          min-width: 250px;
+          transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+          transform: translateX(0);
+          opacity: 1;
+        }
+
+        .sidebar-box {
+          background: var(--bg-dark-accent, #2a2a2a);
+          border-radius: 10px;
+          padding: 24px;
+          min-height: 164px;
+          margin-top: 16px;
+        }
+
+        .sidebar-item {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          cursor: pointer;
+          color: var(--bg-dark-accent-lighter, #888);
+          margin-top: 14px;
+        }
+
+        .sidebar-item:hover {
+          color: white;
+        }
+
+        .sidebar-item.active {
+          color: white;
+          cursor: default;
+        }
+
+        .material-symbols-rounded {
+          margin-right: 10px;
+          font-size: 24px;
+          font-family: 'Material Symbols Rounded';
+        }
+
+        .sidebar-item span:not(.material-symbols-rounded) {
+          font-size: 12pt;
+          font-weight: 600;
+        }
+
+        .icon-circle-bg {
+          border-radius: 999px;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 10px;
+          background: var(--bg-primary-500, #4a90e2);
+        }
+
+        .icon-circle-bg .material-symbols-rounded {
+          color: white;
+          margin: 0;
+          font-size: 12pt;
+        }
+
+        #servers-list-sidebar {
+          max-height: 30vh;
+          overflow-y: auto;
+        }
+
+        #close-btn {
+          display: none;
+          width: 100%;
+        }
+
+        @media (max-width: 768px) {
+          #close-btn {
+            display: block;
+          }
+        }
+      </style>
+      
+      <div class="sidebar">
+        <button class="dark-btn icon-only" id="close-btn">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+
+        <div class="sidebar-box" id="servers-list-sidebar">
+          <div class="sidebar-item" id="new-server-btn">
+            <div class="icon-circle-bg">
+              <span class="material-symbols-rounded">add</span>
+            </div>
+            <span>Create server</span>
+          </div>
+        </div>
+
+        <div class="sidebar-box" id="main-menu-sidebar">
+          <div class="sidebar-item" data-page="console">
+            <span class="material-symbols-rounded">terminal</span>
+            <span>Console</span>
+          </div>
+          <div class="sidebar-item" data-page="fileManager">
+            <span class="material-symbols-rounded">folder</span>
+            <span>File Manager</span>
+          </div>
+          <div class="sidebar-item" data-page="plugins">
+            <span class="material-symbols-rounded">extension</span>
+            <span>Plugins</span>
+          </div>
+          <div class="sidebar-item" data-page="serverSettings">
+            <span class="material-symbols-rounded">tune</span>
+            <span>Server Settings</span>
+          </div>
+          <div class="sidebar-item" data-page="server.properties">
+            <span class="material-symbols-rounded">settings_ethernet</span>
+            <span>Server.properties</span>
+          </div>
+          <div class="sidebar-item" data-page="kubekSettings">
+            <span class="material-symbols-rounded">settings</span>
+            <span>Kubek Settings</span>
+          </div>
+          <div class="sidebar-item" data-page="systemMonitor">
+            <span class="material-symbols-rounded">area_chart</span>
+            <span>System Monitor</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  setupEventListeners() {
+    // Setup menu item clicks
+    const sidebarItems = this.shadowRoot.querySelectorAll("#main-menu-sidebar .sidebar-item");
+    sidebarItems.forEach(item => {
+      item.addEventListener("click", () => {
+        const page = item.getAttribute("data-page");
+        
+        // Remove active class from all items
+        sidebarItems.forEach(i => i.classList.remove('active'));
+        // Add active class to clicked item
+        item.classList.add('active');
+
+        // Dispatch custom event
+        const event = new CustomEvent('page-change', {
+          detail: {
+            page: page
+          },
+          bubbles: true,
+          composed: true
+        });
+        this.dispatchEvent(event);
+      });
+    });
+
+    // Setup new server button
+    const newServerBtn = this.shadowRoot.getElementById('new-server-btn');
+    newServerBtn.addEventListener('click', () => {
+      const event = new CustomEvent('new-server', {
+        bubbles: true,
+        composed: true
+      });
+      this.dispatchEvent(event);
+    });
+
+    // Setup close button
+    const closeBtn = this.shadowRoot.getElementById('close-btn');
+    closeBtn.addEventListener('click', () => {
+      this.toggleSidebar();
+      const event = new CustomEvent('toggle-sidebar', {
+        detail: {
+          isVisible: this.isVisible
+        },
+        bubbles: true,
+        composed: true
+      });
+      this.dispatchEvent(event);
+    });
+  }
+}
+
+customElements.define('sidebar-menu', SidebarComponent);
