@@ -1,6 +1,3 @@
-$(function () {
-    initializedSectionSystemMonitor();
-});
 function initializedSectionSystemMonitor() {
     KubekUI.setTitle("Kubek | {{sections.systemMonitor}}");
     KubekHardware.getSummary((data) => {
@@ -14,3 +11,4 @@ function systemMonitor(data) {
     if (!data) return;
     systemMonitor.renderdata(data);
 }
+initializedSectionSystemMonitor();

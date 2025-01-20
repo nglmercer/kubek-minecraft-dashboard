@@ -4,9 +4,6 @@ NEW_ACCOUNT_ITEM = "<div class='item' data-account='newAccItem'><div class='icon
 currentEditorMode = null;
 currentConfig = null;
 
-$(function () {
-  initializeKubekSettings();
-});
 function initializeKubekSettings() {
   KubekUI.setTitle("Kubek | {{sections.kubekSettings}}");
 
@@ -536,3 +533,4 @@ langSelector.addEventListener('language-change', (event) => {
   console.log('Selected language:', event.detail.langCode);
   console.log('Language data:', event.detail.language);
 });
+initializeKubekSettings();
