@@ -198,7 +198,8 @@ function refreshJavaList(cb) {
         }
         const javaslist = $(".new-server-container #javas-list");
         javas.installed.forEach((installed) => {
-            //javaslist.appenduploadCore()(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "installed").replaceAll("$1", installed).replaceAll("$2", installed));
+            console.log("installed", installed, JAVA_ITEM_PLACEHOLDER );
+            javaslist.append(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "installed").replaceAll("$1", installed).replaceAll("$2", installed));
         });
         javas.kubek.forEach((installed) => {
             $(".new-server-container #javas-list").append(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "kubek").replaceAll("$1", installed).replaceAll("$2", "Temurin Java " + installed + " ({{commons.installed}})"));
@@ -297,7 +298,7 @@ function prepareServerCreation(){
 }
 
 function startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort){
-    KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
+/*     KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
         $(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
-    });
+    }); */
 }
