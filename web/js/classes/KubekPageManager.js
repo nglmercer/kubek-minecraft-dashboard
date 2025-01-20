@@ -1,72 +1,68 @@
 let loadedScript;
 
 class KubekPageManager {
-    // Загрузить страницу
-    static gotoPage = (page) => {
+    // Load page
+    static gotoPage(page) {
         this.loadPageContent(page);
     }
 
-    // Загрузить страницу в блок (функция без проверок)
-    static loadPageContent = (page) => {
-        $("#content-place").html("");
-        $("#content-place").append('<div id="content-preloader"><div class="lds-spinner"><div></div><div></div><div></div></div></div>');
+    // Load page content into block (function without checks)
+    static loadPageContent(page) {
+        const contentPlace = document.getElementById('content-place');
+        contentPlace.innerHTML = '';
+        
+        const preloader = document.createElement('div');
+        preloader.id = 'content-preloader';
+        preloader.innerHTML = '<div class="lds-spinner"><div></div><div></div><div></div></div>';
+        contentPlace.appendChild(preloader);
+        
         console.log("[UI]", "Trying to load page:", page);
-        $.ajax({
-            url: "/pages/" + page + ".html",
-            success: function (result) {
+
+        fetch(`/pages/${page}.html`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(result => {
                 console.log("[UI]", "We got page content");
                 KubekPageManager.setPageURL(page);
                 KubekUI.setActiveItemByPage(page);
 
                 setTimeout(() => {
-                    // Динамически загружаем скрипт страницы
-                    if(typeof loadedScript !== "undefined"){
+                    // Dynamically load page script
+                    if (typeof loadedScript !== "undefined") {
                         document.head.removeChild(loadedScript);
                     }
                     loadedScript = document.createElement("script");
-                    loadedScript.setAttribute("src", "/pages/" + page + ".js");
+                    loadedScript.src = `/pages/${page}.js`;
                     document.head.appendChild(loadedScript);
 
-                    // Загружаем саму страницу
-                    $("#content-place").append(result);
-                    $("#content-preloader").remove();
+                    // Load the page itself
+                    contentPlace.insertAdjacentHTML('beforeend', result);
+                    document.getElementById('content-preloader').remove();
                 }, 100);
-            },
-            error: function (error) {
+            })
+            .catch(error => {
                 console.error(
                     "[UI]",
-                    "Error happend when loading page:",
-                    error.status,
-                    error.statusText
+                    "Error happened when loading page:",
+                    error.message
                 );
                 this.gotoPage("console");
-            },
-        });
+            });
     }
 
-    // Обновить параметр в URL браузера
-    static updateURLParameter = (url, param, paramVal) => {
-        let newAdditionalURL = "";
-        let tempArray = url.split("?");
-        let baseURL = tempArray[0];
-        let additionalURL = tempArray[1];
-        let temp = "";
-        if (additionalURL) {
-            tempArray = additionalURL.split("&");
-            for (let i = 0; i < tempArray.length; i++) {
-                if (tempArray[i].split("=")[0] !== param) {
-                    newAdditionalURL += temp + tempArray[i];
-                    temp = "&";
-                }
-            }
-        }
-
-        let rows_txt = temp + "" + param + "=" + paramVal;
-        return baseURL + "?" + newAdditionalURL + rows_txt;
+    // Update parameter in browser URL
+    static updateURLParameter(url, param, paramVal) {
+        const urlObj = new URL(url);
+        urlObj.searchParams.set(param, paramVal);
+        return urlObj.toString();
     }
 
-    // Установить URL браузера
-    static setPageURL = (page) => {
+    // Set browser URL
+    static setPageURL(page) {
         window.history.replaceState(
             "",
             "",

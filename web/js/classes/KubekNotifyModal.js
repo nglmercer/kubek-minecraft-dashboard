@@ -1,247 +1,135 @@
-const NOTIFY_MODAL_CODE =
-    '<div class="notify-modal modal-bg" id="$5"> <div class="notify-window"> <div class="notify-icon">$4</div> <div class="notify-caption">$1</div> <div class="notify-description">$2</div> <button id="cmbtn-$5" class="primary-btn">$3</button> $6 </div> </div>';
-
-class KubekNotifyModal {
-    static create(caption, text, buttonText, icon, cb = () => {
-    }, additionalElements = "") {
-        $(".blurScreen").show();
-        let iconEl = "<span class='material-symbols-rounded'>" + icon + "</span>";
-        let randomID = "notify-" + Math.floor(Math.random() * (1000 - 10 + 1)) + 10;
-        $("body").append(
-            NOTIFY_MODAL_CODE.replaceAll(/\$1/gim, caption)
-                .replaceAll(/\$2/gim, text)
-                .replaceAll(/\$3/gim, buttonText)
-                .replaceAll(/\$4/gim, iconEl)
-                .replaceAll(/\$5/gim, randomID)
-                .replaceAll(/\$6/gim, additionalElements)
-        );
-        $("#cmbtn-" + randomID)
-            .on("click", function () {
-                animateCSSJ("#" + randomID, "fadeOut", true).then(() => {
-                    $(this).parent().parent().remove();
-                });
-                $(".blurScreen").hide();
-                cb();
-            });
-    }
-
-    // Удалить все модальные окна
-    static destroyAllModals() {
-        $(".notify-modal").remove();
-        $(".blurScreen").hide();
-    }
-
-    // Создать modal с запросом ввода от пользователя
-    static askForInput(caption, icon, cb = () => {}, description = "", placeholder = "{{commons.input}}", value = "", iType = "text"){
-        let inputRandID = KubekUtils.uuidv4();
-        let desc = "<p>" + description + "</p><input style='width: 300px;' id='" + inputRandID + "' type='" + iType + "' placeholder='" + placeholder + "' value='" + value + "'></input>";
-        this.create(caption, desc, "{{commons.save}}", icon, () => {
-            cb($("#" + inputRandID).val());
-        }, KubekPredefined.MODAL_CANCEL_BTN);
-    }
-}
-// Definimos el template HTML base para el modal
-/* const template = document.createElement('template');
-template.innerHTML = `
-  <style>
-    .notify-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .notify-window {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 500px;
-      width: 90%;
-    }
-
-    .notify-icon {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    .notify-caption {
-      font-size: 1.2em;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .notify-description {
-      margin-bottom: 20px;
-    }
-
-    .primary-btn {
-      padding: 8px 16px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .primary-btn:hover {
-      background: #0056b3;
-    }
-
-    .cancel-btn {
-      margin-left: 10px;
-      padding: 8px 16px;
-      background: #6c757d;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-  </style>
-  <div class="notify-modal">
-    <div class="notify-window">
-      <div class="notify-icon"></div>
-      <div class="notify-caption"></div>
-      <div class="notify-description"></div>
-      <div class="buttons">
-        <button class="primary-btn"></button>
-      </div>
+const NOTIFY_MODAL_TEMPLATE = `
+    <div class="notify-modal modal-bg" id="{id}">
+        <div class="notify-window">
+            <div class="notify-icon">{icon}</div>
+            <div class="notify-caption">{caption}</div>
+            <div class="notify-description">{description}</div>
+            <button id="cmbtn-{id}" class="primary-btn">{buttonText}</button>
+            {additionalElements}
+        </div>
     </div>
-  </div>
 `;
 
-class NotifyModal extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
-    
-    // Bindings
-    this._handlePrimaryButton = this._handlePrimaryButton.bind(this);
-    this._handleCancelButton = this._handleCancelButton.bind(this);
-  }
+class KubekNotifyModal {
+    /**
+     * Crear una ventana modal de notificación
+     * @param {string} caption - El título de la notificación
+     * @param {string} text - La descripción del mensaje
+     * @param {string} buttonText - El texto del botón principal
+     * @param {string} icon - El icono que se mostrará
+     * @param {Function} cb - Callback a ejecutar al cerrar la ventana
+     * @param {string} additionalElements - Elementos adicionales que se agregarán
+     */
+    static create(caption, text, buttonText, icon, cb = () => {}, additionalElements = "") {
+        // Mostrar pantalla difuminada
+        const blurScreen = document.querySelector(".blurScreen");
+        if (blurScreen) blurScreen.style.display = "block";
 
-  static get observedAttributes() {
-    return ['caption', 'text', 'button-text', 'icon'];
-  }
+        const randomID = `notify-${Math.floor(Math.random() * 991) + 10}`;
+        const iconElement = `<span class='material-symbols-rounded'>${icon}</span>`;
 
-  connectedCallback() {
-    this.shadowRoot.querySelector('.primary-btn').addEventListener('click', this._handlePrimaryButton);
-  }
+        // Crear el contenido del modal
+        const modalHTML = NOTIFY_MODAL_TEMPLATE
+            .replace("{id}", randomID)
+            .replace("{icon}", iconElement)
+            .replace("{caption}", caption)
+            .replace("{description}", text)
+            .replace("{buttonText}", buttonText)
+            .replace("{additionalElements}", additionalElements);
 
-  disconnectedCallback() {
-    this.shadowRoot.querySelector('.primary-btn').removeEventListener('click', this._handlePrimaryButton);
-    if (this.shadowRoot.querySelector('.cancel-btn')) {
-      this.shadowRoot.querySelector('.cancel-btn').removeEventListener('click', this._handleCancelButton);
-    }
-  }
+        // Insertar el modal en el body
+        const modalElement = document.createElement("div");
+        modalElement.innerHTML = modalHTML;
+        document.body.appendChild(modalElement.firstElementChild);
 
-  attributeChangedCallback(name, oldValue, newValue) {
-    switch (name) {
-      case 'caption':
-        this.shadowRoot.querySelector('.notify-caption').textContent = newValue;
-        break;
-      case 'text':
-        this.shadowRoot.querySelector('.notify-description').innerHTML = newValue;
-        break;
-      case 'button-text':
-        this.shadowRoot.querySelector('.primary-btn').textContent = newValue;
-        break;
-      case 'icon':
-        this.shadowRoot.querySelector('.notify-icon').innerHTML = 
-          `<span class="material-symbols-rounded">${newValue}</span>`;
-        break;
-    }
-  }
-
-  _handlePrimaryButton() {
-    this.dispatchEvent(new CustomEvent('confirm'));
-    this.remove();
-  }
-
-  _handleCancelButton() {
-    this.remove();
-  }
-
-  // Métodos estáticos similares a KubekNotifyModal
-  static create(caption, text, buttonText, icon, callback = () => {}, additionalElements = "") {
-    const modal = document.createElement('notify-modal');
-    modal.setAttribute('caption', caption);
-    modal.setAttribute('text', text);
-    modal.setAttribute('button-text', buttonText);
-    modal.setAttribute('icon', icon);
-    
-    modal.addEventListener('confirm', callback);
-
-    if (additionalElements) {
-      const buttons = modal.shadowRoot.querySelector('.buttons');
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'cancel-btn';
-      cancelBtn.textContent = 'Cancel';
-      cancelBtn.addEventListener('click', () => modal.remove());
-      buttons.appendChild(cancelBtn);
+        // Configurar el evento del botón principal
+        const button = document.getElementById(`cmbtn-${randomID}`);
+        if (button) {
+            button.addEventListener("click", () => {
+                this.animateCSS(`#${randomID}`, "fadeOut").then(() => {
+                    const modal = document.getElementById(randomID);
+                    if (modal) modal.remove();
+                });
+                if (blurScreen) blurScreen.style.display = "none";
+                cb();
+            });
+        }
     }
 
-    document.body.appendChild(modal);
-    return modal;
-  }
+    /**
+     * Eliminar todos los modales de notificación
+     */
+    static destroyAllModals() {
+        const modals = document.querySelectorAll(".notify-modal");
+        modals.forEach((modal) => modal.remove());
 
-  static destroyAllModals() {
-    document.querySelectorAll('notify-modal').forEach(modal => modal.remove());
-  }
+        const blurScreen = document.querySelector(".blurScreen");
+        if (blurScreen) blurScreen.style.display = "none";
+    }
 
-  static askForInput(caption, icon, callback = () => {}, description = "", placeholder = "Input", value = "", inputType = "text") {
-    const inputId = 'input-' + Math.random().toString(36).substr(2, 9);
-    const inputHTML = `
-      <p>${description}</p>
-      <input style="width: 300px;" 
-             id="${inputId}" 
-             type="${inputType}" 
-             placeholder="${placeholder}" 
-             value="${value}">
-    `;
+    /**
+     * Crear un modal solicitando entrada del usuario
+     * @param {string} caption - El título del modal
+     * @param {string} icon - El icono que se mostrará
+     * @param {Function} cb - Callback que recibe el valor ingresado
+     * @param {string} description - La descripción del modal
+     * @param {string} placeholder - Placeholder del campo de entrada
+     * @param {string} value - Valor por defecto en el campo de entrada
+     * @param {string} iType - Tipo del campo de entrada (por defecto "text")
+     */
+    static askForInput(
+        caption,
+        icon,
+        cb = () => {},
+        description = "",
+        placeholder = "{{commons.input}}",
+        value = "",
+        iType = "text"
+    ) {
+        const inputRandID = `input-${Math.floor(Math.random() * 10000)}`;
+        const inputField = `
+            <p>${description}</p>
+            <input 
+                style="width: 300px;" 
+                id="${inputRandID}" 
+                type="${iType}" 
+                placeholder="${placeholder}" 
+                value="${value}"
+            >
+        `;
+        this.create(
+            caption,
+            inputField,
+            "{{commons.save}}",
+            icon,
+            () => {
+                const inputElement = document.getElementById(inputRandID);
+                if (inputElement) cb(inputElement.value);
+            },
+            KubekPredefined.MODAL_CANCEL_BTN
+        );
+    }
 
-    const modal = this.create(
-      caption,
-      inputHTML,
-      'Save',
-      icon,
-      () => {
-        const input = modal.shadowRoot.querySelector(`#${inputId}`);
-        callback(input.value);
-      },
-      true
-    );
+    /**
+     * Animar un elemento usando clases CSS
+     * @param {string} selector - Selector del elemento
+     * @param {string} animation - Nombre de la animación
+     * @returns {Promise} - Promesa que se resuelve al finalizar la animación
+     */
+    static animateCSS(selector, animation) {
+        return new Promise((resolve) => {
+            const element = document.querySelector(selector);
+            if (!element) return resolve();
 
-    return modal;
-  }
+            element.classList.add("animate__animated", `animate__${animation}`);
+            element.addEventListener(
+                "animationend",
+                () => {
+                    element.classList.remove("animate__animated", `animate__${animation}`);
+                    resolve();
+                },
+                { once: true }
+            );
+        });
+    }
 }
-
-// Registrar el componente
-customElements.define('notify-modal', NotifyModal);
- */
-// Ejemplo de uso:
-/*
-// Crear un modal simple
-NotifyModal.create(
-  'Título',
-  'Descripción del modal',
-  'Aceptar',
-  'info',
-  () => console.log('Modal confirmado')
-);
-
-// Crear un modal con input
-NotifyModal.askForInput(
-  'Ingrese datos',
-  'edit',
-  (value) => console.log('Valor ingresado:', value),
-  'Por favor ingrese la información requerida',
-  'Escriba aquí...'
-);
-*/

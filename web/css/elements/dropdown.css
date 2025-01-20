@@ -29,6 +29,7 @@
   font-size: 12pt;
   font-weight: 600;
   width: 100%;
+  min-width: 150px;
 }
 
 .dropdown .dropdown-item:first-child {

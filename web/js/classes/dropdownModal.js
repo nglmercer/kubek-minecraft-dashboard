@@ -1,27 +1,270 @@
-UPPER_DIR_ITEM = "<tr onclick='KubekFileManagerUI.upperDir()'><td></td><td>..</td><td></td><td></td></tr>";
-DIR_ITEM_PLACEHOLDER = "<tr data-filename='$0' data-path='$1' data-type='$5'><td><div class='icon-bg'><span class='material-symbols-rounded'>$2</span></div></td><td>$0</td><td>$3</td><td>$4</td></tr>";
-FILE_NAME_REGEXP = /^[\w,\s-]+\.[A-Za-z]{1,15}$/gi;
+class KubekPredefined {
+    // Права
+    static PERMISSIONS = {
+        DEFAULT: "default",
+        ACCOUNTS: "accounts",
+        FILE_MANAGER: "file_manager",
+        MANAGE_SERVERS: "manage_servers",
+        MAKING_SERVERS: "making_servers",
+        MONITOR_SERVERS: "monitor_servers",
+        MANAGE_JAVA: "manage_java",
+        MANAGE_PLUGINS: "manage_plugins"
+    };
 
-currentPath = "/";
-tableListElement = $("#fm-table tbody");
-currentEditorLang = "plaintext";
-currentDataParts = [];
-currentChunkID = null;
-currentChunkWriting = null;
-editableExtensions = [
-    "txt",
-    "log",
-    "yml",
-    "xml",
-    "cfg",
-    "conf",
-    "config",
-    "json",
-    "yaml",
-    "properties",
-    "sh",
-    "bat",
-];
+    // См. название :)
+    static API_ENDPOINT = "/api";
+
+    // Переводы статусов серверов
+    static SERVER_STATUSES_TRANSLATE = {
+        "stopped": "{{serverStatus.stopped}}",
+        "starting": "{{serverStatus.starting}}",
+        "stopping": "{{serverStatus.stopping}}",
+        "running": "{{serverStatus.running}}"
+    }
+
+    // Статусы серверов
+    static SERVER_STATUSES = {
+        STOPPED: "stopped",
+        RUNNING: "running",
+        STARTING: "starting",
+        STOPPING: "stopping"
+    }
+
+    // Базовые типы задач
+    static TASKS_TYPES = {
+        DOWNLOADING: "downloading",
+        INSTALLING: "installing",
+        ZIPPING: "zipping",
+        UNPACKING: "unpacking",
+        UPDATING: "updating",
+        RESTARTING: "restarting",
+        CREATING: "creating",
+        DELETION: "deletion",
+        COMMON: "common",
+        UNKNOWN: "unknown"
+    }
+
+    // Шаги создания сервера
+    static SERVER_CREATION_STEPS = {
+        SEARCHING_CORE: "searchingCore",
+        CHECKING_JAVA: "checkingJava",
+        DOWNLOADING_JAVA: "downloadingJava",
+        UNPACKING_JAVA: "unpackingJava",
+        DOWNLOADING_CORE: "downloadingCore",
+        CREATING_BAT: "creatingBat",
+        COMPLETION: "completion",
+        COMPLETED: "completed",
+        FAILED: "failed",
+    }
+
+    // REGEX для авторизации
+    static PASSWORD_REGEX = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{6,64}$/g;
+    static LOGIN_REGEX = /^[a-zA-Z0-9_.-]{3,16}$/g;
+    static EMAIL_REGEX = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+
+    static MODAL_CANCEL_BTN = '<button class="dark-btn" onclick="KubekNotifyModal.destroyAllModals()">{{commons.close}}</button>';
+}
+const NOTIFY_MODAL_TEMPLATE = `
+    <div class="notify-modal modal-bg" id="{id}">
+        <div class="notify-window">
+            <div class="notify-icon">{icon}</div>
+            <div class="notify-caption">{caption}</div>
+            <div class="notify-description">{description}</div>
+            <button id="cmbtn-{id}" class="primary-btn">{buttonText}</button>
+            {additionalElements}
+        </div>
+    </div>
+`;
+
+class KubekNotifyModal {
+    /**
+     * Crear una ventana modal de notificación
+     * @param {string} caption - El título de la notificación
+     * @param {string} text - La descripción del mensaje
+     * @param {string} buttonText - El texto del botón principal
+     * @param {string} icon - El icono que se mostrará
+     * @param {Function} cb - Callback a ejecutar al cerrar la ventana
+     * @param {string} additionalElements - Elementos adicionales que se agregarán
+     */
+    static create(caption, text, buttonText, icon, cb = () => {}, additionalElements = "") {
+        // Mostrar pantalla difuminada
+        const blurScreen = document.querySelector(".blurScreen");
+        if (blurScreen) blurScreen.style.display = "block";
+
+        const randomID = `notify-${Math.floor(Math.random() * 991) + 10}`;
+        const iconElement = `<span class='material-symbols-rounded'>${icon}</span>`;
+
+        // Crear el contenido del modal
+        const modalHTML = NOTIFY_MODAL_TEMPLATE
+            .replace("{id}", randomID)
+            .replace("{icon}", iconElement)
+            .replace("{caption}", caption)
+            .replace("{description}", text)
+            .replace("{buttonText}", buttonText)
+            .replace("{additionalElements}", additionalElements);
+
+        // Insertar el modal en el body
+        const modalElement = document.createElement("div");
+        modalElement.innerHTML = modalHTML;
+        document.body.appendChild(modalElement.firstElementChild);
+
+        // Configurar el evento del botón principal
+        const button = document.getElementById(`cmbtn-${randomID}`);
+        if (button) {
+            button.addEventListener("click", () => {
+                this.animateCSS(`#${randomID}`, "fadeOut").then(() => {
+                    const modal = document.getElementById(randomID);
+                    if (modal) modal.remove();
+                });
+                if (blurScreen) blurScreen.style.display = "none";
+                cb();
+            });
+        }
+    }
+
+    /**
+     * Eliminar todos los modales de notificación
+     */
+    static destroyAllModals() {
+        const modals = document.querySelectorAll(".notify-modal");
+        modals.forEach((modal) => modal.remove());
+
+        const blurScreen = document.querySelector(".blurScreen");
+        if (blurScreen) blurScreen.style.display = "none";
+    }
+
+    /**
+     * Crear un modal solicitando entrada del usuario
+     * @param {string} caption - El título del modal
+     * @param {string} icon - El icono que se mostrará
+     * @param {Function} cb - Callback que recibe el valor ingresado
+     * @param {string} description - La descripción del modal
+     * @param {string} placeholder - Placeholder del campo de entrada
+     * @param {string} value - Valor por defecto en el campo de entrada
+     * @param {string} iType - Tipo del campo de entrada (por defecto "text")
+     */
+    static askForInput(
+        caption,
+        icon,
+        cb = () => {},
+        description = "",
+        placeholder = "{{commons.input}}",
+        value = "",
+        iType = "text"
+    ) {
+        const inputRandID = `input-${Math.floor(Math.random() * 10000)}`;
+        const inputField = `
+            <p>${description}</p>
+            <input 
+                style="width: 300px;" 
+                id="${inputRandID}" 
+                type="${iType}" 
+                placeholder="${placeholder}" 
+                value="${value}"
+            >
+        `;
+        this.create(
+            caption,
+            inputField,
+            "{{commons.save}}",
+            icon,
+            () => {
+                const inputElement = document.getElementById(inputRandID);
+                if (inputElement) cb(inputElement.value);
+            },
+            KubekPredefined.MODAL_CANCEL_BTN
+        );
+    }
+
+    /**
+     * Animar un elemento usando clases CSS
+     * @param {string} selector - Selector del elemento
+     * @param {string} animation - Nombre de la animación
+     * @returns {Promise} - Promesa que se resuelve al finalizar la animación
+     */
+    static animateCSS(selector, animation) {
+        return new Promise((resolve) => {
+            const element = document.querySelector(selector);
+            if (!element) return resolve();
+
+            element.classList.add("animate__animated", `animate__${animation}`);
+            element.addEventListener(
+                "animationend",
+                () => {
+                    element.classList.remove("animate__animated", `animate__${animation}`);
+                    resolve();
+                },
+                { once: true }
+            );
+        });
+    }
+}
+const DROPDOWN_BASE =
+    "<div class='dropdown layout-accent-box' id='dropdown-$1' style='left: $2px; top: $3px; z-index: $4;'>$5</div>";
+const DROPDOWN_ITEM_BASE =
+    "<div class='dropdown-item' data-data='$3'>$2$1</div>";
+const DROPDOWN_ITEM_ICON_BASE =
+    "<span class='material-symbols-rounded'>$1</span>";
+
+class KubekDropdowns {
+    // Функция для добавления нового дропдауна
+    static addDropdown(data, posX, posY, zIndex, callback = () => {}) {
+        this.removeAllDropdowns();
+        let poolElement = document.body;
+        let newID = this.generateDropdownID();
+        let dropdownItems = "";
+
+        data.forEach((item) => {
+            if (typeof item.icon !== "undefined") {
+                dropdownItems += DROPDOWN_ITEM_BASE
+                    .replaceAll(/\$1/gim, item.text)
+                    .replaceAll(
+                        /\$2/gim,
+                        DROPDOWN_ITEM_ICON_BASE.replace(/\$1/gim, item.icon)
+                    )
+                    .replaceAll(/\$3/gim, item.data);
+            } else {
+                dropdownItems += DROPDOWN_ITEM_BASE
+                    .replaceAll(/\$1/gim, item.text)
+                    .replaceAll(/\$2/gim, "")
+                    .replaceAll(/\$3/gim, item.data);
+            }
+        });
+
+        let dropdownCode = DROPDOWN_BASE
+            .replaceAll("$1", newID)
+            .replaceAll("$2", posX)
+            .replaceAll("$3", posY)
+            .replaceAll("$4", zIndex)
+            .replaceAll("$5", dropdownItems);
+
+        // Crear y agregar el dropdown al DOM
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = dropdownCode;
+        const dropdownElement = tempDiv.firstElementChild;
+        poolElement.appendChild(dropdownElement);
+
+        // Agregar eventos a los elementos del dropdown
+        const dropdownItemsElements = dropdownElement.querySelectorAll(".dropdown-item");
+        dropdownItemsElements.forEach((item) => {
+            item.addEventListener("click", () => {
+                callback(item.getAttribute("data-data"));
+                KubekDropdowns.removeAllDropdowns();
+            });
+        });
+    }
+
+    // Получить ID для нового дропдауна
+    static generateDropdownID() {
+        return document.querySelectorAll("body .dropdown").length;
+    }
+
+    // Удалить все дропдауны
+    static removeAllDropdowns() {
+        const dropdowns = document.querySelectorAll("body .dropdown");
+        dropdowns.forEach((dropdown) => dropdown.remove());
+    }
+}
 
 $(function () {
     KubekUI.setTitle("Kubek | {{sections.fileManager}}");
@@ -229,14 +472,10 @@ KubekFileManagerUI = class {
 
     // Открыть пустой редактор
     static openEmptyEditor = () => {
-        const buttonElement = document.querySelector('#fm-newfile');
-        const popupElement = document.querySelector('#fm-popup');
-        console.log("buttonElement", buttonElement, popupElement);
-        popupElement.showAtElement(buttonElement);
-/*         KubekFileManagerUI.closeEditor();
+        KubekFileManagerUI.closeEditor();
         currentEditorLang = "plaintext";
         $(".blurScreen").show();
-        $(".fileEditor").show(); */
+        $(".fileEditor").show();
     };
 
     // Открыть файл на редактирование
@@ -388,67 +627,4 @@ function getTextNodeAtPosition(root, index) {
         node: c ? c : root,
         position: index
     };
-}
-function openPopup(element, popupId = "#fm-popup") {
-    const popupElement = document.querySelector(popupId);
-    if (!popupElement) return;
-    if (typeof element === "string") {
-        const buttonElement  = document.querySelector(element);
-            popupElement.showAtElement(buttonElement);
-    } else {
-        const buttonElement = element;
-        popupElement.showAtElement(buttonElement);
-    }
-}
-const popupElement = document.querySelector('#fm-popup');
-const hoverStyles = `
-<style>
-    .dropdown-item {
-        background: var(--bg-dark-accent);
-        border-radius: 8px;
-        padding: 4px 8px;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        cursor: pointer;
-        height: 48px;
-        font-size: 12pt;
-        width: 100%;
-    }
-    .dropdown-item:hover {
-        background: #2e3e53;
-    }
-</style>
-`;
-
-// Add force quit button to popup
-
-popupElement.addButton(
-    `${gettemplatebutton("{{commons.delete}}","bookmark_manager")}`,
-    () => {
-        popupElement.hide();
-    }
-);
-popupElement.addButton(
-    `${gettemplatebutton("{{commons.rename}}","bookmark_manager")}`,
-    () => {
-        popupElement.hide();
-    }
-);
-popupElement.addButton(
-    `${gettemplatebutton("{{commons.download}}","download")}`,
-    () => {
-        popupElement.hide();
-        console.log("download");
-    }
-);
-
-
-function gettemplatebutton(text, icon) {
-    return `${hoverStyles}
-        <div class="dropdown-item">
-            <span class="material-symbols-rounded">${icon}</span>
-            <span class="default-font">${text}</span>
-        </div>
-    `;
 }

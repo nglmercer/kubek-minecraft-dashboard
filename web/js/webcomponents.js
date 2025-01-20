@@ -1975,6 +1975,7 @@ class CustomPopup extends HTMLElement {
         this.attachShadow({ mode: 'open', delegatesFocus: true });
         this.container = document.createElement('div');
         this.lastFocusedElement = null;
+        ///*this content is not in div or content, this is a fixed position elem+ t*/
         this.container.style.cssText = `
         position: fixed;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
@@ -1986,6 +1987,10 @@ class CustomPopup extends HTMLElement {
         justify-content: center;
         align-items: center;
         align-content: center;
+        flex-direction: column;
+        min-width: inherit;
+        width: 100%;
+        max-width: 200px
         `;
     
         const style = document.createElement('style');
@@ -2000,6 +2005,10 @@ class CustomPopup extends HTMLElement {
         }
         button:hover {
             background: #0056b3;
+        }
+        div {
+        box-sizing: border-box !important;
+
         }
         `;
     
@@ -2058,6 +2067,7 @@ class CustomPopup extends HTMLElement {
         button.innerHTML = html;
         button.style.cssText = `
         cursor: pointer;
+        width: 100% !important;
         `;
         button.addEventListener('click', callback);
         this.container.appendChild(button);

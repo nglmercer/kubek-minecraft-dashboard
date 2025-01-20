@@ -35,7 +35,7 @@
 <div class="fm-container animate__animated animate__fadeIn animate__faster">
     <h2 class="title">{{sections.fileManager}}</h2>
     <div class="actions">
-        <button class="dark-btn icon-only" onclick="KubekFileManagerUI.openEmptyEditor()">
+        <button class="dark-btn icon-only" id="fm-newfile" onclick="KubekFileManagerUI.openEmptyEditor()">
             <span class="material-symbols-rounded">add_circle</span>
             <span>{{commons.create}} {{commons.file.lowerCase}}</span>
         </button>
@@ -56,3 +56,8 @@
         </table>
     </div>
 </div>
+<custom-popup id="fm-popup" class="material-symbols-rounded">
+</custom-popup>
+<script>
+
+</script>

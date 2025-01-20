@@ -21,18 +21,17 @@ class KubekUI {
         });
     }
 
-    // Управление сайдбаром
-    static setActiveItemByPage = (page) => {
-        $("#main-menu-sidebar .sidebar-item").each(function () {
-            if ($(this).data("page") === page) {
-                $(this).addClass("active");
+    static setActiveItemByPage(page) {
+        document.querySelectorAll("#main-menu-sidebar .sidebar-item").forEach(item => {
+            if (item.dataset.page === page) {
+                item.classList.add("active");
             }
         });
     }
 
-    static setAllSidebarItemsUnactive = () => {
-        $("#main-menu-sidebar .sidebar-item").each(function () {
-            $(this).removeClass("active");
+    static setAllSidebarItemsUnactive() {
+        document.querySelectorAll("#main-menu-sidebar .sidebar-item").forEach(item => {
+            item.classList.remove("active");
         });
     }
 
@@ -41,14 +40,12 @@ class KubekUI {
         this.setActiveItemByPage(page);
     }
 
-    // Загрузить данные выбранного сервера
+    // Load the selected server
     static loadSelectedServer = () => {
         if (typeof window.localStorage.selectedServer !== "undefined") {
             selectedServer = window.localStorage.selectedServer;
-            // Пробуем загрузить сервер в хидер
             KubekServerHeaderUI.loadServerByName(selectedServer, (result) => {
                 if (result === false) {
-                    // При ошибке загрузки выбираем первый сервер из списка, и пробуем ещё раз
                     KubekServers.getServersList((list) => {
                         window.localStorage.selectedServer = list[0];
                         window.location.reload();
@@ -64,77 +61,86 @@ class KubekUI {
         }
     }
 
-    // Загрузить список серверов
-    static loadServersList = () => {
-        $("#servers-list-sidebar .server-item").remove();
-        KubekServers.getServersList((servers) => {
-            servers.forEach((serverItem) => {
-                let isActive;
-                serverItem === selectedServer ? isActive = " active" : isActive = "";
-                $("#servers-list-sidebar").append('<div class="server-item sidebar-item' + isActive + '" onclick="window.localStorage.selectedServer = `' + serverItem + '`; window.location.reload()">\n' +
-                    '      <div class="icon-circle-bg">\n' +
-                    '        <img style="width: 24px; height: 24px;" alt="' + serverItem + '" src="/api/servers/' + serverItem + '/icon">\n' +
-                    '      </div>\n' +
-                    '      <span>' + serverItem + '</span>\n' +
-                    '    </div>');
-            })
-        })
-    };
-
-    // Соединение с сервером потеряно
-    static connectionLost = () => {
-        KubekAlerts.addAlert("{{commons.connectionLost}}", "warning", moment().format("DD.MM / HH:MM:SS"), 6000);
-        KubekUI.showPreloader();
+    // Load the list of servers
+    static loadServersList() {
+        const sidebar = document.querySelector("#servers-list-sidebar");
+        if (sidebar) {
+            sidebar.querySelectorAll(".server-item").forEach(item => item.remove());
+            KubekServers.getServersList(servers => {
+                servers.forEach(serverItem => {
+                    const isActive = serverItem === localStorage.selectedServer ? " active" : "";
+                    const serverElement = document.createElement("div");
+                    serverElement.className = `server-item sidebar-item${isActive}`;
+                    serverElement.onclick = () => {
+                        localStorage.selectedServer = serverItem;
+                        location.reload();
+                    };
+                    serverElement.innerHTML = `
+                        <div class="icon-circle-bg">
+                            <img style="width: 24px; height: 24px;" alt="${serverItem}" src="/api/servers/${serverItem}/icon">
+                        </div>
+                        <span>${serverItem}</span>
+                    `;
+                    sidebar.appendChild(serverElement);
+                });
+            });
+        }
     }
 
-    // Соединение с сервером восстановление
-    static connectionRestored = () => {
+    // Handle connection lost
+    static connectionLost() {
+        KubekAlerts.addAlert("{{commons.connectionLost}}", "warning", moment().format("DD.MM / HH:MM:SS"), 6000);
+        this.showPreloader();
+    }
+
+    // Handle connection restored
+    static connectionRestored() {
         KubekAlerts.addAlert("{{commons.connectionRestored}}", "check", moment().format("DD.MM / HH:MM:SS"), 3000);
         setTimeout(() => {
-            window.location.reload();
+            location.reload();
         }, 1000);
     }
 
-    // Открыть/закрыть sidebar, если он в mobile-режиме
-    static toggleSidebar = () => {
-        if(window.matchMedia("(max-width: 1360px)")){
-            if ($(".main-layout .sidebar").hasClass("minimized")) {
-                $(".main-layout .sidebar").removeClass("minimized");
-                $(".blurScreen").show();
+    // Toggle sidebar for mobile mode
+    static toggleSidebar() {
+        const sidebar = document.querySelector(".main-layout .sidebar");
+        const blurScreen = document.querySelector(".blurScreen");
+
+        if (window.matchMedia("(max-width: 1360px)").matches && sidebar) {
+            if (sidebar.classList.contains("minimized")) {
+                sidebar.classList.remove("minimized");
+                if (blurScreen) blurScreen.style.display = "block";
             } else {
-                $(".main-layout .sidebar").addClass("minimized");
-                $(".blurScreen").hide();
+                sidebar.classList.add("minimized");
+                if (blurScreen) blurScreen.style.display = "none";
             }
         }
-    };
+    }
 
-    // Задать заголовок окна (вкладки)
-    static setTitle(title){
+    // Set the document title
+    static setTitle(title) {
         document.title = title;
     }
 }
 
-const animateCSSJ = (element, animation, fast = true, prefix = "animate__") =>
-    // We create a Promise and return it
-    new Promise((resolve) => {
+const animateCSSJ = (element, animation, fast = true, prefix = "animate__") => {
+    return new Promise((resolve) => {
         const animationName = `${prefix}${animation}`;
+        const node = document.querySelector(element);
 
-        if (fast === true) {
-            $(element).addClass(`${prefix}animated ${animationName} ${prefix}faster`);
+        if (fast) {
+            node.classList.add(`${prefix}animated`, animationName, `${prefix}faster`);
         } else {
-            $(element).addClass(`${prefix}animated ${animationName}`);
+            node.classList.add(`${prefix}animated`, animationName);
         }
 
-        // When the animation ends, we clean the classes and resolve the Promise
         function handleAnimationEnd(event) {
             event.stopPropagation();
-            $(element).removeClass(
-                `${prefix}animated ${animationName} ${prefix}faster`
-            );
+            node.classList.remove(`${prefix}animated`, animationName, `${prefix}faster`);
             resolve("Animation ended");
         }
 
-        $(element)[0].addEventListener("animationend", handleAnimationEnd, {
-            once: true,
-        });
+        node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });
+};
+

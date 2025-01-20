@@ -34,6 +34,7 @@ class KubekRefresher {
         this.addRefreshInterval(5000, () => {
             if (typeof KubekConsoleUI !== "undefined") {
                 KubekHardware.getUsage((usage) => {
+                    if (!usage) return;
                     KubekConsoleUI.refreshUsageItems(usage.cpu, usage.ram.percent, usage.ram);
                 });
             }

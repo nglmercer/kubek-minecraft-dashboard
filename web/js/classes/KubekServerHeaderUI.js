@@ -96,7 +96,7 @@ class KubekServerHeaderUI {
  */
 function initializeServerDropdown() {
     const buttonElement = document.querySelector('#server-more-btn');
-    const popupElement = document.querySelector('custom-popup');
+    const popupElement = document.querySelector('#server-popup');
 
     // Add click event listener to show popup
     buttonElement.addEventListener('click', () => {
