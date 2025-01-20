@@ -31,5 +31,5 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log('Toggling sidebar');
           // Add your sidebar toggle logic here
         });
-    }, 222);
+    }, 444);
 });

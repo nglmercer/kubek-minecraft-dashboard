@@ -13,6 +13,7 @@ $(function () {
     // Заполняем список серверов для проверки на существование
     $("#servers-list-sidebar .sidebar-item span:last-child").each((i, el) => {
         allServersList.push($(el).text());
+        console.log("allServersList", allServersList);
     });
 
     refreshServerCoresList(() => {
@@ -30,62 +31,37 @@ $(function () {
         $(".new-server-container #server-mem").val(totalDigit);
         $(".new-server-container #server-mem").attr("max", maxMemory);
         validateNewServerInputs();
+        console.log("usage server-mem input precalculated", usage);
     });
 });
 
-// Функция для валидации полей ввода
 function validateNewServerInputs(){
-    // Проверка на выбор файла ядра
-    if($(".new-server-container #core-upload").css("display") !== "none" && $("#server-core-input")[0].value === ""){
-        return;
+    const server_name_input = document.querySelector('#server_name_input');
+    const cores_grid = document.querySelector('#cores-grids');
+    const core_upload = document.querySelector('#core-upload');
+    const customselect_versions = document.querySelector('#customselect_versions');
+    const javas_list = document.querySelector('#javas_list');
+    const server_mem = document.querySelector('#server-mem');
+    const server_port = document.querySelector('#server-port');
+    const verifyobj = {
+        server_name_input: server_name_input.getInputValues(),
+        cores_grid: cores_grid.selected,
+        core_upload: core_upload.style.display !== "none",
+        customselect_versions: customselect_versions.getSelectedOptions(),
+        javas_list: javas_list.getSelectedOptions(),
+        server_mem: server_mem.value,
+        server_port: server_port.value
     }
-
-    // Проверка имени сервера
-    let sName = $(".new-server-container #server-name-input").val();
-    if(!SERVER_NAME_REGEXP.test(sName)){
-        $(".new-server-container #server-name-input").addClass("error");
-        return;
-    } else {
-        $(".new-server-container #server-name-input").removeClass("error");
+    console.log("verifyobj", verifyobj);
+    if (!verifyobj.server_name_input || !verifyobj.server_name_input) {
+    return false;
     }
-
-    // Проверка имени сервера на существование
-    if(allServersList.includes(sName)){
-        $(".new-server-container #server-name-input").addClass("error");
-        return;
-    } else {
-        $(".new-server-container #server-name-input").removeClass("error");
+    if (!verifyobj.server_name_input || !verifyobj.customselect_versions || !verifyobj.javas_list) {
+    return false;
     }
-
-    // Проверка ввода памяти
-    let memInput = $(".new-server-container #server-mem");
-    if(memInput.val() < memInput.attr("min") && memInput.val() > memInput.attr("max") && memInput !== ""){
-        $(".new-server-container #server-mem").addClass("error");
-        return;
-    } else {
-        $(".new-server-container #server-mem").removeClass("error");
-    }
-
-    // Проверка ввода порта
-    let portInput = $(".new-server-container #server-port");
-    if(portInput.val() < portInput.attr("min") && portInput.val() > portInput.attr("max") && portInput !== ""){
-        $(".new-server-container #server-port").addClass("error");
-        return;
-    } else {
-        $(".new-server-container #server-port").removeClass("error");
-    }
-
-    // Проверка выбора версии и ядра
-    if($(".new-server-container #core-upload").css("display") === "none"){
-        if($(".new-server-container #cores-grid .item.active").length === 1 && $(".new-server-container #cores-versions .item.active").length === 1){
-            return;
-        }
-    }
-
-    // Если все проверки прошли
+    return true;
 }
 
-// Функция для обновления списка ядер
 function refreshServerCoresList(cb = () => {
 }) {
     currentSelectedCore = "";
@@ -104,41 +80,20 @@ function refreshServerCoresList(cb = () => {
             allcoresmap.push(parsedcore);
         });
         coresgrid.data = allcoresmap;
-        $(".new-server-container #cores-grid .card").off("click");
+        coresgrid.addEventListener('change', (e) => {
+            console.log("e", e.detail);
+            currentSelectedCore = e.detail.selected;
+            refreshCoreVersionsList(() => {
+                validateNewServerInputs();
+                KubekUI.hidePreloader();
+            });
+        });
+        coresgrid.selected = "vanilla";
 
-        // Очищаем список
-        $(".new-server-container #cores-grid").html("");
-
-        // Загружаем новый список
-        for (const [, core] of Object.entries(cores)) {
-            $(".new-server-container #cores-grid").append(CORE_GRID_ITEM_PLACEHOLDER.replaceAll("$0", core.displayName).replaceAll("$1", core.name));
-        }
-        $(".new-server-container #cores-grid .card:first-child").addClass("active");
-        currentSelectedCore = $(".new-server-container #cores-grid .card:first-child").data("id");
-
-        // Биндим нажатия на карточки
-        $(".new-server-container #cores-grid .card").on("click", function () {
-            if (!$(this).hasClass("active")) {
-                $(".new-server-container #cores-grid .card.active").removeClass("active");
-                $(this).addClass("active");
-                currentSelectedCore = $(this).data("id");
-                KubekUI.showPreloader();
-                refreshCoreVersionsList(() => {
-                    validateNewServerInputs();
-                    KubekUI.hidePreloader();
-                });
-            }
-        })
         cb(true);
     });
 }
 
-// Бинд на имя сервера
-$(".new-server-container input").on("input", function(){
-   validateNewServerInputs();
-});
-
-// Функция для обновления списка версий ядра
 function refreshCoreVersionsList(cb = () => {
 }) {
     currentSelectedVersion = "";
@@ -149,10 +104,8 @@ function refreshCoreVersionsList(cb = () => {
         }
         console.log("versions", versions);
 
-        // Очищаем список
         const allversions = []
 
-        // Загружаем новый список
         versions.forEach((ver) => {
             const optionserver = {
                 label: ver,
@@ -163,34 +116,20 @@ function refreshCoreVersionsList(cb = () => {
         const customselect_versions = document.querySelector('#customselect_versions');
         console.log("customselect_versions", customselect_versions);
         customselect_versions.setOptions(allversions);
-        // Делаем первый элемент активным и загружаем версию в переменную
-
-        // Биндим нажатия на версии
-        $(".new-server-container #cores-versions .item").on("click", function () {
-            if (!$(this).hasClass("active")) {
-                $(this).addClass("active");
-                currentSelectedVersion = $(this).text();
-                validateNewServerInputs();
-            }
-        })
         cb(true);
     });
 }
 
-// Вызвать диалог для выбора файла ядра
 function uploadCore() {
-    $("#server-core-input").trigger("click");
-    $("#server-core-input").off("change");
-    $("#server-core-input").on("change", () => {
-        $(".new-server-container #core-upload #uploaded-file-name").text($("#server-core-input")[0].files[0].name);
+    document.querySelector('#server-core-input').trigger("click");
+    document.querySelector('#server-core-input').off("change");
+    document.querySelector('#server-core-input').on("change", () => {
+        document.querySelector(".new-server-container #core-upload #uploaded-file-name").text(document.querySelector("#server-core-input")[0].files[0].name);
         validateNewServerInputs();
     });
 }
 
-// Обновить список Java
 function refreshJavaList(cb) {
-    $("#java-list-placeholder").show();
-    $("#javas-list").hide();
     const javas_list = document.querySelector('#javas_list');
     const alljavas = []
     KubekJavaManager.getAllJavas((javas) => {
@@ -207,8 +146,6 @@ function refreshJavaList(cb) {
         alljavas.push(...parseToOptions(javas));
         javas_list.setOptions(alljavas);
         localStorage.setItem("javas", JSON.stringify(javas));
-        $("#java-list-placeholder").hide();
-        $("#javas-list").show();
         cb(true);
     });
 }
@@ -222,27 +159,9 @@ function generateNewServerStart(){
     return result;
 }
 
-// Биндим нажатия на категории ядра
-// next creame component to select elementsa and return the selected value cores-versions-parent
-$(".new-server-container #core-category .item").on("click", function () {
-    if (!$(this).hasClass("active")) {
-        $(".new-server-container #core-category .item.active").removeClass("active");
-        $(this).addClass("active");
-        if ($(this).data("item") === "list") {
-            $(".new-server-container #cores-grid").show();
-            $(".new-server-container #core-upload").hide();
-        } else {
-            $(".new-server-container #cores-grid").hide();
-            $(".new-server-container #core-upload").show();
-        }
-        validateNewServerInputs();
-    }
-});
-
-// Начать создание сервера
 function prepareServerCreation(){
     $(".new-server-container #create-server-btn .text").text("{{newServerWizard.creationStartedShort}}");
-    $(".new-server-container #create-server-btn").attr("disabled", "true");
+    //$(".new-server-container #create-server-btn").attr("disabled", "true");
     $(".new-server-container #create-server-btn .material-symbols-rounded:not(.spinning)").hide();
     $(".new-server-container #create-server-btn .material-symbols-rounded.spinning").show();
     let serverName = document.querySelector('#server_name_input').getInputValues();

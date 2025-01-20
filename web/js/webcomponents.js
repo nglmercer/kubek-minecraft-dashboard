@@ -3035,13 +3035,13 @@ class SidebarComponent extends HTMLElement {
       sidebar.style.opacity = '1';
       setTimeout(() => {
         sidebar.style.display = 'block';
-      }, 222);
+      }, 444);
     } else {
       sidebar.style.transform = 'translateX(-100%)';
       sidebar.style.opacity = '0';
       setTimeout(() => {
         sidebar.style.display = 'none';
-      }, 222);
+      }, 444);
     }
   }
 
@@ -3283,6 +3283,7 @@ class GridSelector extends HTMLElement {
               bubbles: true,
               composed: true
           }));
+          this.render();
       }
   }
 
