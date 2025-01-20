@@ -91,6 +91,19 @@ function refreshServerCoresList(cb = () => {
     currentSelectedCore = "";
     currentSelectedVersion = "";
     KubekCoresManager.getList((cores) => {
+        console.log("cores", cores);
+        const coresgrid = document.querySelector('#cores-grids');
+        const allcoresmap = [];
+        Object.entries(cores).forEach(([key, value]) => {
+            console.log("value", value, "key", key);
+            const parsedcore = {
+                id: key,
+                title: value.displayName,
+                img: `/assets/icons/cores/${key}.png`
+            }
+            allcoresmap.push(parsedcore);
+        });
+        coresgrid.data = allcoresmap;
         $(".new-server-container #cores-grid .card").off("click");
 
         // Очищаем список
@@ -244,9 +257,19 @@ function prepareServerCreation(){
     const javaversion_select = document.querySelector('#javas_list');
     console.log("javas_list", javaversion_select);
     javaVersion = javaversion_select.getValue();
-    console.log("javaVersion", javaVersion, serverName, serverPort, serverCore, serverVersion, startScript,memory);
-/*     startScript = generateNewServerStart();
-
+         startScript = generateNewServerStart();
+         serverCore = currentSelectedCore;
+    const mapedserverdata = {
+        serverName : serverName,
+        serverCore : serverCore,// create webcomponent for this list: ['vanilla', 'paper', 'waterfall', 'purpur', 'spigot',"velocity"]
+        serverVersion : serverVersion,
+        startScript : startScript, //start script
+        javaVersion : javaVersion,
+        serverPort : serverPort,
+        memory : memory
+    }
+    console.log("javaVersion mapedserverdata", mapedserverdata);
+/*
     if($(".new-server-container #core-upload").css("display") === "none"){
         serverCore = currentSelectedCore;
         serverVersion = currentSelectedVersion;

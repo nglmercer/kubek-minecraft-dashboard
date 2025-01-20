@@ -3236,3 +3236,123 @@ class SidebarComponent extends HTMLElement {
 }
 
 customElements.define('sidebar-menu', SidebarComponent);
+class GridSelector extends HTMLElement {
+  constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+      this._selected = null;
+  }
+
+  static get observedAttributes() {
+      return ['data'];
+  }
+
+  connectedCallback() {
+      this.render();
+      this.addEventListeners();
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+      if (name === 'data' && oldValue !== newValue) {
+          this.render();
+      }
+  }
+
+  get data() {
+      try {
+          return JSON.parse(this.getAttribute('data') || '[]');
+      } catch {
+          return [];
+      }
+  }
+
+  set data(value) {
+      this.setAttribute('data', JSON.stringify(value));
+  }
+
+  get selected() {
+      return this._selected;
+  }
+
+  set selected(value) {
+      const oldValue = this._selected;
+      this._selected = value;
+      if (oldValue !== value) {
+          this.dispatchEvent(new CustomEvent('change', {
+              detail: { selected: value },
+              bubbles: true,
+              composed: true
+          }));
+      }
+  }
+
+  render() {
+      const style = `
+          :host {
+              display: block;
+          }
+          .cards-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+              gap: 1rem;
+              padding: 1rem;
+          }
+          .card {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 1rem;
+              border: 2px solid #ddd;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+          }
+          .card:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          }
+          .card.active {
+              border-color: #4a90e2;
+              background-color: rgba(74, 144, 226, 0.1);
+          }
+          .icon {
+              width: 64px;
+              height: 64px;
+              object-fit: contain;
+              margin-bottom: 0.5rem;
+          }
+          .title {
+              text-align: center;
+              font-weight: 500;
+          }
+      `;
+
+      const items = this.data.map(item => `
+          <div class="card ${this._selected === item.id ? 'active' : ''}" data-id="${item.id}">
+              <img class="icon" src="${item.img}" alt="${item.title} logo">
+              <span class="title">${item.title}</span>
+          </div>
+      `).join('');
+
+      this.shadowRoot.innerHTML = `
+          <style>${style}</style>
+          <div class="cards-grid">
+              ${items}
+          </div>
+      `;
+  }
+
+  addEventListeners() {
+      this.shadowRoot.addEventListener('click', (e) => {
+          const card = e.target.closest('.card');
+          if (card) {
+              const id = card.dataset.id;
+              this.selected = id;
+              this.render();
+          }
+      });
+  }
+}
+
+// Register the web component
+customElements.define('grid-selector', GridSelector);
