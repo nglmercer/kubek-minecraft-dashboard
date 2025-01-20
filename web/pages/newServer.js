@@ -181,6 +181,7 @@ function uploadCore() {
     $("#server-core-input").trigger("click");
     $("#server-core-input").off("change");
     $("#server-core-input").on("change", () => {
+        console.log("core-upload", $("#server-core-input")[0].files[0].name);
         $(".new-server-container #core-upload #uploaded-file-name").text($("#server-core-input")[0].files[0].name);
         validateNewServerInputs();
     });
@@ -192,8 +193,12 @@ function refreshJavaList(cb) {
     $("#javas-list").hide();
     KubekJavaManager.getAllJavas((javas) => {
         $(".new-server-container #javas-list").html("");
+        if (!javas || Object.keys(javas).length === 0) {
+            return;
+        }
+        const javaslist = $(".new-server-container #javas-list");
         javas.installed.forEach((installed) => {
-            $(".new-server-container #javas-list").append(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "installed").replaceAll("$1", installed).replaceAll("$2", installed));
+            //javaslist.appenduploadCore()(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "installed").replaceAll("$1", installed).replaceAll("$2", installed));
         });
         javas.kubek.forEach((installed) => {
             $(".new-server-container #javas-list").append(JAVA_ITEM_PLACEHOLDER.replaceAll("$0", "kubek").replaceAll("$1", installed).replaceAll("$2", "Temurin Java " + installed + " ({{commons.installed}})"));
@@ -261,18 +266,33 @@ function prepareServerCreation(){
 
     javaVersion = $(".new-server-container #javas-list .item.active").data("data");
     startScript = generateNewServerStart();
-
+    let parsedsenddata = {
+        serverName : serverName,
+        serverCore : serverCore,
+        serverVersion : serverVersion,
+        startScript : startScript, //start script
+        javaVersion : javaVersion,
+        serverPort : serverPort,
+        formData : {}
+    }
     if($(".new-server-container #core-upload").css("display") === "none"){
         serverCore = currentSelectedCore;
         serverVersion = currentSelectedVersion;
         startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
+        parsedsenddata.serverCore = serverCore;
+        parsedsenddata.serverVersion = serverVersion;
+        console.log("parsedsenddata", parsedsenddata);
     } else {
         serverCore = $("#server-core-input")[0].files[0].name;
         serverVersion = serverCore;
         let formData = new FormData($("#server-core-form")[0]);
+        parsedsenddata.serverCore = serverCore;
+        parsedsenddata.serverVersion = serverVersion;
+        parsedsenddata.formData = formData;
         KubekRequests.post("/cores/" + serverName, () => {
             startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
         }, formData);
+        console.log("parsedsenddata", parsedsenddata);
     }
 }
 
