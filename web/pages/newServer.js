@@ -6,7 +6,22 @@ AIKAR_FLAGS = "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefP
 currentSelectedCore = "";
 currentSelectedVersion = "";
 allServersList = [];
-
+$(".new-server-container #core-category .item").on("click", function () {
+    if (!$(this).hasClass("active")) {
+        $(".new-server-container #core-category .item.active").removeClass("active");
+        $(this).addClass("active");
+        if ($(this).data("item") === "list") {
+            $(".new-server-container #cores-grid").show();
+            $(".new-server-container #cores-versions-parent").show();
+            $(".new-server-container #core-upload").hide();
+        } else {
+            $(".new-server-container #cores-grid").hide();
+            $(".new-server-container #cores-versions-parent").hide();
+            $(".new-server-container #core-upload").show();
+        }
+        validateNewServerInputs();
+    }
+});
 $(function () {
     KubekUI.setTitle("Kubek | {{commons.create}} {{commons.server.lowerCase}}");
 
@@ -120,10 +135,10 @@ function refreshCoreVersionsList(cb = () => {
 }
 
 function uploadCore() {
-    document.querySelector('#server-core-input').trigger("click");
-    document.querySelector('#server-core-input').off("change");
-    document.querySelector('#server-core-input').on("change", () => {
-        document.querySelector(".new-server-container #core-upload #uploaded-file-name").text(document.querySelector("#server-core-input")[0].files[0].name);
+    $("#server-core-input").trigger("click");
+    $("#server-core-input").off("change");
+    $("#server-core-input").on("change", () => {
+        $(".new-server-container #core-upload #uploaded-file-name").text($("#server-core-input")[0].files[0].name);
         validateNewServerInputs();
     });
 }
@@ -164,10 +179,10 @@ function generateNewServerStart(){
 }
 
 function prepareServerCreation(){
-    document.querySelector(".new-server-container #create-server-btn .text").text("{{newServerWizard.creationStartedShort}}");
+    document.querySelector(".new-server-container #create-server-btn .text").innerHTML = "{{newServerWizard.creationStartedShort}}";
     //document.querySelector(".new-server-container #create-server-btn").attr("disabled", "true");
-    document.querySelector(".new-server-container #create-server-btn .material-symbols-rounded:not(.spinning)").hide();
-    document.querySelector(".new-server-container #create-server-btn .material-symbols-rounded.spinning").show();
+    document.querySelector(".new-server-container #create-server-btn .material-symbols-rounded:not(.spinning)").style.display = "none";
+    document.querySelector(".new-server-container #create-server-btn .material-symbols-rounded.spinning").style.display = "block";
     let serverName = document.querySelector('#server_name_input').getInputValues();
     let memory = document.querySelector('#server-mem').value;
     let serverPort = document.querySelector('#server-port').value;
@@ -179,6 +194,7 @@ function prepareServerCreation(){
     serverVersion = serverVersion_select.getValue();
     const javaversion_select = document.querySelector('#javas_list');
     console.log("javas_list", javaversion_select);
+    let formData = new FormData($("#server-core-form")[0]);
     javaVersion = javaversion_select.getValue();
          startScript = generateNewServerStart();
          serverCore = currentSelectedCore;
@@ -189,7 +205,8 @@ function prepareServerCreation(){
         startScript : startScript, //start script
         javaVersion : javaVersion,
         serverPort : serverPort,
-        memory : memory
+        memory : memory,
+        formData : formData
     }
     console.log("javaVersion mapedserverdata", mapedserverdata);
 /*
@@ -200,7 +217,6 @@ function prepareServerCreation(){
     } else {
         serverCore = $("#server-core-input")[0].files[0].name;
         serverVersion = serverCore;
-        let formData = new FormData($("#server-core-form")[0]);
         KubekRequests.post("/cores/" + serverName, () => {
             startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
         }, formData);
