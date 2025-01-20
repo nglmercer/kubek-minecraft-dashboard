@@ -10,7 +10,6 @@ allServersList = [];
 $(function () {
     KubekUI.setTitle("Kubek | {{commons.create}} {{commons.server.lowerCase}}");
 
-    // Заполняем список серверов для проверки на существование
     $("#servers-list-sidebar .sidebar-item span:last-child").each((i, el) => {
         allServersList.push($(el).text());
         console.log("allServersList", allServersList);
@@ -28,8 +27,8 @@ $(function () {
         let totalMemory = Math.ceil(Math.round(usage.ram.total / 1024 / 1024) / 512) * 512;
         let totalDigit = (totalMemory / 1024).toFixed(1) / 2;
         let maxMemory = (totalMemory / 1024).toFixed(1);
-        $(".new-server-container #server-mem").val(totalDigit);
-        $(".new-server-container #server-mem").attr("max", maxMemory);
+        document.querySelector(".new-server-container #server-mem").value = totalDigit;
+        document.querySelector(".new-server-container #server-mem").max = maxMemory;
         validateNewServerInputs();
         console.log("usage server-mem input precalculated", usage);
     });
@@ -130,6 +129,9 @@ function uploadCore() {
 }
 
 function refreshJavaList(cb) {
+    document.querySelector("#java-list-placeholder").style.display = "block";
+    document.querySelector("#javas-list").style.display = "none";
+
     const javas_list = document.querySelector('#javas_list');
     const alljavas = []
     KubekJavaManager.getAllJavas((javas) => {
@@ -146,27 +148,29 @@ function refreshJavaList(cb) {
         alljavas.push(...parseToOptions(javas));
         javas_list.setOptions(alljavas);
         localStorage.setItem("javas", JSON.stringify(javas));
+        document.querySelector("#java-list-placeholder").style.display = "none";
+        document.querySelector("#javas-list").style.display = "block";
         cb(true);
     });
 }
 
 // Собрать start script запуска сервера
 function generateNewServerStart(){
-    let result = "-Xmx" + $("#server-mem").val() * 1024 + "M";
-    if($("#add-aikar-flags").is(":checked")){
+    let result = "-Xmx" + document.querySelector('#server-mem').value * 1024 + "M";
+    if(document.querySelector('#add-aikar-flags').checked){
         result = result + " " + encodeURIComponent(AIKAR_FLAGS);
     }
     return result;
 }
 
 function prepareServerCreation(){
-    $(".new-server-container #create-server-btn .text").text("{{newServerWizard.creationStartedShort}}");
-    //$(".new-server-container #create-server-btn").attr("disabled", "true");
-    $(".new-server-container #create-server-btn .material-symbols-rounded:not(.spinning)").hide();
-    $(".new-server-container #create-server-btn .material-symbols-rounded.spinning").show();
+    document.querySelector(".new-server-container #create-server-btn .text").text("{{newServerWizard.creationStartedShort}}");
+    //document.querySelector(".new-server-container #create-server-btn").attr("disabled", "true");
+    document.querySelector(".new-server-container #create-server-btn .material-symbols-rounded:not(.spinning)").hide();
+    document.querySelector(".new-server-container #create-server-btn .material-symbols-rounded.spinning").show();
     let serverName = document.querySelector('#server_name_input').getInputValues();
-    let memory = $(".new-server-container #server-mem").val();
-    let serverPort = $(".new-server-container #server-port").val();
+    let memory = document.querySelector('#server-mem').value;
+    let serverPort = document.querySelector('#server-port').value;
     let serverCore = "";
     let serverVersion = "";
     let javaVersion = "";
@@ -205,6 +209,6 @@ function prepareServerCreation(){
 
 function startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort){
     KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
-        $(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
+        document.querySelector(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
     });
 }
