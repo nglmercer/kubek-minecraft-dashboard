@@ -125,7 +125,7 @@ function initializeServerDropdown() {
     `;
 
     // Add force quit button to popup
-    popupElement.addButton(
+    popupElement.addOption(
         `${hoverStyles}<div class="dropdown-item">
             <span class="material-symbols-rounded">dangerous</span>
             <span class="default-font">Force Quit</span>

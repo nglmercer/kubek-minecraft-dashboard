@@ -73,7 +73,7 @@ KubekFileManagerUI = class {
             if (currentPath !== "/") {
                 tableListElement.append(UPPER_DIR_ITEM);
             }
-            if (data.forEach.length > 0) {
+            // Добавляем файлы в список
             data.forEach((file) => {
                 let fileName = file.name;
                 let filePath = file.path;
@@ -84,7 +84,7 @@ KubekFileManagerUI = class {
                 let fileSize = KubekUtils.humanizeFileSize(file.size);
                 tableListElement.append(DIR_ITEM_PLACEHOLDER.replaceAll("$0", fileName).replaceAll("$1", filePath).replaceAll("$2", fileIcon).replaceAll("$3", modifyDate).replaceAll("$4", fileSize).replaceAll("$5", file.type))
             })
-            }
+
             // Биндим клики на файлы
             KubekFileManagerUI.bindFMFilesList(bindEvent);
 
@@ -137,17 +137,8 @@ const baseOptions = [
     icon: 'download',
     callback: (dataTarget) => {
       console.log('download', dataTarget);
-      let basePath = currentPath
-      if (basePath.length < 1) {
-            basePath = "";
-      } 
-
-      // Construir parsedPath agregando la barra si es necesario
-      const parsedPath = (basePath.endsWith("/") ? basePath : basePath + "/") + dataTarget.filename;
-  
-            console.log("parsedPath", parsedPath);
-     KubekFileManager.downloadFile(parsedPath, () => {
-    }); 
+      KubekFileManager.downloadFile(dataTarget.path, () => {
+    });
     }
   };
   
@@ -503,3 +494,38 @@ function gettemplatebutton(text, icon) {
         </div>
     `;
 }
+/*            KubekDropdowns.addDropdown(dropdownData, e.clientX, e.clientY, 5, (clickResult) => {
+                
+                if (typeof clickResult !== "undefined") {
+                    let spl = clickResult.split(":");
+                    let action = spl[0];
+                    let path = spl.slice(1).join("");
+                    switch (action) {
+                        case "rename":
+                            // Переименование файла/папки
+                            KubekNotifyModal.askForInput("{{commons.rename}}", "bookmark_manager", (txt) => {
+                                KubekFileManager.renameFile(path, txt, () => {
+                                    KubekFileManagerUI.refreshDir();
+                                })
+                            }, "", "{{fileManager.enterName}}", KubekUtils.pathFilename(path), "text");
+                            break;
+                        case "delete":
+                            // Удаление файла/папки
+                            KubekNotifyModal.create("{{commons.delete}}", "{{fileManager.areYouWantToDelete}} " + KubekUtils.pathFilename(path), "{{commons.delete}}", "delete", () => {
+                                KubekFileManager.delete(path, (result) => {
+                                    if (result === false) {
+                                        KubekAlerts.addAlert("{{commons.actionFailed}}", "warning", "{{commons.delete}} " + KubekUtils.pathFilename(path), 4000, "colored");
+                                    }
+                                    KubekFileManagerUI.refreshDir();
+                                });
+                            }, KubekPredefined.MODAL_CANCEL_BTN);
+                            break;
+                        case "download":
+                            // Скачивание файла
+                            console.log("download",path);
+                        KubekFileManager.downloadFile(path, () => {
+                            }); 
+                            break;
+                    }
+                }
+            }); */

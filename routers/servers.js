@@ -57,7 +57,7 @@ router.get("/:server/log", WEBSERVER.serversRouterMiddleware, function (req, res
     if (COMMONS.isObjectsValid(q.server)) {
         if (COMMONS.isObjectsValid(instancesLogs[q.server])) {
             const serverLog = SERVERS_CONTROLLER.getServerLog(q.server);
-            console.log("serverLog", serverLog);
+            //console.log("serverLog", serverLog);
             res.send({ success: true, serverLog: serverLog });
         } else {
             res.send("");
