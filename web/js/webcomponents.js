@@ -2615,7 +2615,7 @@ class EnhancedSelect extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['multiple'];
+    return ['multiple', "grid"];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -2638,13 +2638,15 @@ class EnhancedSelect extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          display: block;
+          display: inherit;
+          grid-template-columns: inherit;
+          grid-template-rows: inherit;
           font-family: Arial, sans-serif;
           border: 0px;
         }
         .select-container {
           border-radius: 4px;
-          max-width: 300px;
+          max-width: ${this.hasAttribute('grid') ? '100%' : '300px'};
           padding: 8px;
         }
         .preview-container {
@@ -2665,9 +2667,10 @@ class EnhancedSelect extends HTMLElement {
           object-fit: contain;
         }
         .options-list {
-          display: flex;
+          display: ${this.hasAttribute('grid') ? 'grid' : 'flex'};
           flex-direction: column;
-          gap: 4px;
+          grid-template-columns: repeat(auto-fit, minmax(100px, auto));
+          gap: ${this.hasAttribute('grid') ? '8px' : '4px'};
         }
         .option {
           padding: 8px 12px;

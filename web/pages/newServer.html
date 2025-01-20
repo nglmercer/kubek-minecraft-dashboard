@@ -23,6 +23,9 @@
         </div>
         <label>
             <input type="text" placeholder="{{newServerWizard.serverNameInput}}" id="server-name-input">
+            <custom-input type="text" id="server-name-input" style="background-color: #222c3a;  border-radius: 4px; color: white; font-size: 15pt;"
+            name="server-name-input"placeholder="{{newServerWizard.serverNameInput}}" >
+            </custom-input>
         </label>
     </div>
 
@@ -43,6 +46,10 @@
         <div id="cores-versions-parent">
             <h3>{{newServerWizard.coreVersion}}</h3>
             <div id="cores-versions"></div>
+            <enhanced-select id="customselect_versions" 
+            style="width: 100%; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr;"
+            grid="true"
+            ></enhance-select>
         </div>
         <!-- Загрузка своего ядра -->
         <div id="core-upload" onclick="uploadCore()" style="display: none">
@@ -64,8 +71,11 @@
         <div id="java-list-placeholder">
             <div class="lds-spinner"><div></div><div></div><div></div></div>
         </div>
-        <div class="checksList developed-by-seeeroy" id="javas-list" style="display: none"></div>
+        <div class="checksList developed-by-seeeroy" id="javas-list" style="display: none">
+            <enhanced-select id="javas_list" style="width: 100%; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr;"></enhance-select>
 
+
+        </div>
         <div style="display: flex;">
             <!-- Выбор количества памяти -->
             <div style="display: flex; flex-direction: column; width: 100%; margin: 0 6px;">

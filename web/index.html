@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             KubekServers.getServersList((servers) => {
                 if (servers.length === 0) {
-                    if (act !== "newServer") {
+                    if (act !== "newServer" && act !== "console") {
                         KubekPageManager.gotoPage("welcome");
                     } else {
                         KubekPageManager.gotoPage("newServer");
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
                     // Ищем act и загружаем страницу
-                    if (act !== null && localStorage.getItem("active-page") !== act) {
+                    if (act !== null && localStorage.getItem("active-page") !== act && act !== "console") {
                         console.log("[UI]", "act is not null, trying to load", act);
                         KubekPageManager.gotoPage(act);
                     } else {
