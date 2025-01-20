@@ -165,7 +165,7 @@
 }
 
 .fileEditor pre {
-    margin: 16px 8px;
+    position: relative;
 }
 
 .fileEditor pre,
@@ -180,8 +180,16 @@
 .fileEditor pre * {
     font-family: "Roboto Mono", monospace, sans-serif !important;
     font-size: 12pt !important;
+    overflow-y: scroll;
+    max-height: 90dvh;
+    height: 100%;
 }
 
 .fileEditor .footer button {
     margin: 16px 8px;
+}
+pre {
+    overflow-y: scroll;
+    max-height: 80dvh;
+    height: 100%;
 }

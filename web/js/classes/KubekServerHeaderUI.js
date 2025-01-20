@@ -104,7 +104,7 @@ function initializeServerDropdown() {
     });
 
     // Define hover styles for dropdown items
-    const hoverStyles = `
+    var hoverStyles = `
         <style>
             .dropdown-item {
                 background: var(--bg-dark-accent);

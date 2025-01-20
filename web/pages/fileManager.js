@@ -1,405 +1,399 @@
-UPPER_DIR_ITEM = "<tr onclick='KubekFileManagerUI.upperDir()'><td></td><td>..</td><td></td><td></td></tr>";
-DIR_ITEM_PLACEHOLDER = "<tr data-filename='$0' data-path='$1' data-type='$5'><td><div class='icon-bg'><span class='material-symbols-rounded'>$2</span></div></td><td>$0</td><td>$3</td><td>$4</td></tr>";
-FILE_NAME_REGEXP = /^[\w,\s-]+\.[A-Za-z]{1,15}$/gi;
+// Constants
+const UPPER_DIR_ITEM = "<tr onclick='KubekFileManagerUI.upperDir()'><td></td><td>..</td><td></td><td></td></tr>";
+const DIR_ITEM_PLACEHOLDER = "<tr data-filename='$0' data-path='$1' data-type='$5'><td><div class='icon-bg'><span class='material-symbols-rounded'>$2</span></div></td><td>$0</td><td>$3</td><td>$4</td></tr>";
+const FILE_NAME_REGEXP = /^[\w,\s-]+\.[A-Za-z]{1,15}$/gi;
 
-currentPath = "/";
-tableListElement = $("#fm-table tbody");
-currentEditorLang = "plaintext";
-currentDataParts = [];
-currentChunkID = null;
-currentChunkWriting = null;
-editableExtensions = [
-    "txt",
-    "log",
-    "yml",
-    "xml",
-    "cfg",
-    "conf",
-    "config",
-    "json",
-    "yaml",
-    "properties",
-    "sh",
-    "bat",
+let currentPath = "/";
+let currentEditorLang = "plaintext";
+let currentDataParts = [];
+let currentChunkID = null;
+let currentChunkWriting = null;
+const tableListElement = document.querySelector("#fm-table tbody");
+
+const editableExtensions = [
+    "txt", "log", "yml", "xml", "cfg", "conf", "config",
+    "json", "yaml", "properties", "sh", "bat"
 ];
 
-$(function () {
+// Initialize on DOM load
     KubekUI.setTitle("Kubek | {{sections.fileManager}}");
+    const hoverStyles = `
+    <style>
+        .dropdown-item {
+            background: var(--bg-dark-accent);
+            border-radius: 8px;
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            cursor: pointer;
+            height: 48px;
+            font-size: 12pt;
+            width: 100%;
+        }
+        .dropdown-item:hover {
+            background: #2e3e53;
+        }
+    </style>
+    `;
 
-    KubekFileManagerUI.refreshDir();
-})
-
-KubekFileManagerUI = class {
-    // Обновить содержимое папки
-    static refreshDir = (saveScroll = true) => {
+class KubekFileManagerUI {
+    static refreshDir(saveScroll = true) {
         KubekFileManager.readDirectory(currentPath, (data) => {
-            // Сортируем данные, чтоб папки были сверху
+            // Sort data to put directories on top
             if (data.length > 0) {
                 data = sortToDirsAndFiles(data);
             }
-            let bindEvent, scrollData;
-            // Для телефона делаем открытие по двойному тапу
-            if (
-                window.matchMedia("(min-width: 320px)").matches &&
-                window.matchMedia("(max-width: 480px)").matches
-            ) {
-                bindEvent = "click";
-            } else {
-                bindEvent = "dblclick";
-            }
-            // Сохраняем скролл, если требуется
-            if (saveScroll === true) {
-                scrollData = $(".fm-container").scrollTop();
-            } else {
-                scrollData = 0;
-            }
-            tableListElement.html("");
-            let currentPathSplit = currentPath.split("/");
-            currentPathSplit = currentPathSplit.filter((element) => {
-                return element !== "";
-            });
-            // Загружаем путь в breadcrumb
-            $("#fm-breadcrumb").html("");
-            $("#fm-breadcrumb").append("<span>/</span>");
-            $("#fm-breadcrumb").append("<a>" + selectedServer + "</a>");
+
+            let bindEvent = window.matchMedia("(min-width: 320px)").matches && 
+                           window.matchMedia("(max-width: 480px)").matches ? "click" : "dblclick";
+
+            // Save scroll position if needed
+            const scrollData = saveScroll ? 
+                document.querySelector(".fm-container").scrollTop : 0;
+
+            tableListElement.innerHTML = "";
+            console.log("currentPath", currentPath, "data", data);
+            // Process current path for breadcrumb  
+            const currentPathSplit = currentPath.split("/").filter(element => element !== "");
+            const breadcrumb = document.getElementById("fm-breadcrumb");
+            breadcrumb.innerHTML = "";
+            
+            // Build breadcrumb
+            breadcrumb.insertAdjacentHTML('beforeend', "<span>/</span><a>" + selectedServer + "</a>");
+            
             if (currentPath !== "/") {
-                currentPathSplit.forEach((item) => {
-                    $("#fm-breadcrumb").append("<span>/</span>");
-                    $("#fm-breadcrumb").append("<a>" + item + "</a>");
+                currentPathSplit.forEach(item => {
+                    breadcrumb.insertAdjacentHTML('beforeend', `<span>/</span><a>${item}</a>`);
                 });
             }
-            // Биндим эвенты для breadcrumb
-            KubekFileManagerUI.bindBreadcrumbClicks();
+
+            // Bind breadcrumb events
+            this.bindBreadcrumbClicks();
+
+            // Add upper directory item if not in root
             if (currentPath !== "/") {
-                tableListElement.append(UPPER_DIR_ITEM);
+                tableListElement.insertAdjacentHTML('beforeend', UPPER_DIR_ITEM);
             }
-            if (data.forEach.length > 0) {
-            data.forEach((file) => {
-                let fileName = file.name;
-                let filePath = file.path;
-                let fileIcon;
-                file.type === "file" ? fileIcon = "description" : fileIcon = "folder";
-                let modifyDateVanilla = new Date(file.modify);
-                let modifyDate = moment(modifyDateVanilla).format("DD.MM.YYYY HH:mm:ss");
-                let fileSize = KubekUtils.humanizeFileSize(file.size);
-                tableListElement.append(DIR_ITEM_PLACEHOLDER.replaceAll("$0", fileName).replaceAll("$1", filePath).replaceAll("$2", fileIcon).replaceAll("$3", modifyDate).replaceAll("$4", fileSize).replaceAll("$5", file.type))
-            })
-            }
-            // Биндим клики на файлы
-            KubekFileManagerUI.bindFMFilesList(bindEvent);
 
-            // Возвраащем значение скролла
-            $("#fm-table").scrollTop(scrollData);
+            // Add file/directory items
+            if (data.length > 0) {
+                data.forEach(file => {
+                    const fileIcon = file.type === "file" ? "description" : "folder";
+                    const modifyDate = moment(new Date(file.modify)).format("DD.MM.YYYY HH:mm:ss");
+                    const fileSize = KubekUtils.humanizeFileSize(file.size);
+                    
+                    const itemHtml = DIR_ITEM_PLACEHOLDER
+                        .replaceAll("$0", file.name)
+                        .replaceAll("$1", file.path)
+                        .replaceAll("$2", fileIcon)
+                        .replaceAll("$3", modifyDate)
+                        .replaceAll("$4", fileSize)
+                        .replaceAll("$5", file.type);
+                    
+                    tableListElement.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            }
+
+            // Bind file list events
+            this.bindFMFilesList(bindEvent);
+
+            // Restore scroll position
+            document.getElementById("fm-table").scrollTop = scrollData;
         });
     }
 
-    // Бинд кликов на файлы
     static bindFMFilesList(bindEvent) {
-        // Event для открытия контекстного меню
-// Definir las opciones base que siempre estarán presentes
-const baseOptions = [
-    {
-      id: 'delete',
-      text: '{{commons.delete}}',
-      icon: 'delete',
-      callback: (dataTarget) => {
-        console.log('delete', dataTarget);
-        const path = dataTarget.path;
-        KubekNotifyModal.create("{{commons.delete}}", "{{fileManager.areYouWantToDelete}} " + KubekUtils.pathFilename(path), "{{commons.delete}}", "delete", () => {
-            KubekFileManager.delete(path, (result) => {
-                if (result === false) {
-                    KubekAlerts.addAlert("{{commons.actionFailed}}", "warning", "{{commons.delete}} " + KubekUtils.pathFilename(path), 4000, "colored");
+        const baseOptions = [
+            {
+                id: 'delete',
+                text: '{{commons.delete}}',
+                icon: 'delete',
+                callback: (dataTarget) => {
+                    console.log('delete', dataTarget);
+                    const path = dataTarget.path;
+                    KubekNotifyModal.create(
+                        "{{commons.delete}}", 
+                        "{{fileManager.areYouWantToDelete}} " + KubekUtils.pathFilename(path),
+                        "{{commons.delete}}", 
+                        "delete",
+                        () => {
+                            KubekFileManager.delete(path, (result) => {
+                                if (result === false) {
+                                    KubekAlerts.addAlert(
+                                        "{{commons.actionFailed}}", 
+                                        "warning",
+                                        "{{commons.delete}} " + KubekUtils.pathFilename(path),
+                                        4000,
+                                        "colored"
+                                    );
+                                }
+                                KubekFileManagerUI.refreshDir();
+                            });
+                        },
+                        KubekPredefined.MODAL_CANCEL_BTN
+                    );
                 }
-                KubekFileManagerUI.refreshDir();
+            },
+            {
+                id: 'rename',
+                text: '{{commons.rename}}',
+                icon: 'bookmark_manager',
+                callback: (dataTarget) => {
+                    KubekNotifyModal.askForInput(
+                        "{{commons.rename}}",
+                        "bookmark_manager",
+                        (txt) => {
+                            KubekFileManager.renameFile(dataTarget.path, txt, () => {
+                                KubekFileManagerUI.refreshDir();
+                            });
+                        },
+                        "",
+                        "{{fileManager.enterName}}",
+                        KubekUtils.pathFilename(dataTarget.path),
+                        "text"
+                    );
+                }
+            }
+        ];
+
+        const downloadOption = {
+            id: 'download',
+            text: '{{commons.download}}',
+            icon: 'download',
+            callback: (dataTarget) => {
+                const basePath = currentPath.length < 1 ? "" : currentPath;
+                const parsedPath = (basePath.endsWith("/") ? basePath : basePath + "/") + dataTarget.filename;
+                KubekFileManager.downloadFile(parsedPath, () => {});
+            }
+        };
+
+        const getElementData = (target) => {
+            const parent = target.closest('tr');
+            return {
+                filename: parent.dataset.filename,
+                path: parent.dataset.path,
+                type: parent.dataset.type
+            };
+        };
+
+        // Bind context menu
+        document.querySelectorAll('#fm-table tbody tr').forEach(row => {
+            row.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const dataTarget = getElementData(e.target);
+                const options = [...baseOptions];
+                
+                if (dataTarget.type !== 'directory') {
+                    options.push(downloadOption);
+                }
+
+                const popupOptions = options.map(option => ({
+                    html: `${hoverStyles}
+                        <div class="dropdown-item">
+                            <span class="material-symbols-rounded">${option.icon}</span>
+                            <span class="default-font">${option.text}</span>
+                        </div>
+                    `,
+                    callback: () => option.callback(dataTarget)
+                }));
+
+                setPopupOptions(popupOptions);
+                openPopup(e.target);
             });
-        }, KubekPredefined.MODAL_CANCEL_BTN);
-      }
-    },
-    {
-      id: 'rename',
-      text: '{{commons.rename}}',
-      icon: 'bookmark_manager',
-      callback: (dataTarget) => {
-        console.log('rename', dataTarget);
-        KubekNotifyModal.askForInput("{{commons.rename}}", "bookmark_manager", (txt) => {
-            KubekFileManager.renameFile(dataTarget.path, txt, () => {
-                KubekFileManagerUI.refreshDir();
-            })
-        }, "", "{{fileManager.enterName}}", KubekUtils.pathFilename(dataTarget.path), "text");
-      }
-    }
-  ];
-  
-  // Opción adicional para archivos
-  const downloadOption = {
-    id: 'download',
-    text: '{{commons.download}}',
-    icon: 'download',
-    callback: (dataTarget) => {
-      console.log('download', dataTarget);
-      let basePath = currentPath
-      if (basePath.length < 1) {
-            basePath = "";
-      } 
 
-      // Construir parsedPath agregando la barra si es necesario
-      const parsedPath = (basePath.endsWith("/") ? basePath : basePath + "/") + dataTarget.filename;
-  
-            console.log("parsedPath", parsedPath);
-     KubekFileManager.downloadFile(parsedPath, () => {
-    }); 
-    }
-  };
-  
-  // Función para generar el HTML del botón
-  const getTemplateButton = (text, icon) => `
-    ${hoverStyles}
-    <div class="dropdown-item">
-      <span class="material-symbols-rounded">${icon}</span>
-      <span class="default-font">${text}</span>
-    </div>
-  `;
-  
-  // Función para obtener las opciones según el tipo
-  const getOptionsForType = (type) => {
-    const options = [...baseOptions];
-    if (type !== 'directory') {
-      options.push(downloadOption);
-    }
-    return options;
-  };
-  
-  // Función para obtener atributos del elemento
-  const getElementData = (target) => {
-    const getAttribute = (attr) => target.parentNode.getAttribute(attr);
-    return {
-      filename: getAttribute('data-filename'),
-      path: getAttribute('data-path'),
-      type: getAttribute('data-type')
-    };
-  };
-  
-  // Configurar los event listeners
-  document.querySelectorAll('#fm-table tbody tr').forEach(row => {
-    row.addEventListener('contextmenu', (e) => {
-      const dataTarget = getElementData(e.target);
-      
-      const options = getOptionsForType(dataTarget.type);
-      const popupOptions = options.map(option => ({
-        html: getTemplateButton(option.text, option.icon),
-        callback: () => option.callback(dataTarget)
-      }));
-  
-      setPopupOptions(popupOptions);
-      openPopup(e.target);
-    });
-  });
-    
-        $("#fm-table tbody tr").on("contextmenu", function (e) {
-            let fileName = $(e.currentTarget).data("filename");
-            let fileType = $(e.currentTarget).data("type");
-            let dropdownData = [
-                {
-                    "icon": "delete",
-                    "text": "{{commons.delete}}",
-                    "data": "delete:" + currentPath + fileName
-                },
-                {
-                    "icon": "bookmark_manager",
-                    "text": "{{commons.rename}}",
-                    "data": "rename:" + currentPath + fileName
-                },
-                {
-                    "icon": "download",
-                    "text": "{{commons.download}}",
-                    "data": "download:" + currentPath + fileName
+            // Bind click/double-click
+            row.addEventListener(bindEvent, function(e) {
+                const data = getElementData(e.target);
+                
+                if (data.type === "directory") {
+                    currentPath = currentPath + data.filename;
+                    KubekFileManagerUI.refreshDir();
+                } else if (data.type === "file" && 
+                         editableExtensions.includes(KubekUtils.pathExt(data.filename))) {
+                    KubekFileManagerUI.editFile(currentPath + data.filename);
                 }
-            ]
-
-            if (fileType === "directory") {
-                dropdownData.splice(2, 1);
-            }
-
-            console.log("e.target.parentNode",e.target.parentNode);
-            e.preventDefault();
-            return false;
-        });
-        // Event для клика
-        $("#fm-table tbody tr").on(bindEvent, function () {
-            let fileName = $(this).data("filename");
-            let filePath = $(this).data("path");
-            let fileType = $(this).data("type");
-            // Открываем папку, если это папка :)
-            if (fileType === "directory") {
-                currentPath = currentPath + fileName ;
-                KubekFileManagerUI.refreshDir();
-            } else if (fileType === "file" && editableExtensions.includes(KubekUtils.pathExt(fileName))) {
-                KubekFileManagerUI.editFile(currentPath + fileName);
-            }
+            });
         });
     }
 
-    // Бинд кликов на breadcrumb
     static bindBreadcrumbClicks() {
-        $("#fm-breadcrumb a:not(:last-child)").on("click", function () {
-            if ($(this).text() === selectedServer) {
-                currentPath = "/";
-                KubekFileManagerUI.refreshDir(false);
-            } else {
+        const breadcrumbLinks = document.querySelectorAll("#fm-breadcrumb a:not(:last-child)");
+        
+        breadcrumbLinks.forEach(link => {
+            link.addEventListener("click", function() {
+                if (this.textContent === selectedServer) {
+                    currentPath = "/";
+                    KubekFileManagerUI.refreshDir(false);
+                    return;
+                }
+
                 let path = "";
-                let index = $(this).index();
-                $("#fm-breadcrumb a:not(:last-child)").each(function (ind) {
-                    if (
-                        $(this).text() !== selectedServer &&
-                        ind <= index
-                    ) {
-                        path = path + $(this).text() + "/";
+                const currentIndex = Array.from(breadcrumbLinks).indexOf(this);
+                
+                breadcrumbLinks.forEach((item, index) => {
+                    if (item.textContent !== selectedServer && index <= currentIndex) {
+                        path += item.textContent + "/";
                     }
                 });
+
                 currentPath = path;
                 KubekFileManagerUI.refreshDir(false);
-            }
-        });
-    }
-
-    // Создание новой директории
-    static newDirectory = () => {
-        KubekNotifyModal.askForInput("{{fileManager.newDirectory}}", "create_new_folder", (txt) => {
-            KubekFileManager.newDirectory(currentPath, txt, () => {
-                KubekFileManagerUI.refreshDir();
             });
-        }, "", "{{commons.input}}", "", "text");
+        });
     }
 
-    // ..
-    static upperDir = () => {
-        currentPath = currentPath.split("/");
-        currentPath.pop();
-        currentPath.pop();
-        currentPath = currentPath.join("/") + "/";
+    static newDirectory() {
+        KubekNotifyModal.askForInput(
+            "{{fileManager.newDirectory}}",
+            "create_new_folder",
+            (txt) => {
+                KubekFileManager.newDirectory(currentPath, txt, () => {
+                    KubekFileManagerUI.refreshDir();
+                });
+            },
+            "",
+            "{{commons.input}}",
+            "",
+            "text"
+        );
+    }
+
+    static upperDir() {
+        const pathParts = currentPath.split("/");
+        pathParts.pop();
+        pathParts.pop();
+        currentPath = pathParts.join("/") + "/";
         KubekFileManagerUI.refreshDir(false);
-    };
+    }
 
-    // Загрузить файл на сервер
-    static uploadFile = () => {
-        let inputElement = $("#g-file-input");
-        inputElement.trigger("click");
-        inputElement.off("change");
-        inputElement.on("change", () => {
-            let formData = new FormData($("#g-file-form")[0]);
-            KubekRequests.post("/fileManager/upload?server=" + selectedServer + "&path=" + currentPath, () => {
-                KubekFileManagerUI.refreshDir();
-            }, formData);
+    static uploadFile() {
+        const inputElement = document.getElementById("g-file-input");
+        inputElement.click();
+        
+        // Remove old listener and add new one
+        const oldListener = inputElement.onchange;
+        if (oldListener) {
+            inputElement.removeEventListener('change', oldListener);
+        }
+
+        inputElement.addEventListener("change", () => {
+            const formData = new FormData(document.getElementById("g-file-form"));
+            KubekRequests.post(
+                `/fileManager/upload?server=${selectedServer}&path=${currentPath}`,
+                () => { KubekFileManagerUI.refreshDir(); },
+                formData
+            );
         });
     }
 
-    // Открыть пустой редактор
-    static openEmptyEditor = () => {
-        const buttonElement = document.querySelector('#fm-newfile');
-        const popupElement = document.querySelector('#fm-popup');
-        console.log("buttonElement", buttonElement, popupElement);
-        popupElement.showAtElement(buttonElement);
-        /***this is a pending fix*/
-/*         KubekFileManagerUI.closeEditor();
+    static openEmptyEditor() {
+        this.closeEditor();
         currentEditorLang = "plaintext";
-        $(".blurScreen").show();
-        $(".fileEditor").show(); */
-    };
+        document.querySelector(".blurScreen").style.display = "block";
+        document.querySelector(".fileEditor").style.display = "block";
+    }
 
-    // Открыть файл на редактирование
-    static editFile = (path) => {
-        let fileExt = KubekUtils.pathExt(path);
-        let language = "plaintext";
-        if (fileExt === "xml") {
-            language = "xml";
-        } else if (fileExt === "yml" || fileExt === "yaml") {
-            language = "yaml";
-        } else if (fileExt === "css") {
-            language = "css";
-        } else if (fileExt === "js") {
-            language = "javascript";
-        } else if (fileExt === "json") {
-            language = "json";
-        } else if (fileExt === "properties") {
-            language = "ini";
-        }
-        currentEditorLang = language;
+    static editFile(path) {
+        const fileExt = KubekUtils.pathExt(path);
+        const languageMap = {
+            'xml': 'xml',
+            'yml': 'yaml',
+            'yaml': 'yaml',
+            'css': 'css',
+            'js': 'javascript',
+            'json': 'json',
+            'properties': 'ini'
+        };
+        
+        currentEditorLang = languageMap[fileExt] || "plaintext";
+
         KubekFileManager.readFile(path, (data) => {
-            $("#code-edit").text(data);
-            KubekFileManagerUI.formatCode(false);
-            $(".blurScreen").show();
-            $(".fileEditor input").val(KubekUtils.pathFilename(path));
-            $(".fileEditor").show();
+            const codeEdit = document.getElementById("code-edit");
+            codeEdit.textContent = data;
+            this.formatCode(false);
+            
+            document.querySelector(".blurScreen").style.display = "block";
+            document.querySelector(".fileEditor input").value = KubekUtils.pathFilename(path);
+            document.querySelector(".fileEditor").style.display = "block";
         });
-    };
+    }
 
-    // Сохранить файл
     static writeFile() {
-        let inputVal = $(".fileEditor input").val();
-        if (inputVal === "" || !FILE_NAME_REGEXP.test(inputVal)) {
+        const inputElement = document.querySelector(".fileEditor input");
+        if (!inputElement.value || !FILE_NAME_REGEXP.test(inputElement.value)) {
             return false;
         }
-        let path = currentPath + inputVal;
-        let data = $("#code-edit").text();
-        KubekFileManagerUI.closeEditor();
+
+        const path = currentPath + inputElement.value;
+        const data = document.getElementById("code-edit").textContent;
+        
+        this.closeEditor();
         currentDataParts = data.match(/[\s\S]{1,500}/g) || [];
         currentChunkWriting = -1;
+
         KubekFileManager.startChunkWrite(path, (result) => {
             currentChunkID = result;
             console.log("Starting write for", currentChunkID);
-            KubekFileManagerUI.writeNextChunk();
+            this.writeNextChunk();
         });
+
         return true;
     }
 
-    // Записать следующий чанк
     static writeNextChunk() {
         currentChunkWriting++;
-        if (typeof currentDataParts[currentChunkWriting] !== "undefined") {
-            // Если чанки не закончились - записываем
+        if (currentDataParts[currentChunkWriting]) {
             console.log("Writing chunk", currentChunkWriting, "to ID", currentChunkID);
-            KubekFileManager.addChunkWrite(currentChunkID, Base64.encodeURI(currentDataParts[currentChunkWriting]), () => {
-                KubekFileManagerUI.writeNextChunk();
-            });
+            KubekFileManager.addChunkWrite(
+                currentChunkID,
+                Base64.encodeURI(currentDataParts[currentChunkWriting]),
+                () => { this.writeNextChunk(); }
+            );
         } else {
-            // Если закончились чанки - завершаем запись
             KubekFileManager.endChunkWrite(currentChunkID, () => {
                 console.log("Write of", currentChunkID, "ended");
                 currentChunkID = null;
                 currentDataParts = null;
                 currentChunkWriting = null;
                 KubekAlerts.addAlert("{{fileManager.writeEnd}}", "check", "", 4000);
-                KubekFileManagerUI.refreshDir();
+                this.refreshDir();
             });
         }
     }
 
-    // Форматировать текст в редакторе
     static formatCode(saveCaret = true) {
+        const codeEdit = document.getElementById("code-edit");
         let restore;
-        saveCaret ? restore = saveCaretPosition($("#code-edit")[0]) : saveCaret = false;
-        let result = hljs.highlight($("#code-edit").text(), {
+        
+        if (saveCaret) {
+            restore = saveCaretPosition(codeEdit);
+        }
+
+        const result = hljs.highlight(codeEdit.textContent, {
             language: currentEditorLang
         });
-        $("#code-edit").html(result.value);
-        saveCaret ? restore() : saveCaret = false;
+        
+        codeEdit.innerHTML = result.value;
+        
+        if (saveCaret) {
+            restore();
+        }
     }
 
-    // Закрыть редактор
     static closeEditor() {
-        $(".fileEditor").hide();
-        $(".fileEditor input").val("");
-        $("#code-edit").text("");
-        $(".blurScreen").hide();
+        document.querySelector(".fileEditor").style.display = "none";
+        document.querySelector(".fileEditor input").value = "";
+        document.getElementById("code-edit").textContent = "";
+        document.querySelector(".blurScreen").style.display = "none";
     }
 }
-
-// Форматировать код при вводе в редакторе
-$("#code-edit").on("input", function () {
+KubekFileManagerUI.refreshDir();
+// Event listener for code editing
+document.getElementById("code-edit").addEventListener("input", function() {
     KubekFileManagerUI.formatCode();
 });
 
-// Отсортировать по папкам и файлам
 function sortToDirsAndFiles(data) {
     let dirs = [];
     let files = [];
@@ -467,30 +461,8 @@ function openPopup(element, popupId = "#fm-popup") {
         popupElement.showAtElement(buttonElement);
     }
 }
-function openPopupbyxy(x,y,popupId = "#fm-popup"){
-    const popupElement = document.querySelector(popupId);
-    if (!popupElement) return;
-    popupElement.show(x,y);
-}
-const hoverStyles = `
-<style>
-    .dropdown-item {
-        background: var(--bg-dark-accent);
-        border-radius: 8px;
-        padding: 4px 8px;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        cursor: pointer;
-        height: 48px;
-        font-size: 12pt;
-        width: 100%;
-    }
-    .dropdown-item:hover {
-        background: #2e3e53;
-    }
-</style>
-`;
+
+
 function setPopupOptions(popupOptions){
     const popupElement = document.querySelector('#fm-popup');
     popupElement.options = popupOptions;
