@@ -1,5 +1,3 @@
-CORE_GRID_ITEM_PLACEHOLDER = "<div class='card centered' data-id='$1'> <img alt='$0 logo' class='icon' src='/assets/icons/cores/$1.png'> <span class='title'>$0</span> </div>";
-JAVA_ITEM_PLACEHOLDER = "<div class='item' data-type='$0' data-data='$1'> <span class='text'>$2</span> <span class='check material-symbols-rounded'>check</span> </div>";
 SERVER_NAME_REGEXP = /^[a-zA-Z0-9\-\_]{1,20}$/;
 AIKAR_FLAGS = "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20";
 
@@ -137,15 +135,6 @@ function refreshCoreVersionsList(cb = () => {
     });
 }
 
-function uploadCore() {
-    $("#server-core-input").trigger("click");
-    $("#server-core-input").off("change");
-    $("#server-core-input").on("change", () => {
-        $(".new-server-container #core-upload #uploaded-file-name").text($("#server-core-input")[0].files[0].name);
-        validateNewServerInputs();
-    });
-}
-
 function refreshJavaList(cb) {
     document.querySelector("#java-list-placeholder").style.display = "block";
     document.querySelector("#javas-list").style.display = "none";
@@ -155,12 +144,18 @@ function refreshJavaList(cb) {
     KubekJavaManager.getAllJavas((javas) => {
         console.log("javas", javas);
         const parseToOptions = (data) => {
+            const itemname = (name) => {
+                return name.includes("java") ? name : "java-" + name;
+            }
+            const statename = (state) => {
+                return state === "kubek" ? "(installed)" : "";
+            }
             return Object.entries(data).flatMap(([state, items]) =>
-              items.map(item => ({
-                label: item,
-                value: item,
-                state: state
-              }))
+                items.map(item => ({
+                    label: itemname(item),
+                    value: item,
+                    state: statename(state)
+                }))
             );
           };
         alljavas.push(...parseToOptions(javas));

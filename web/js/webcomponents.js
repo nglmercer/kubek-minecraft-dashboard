@@ -3365,7 +3365,7 @@ customElements.define('grid-selector', GridSelector);
 class FileUpload extends HTMLElement {
   getStyles() {
     return `
-          <style>
+      <style>
       :host {
         display: inherit;
         font-family: Arial, sans-serif;
@@ -3406,23 +3406,7 @@ class FileUpload extends HTMLElement {
       .file-info {
         margin-top: 1em;
         font-size: 0.9em;
-        color: #333;
-      }
-
-      .upload-button {
-        margin-top: 1em;
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1em;
-      }
-
-      .upload-button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
+        color: inherit;
       }
     </style>
     `;
@@ -3440,18 +3424,15 @@ class FileUpload extends HTMLElement {
         <label for="file-input" class="file-label">Selecciona un archivo</label>
         <input type="file" id="file-input" />
         <div class="file-info" id="file-info">No se ha seleccionado ningún archivo</div>
-        <button class="upload-button" id="upload-button" disabled>Subir archivo</button>
       </div>
     `;
 
     // Referencias a los elementos
     this.fileInput = this.shadowRoot.querySelector("#file-input");
     this.fileInfo = this.shadowRoot.querySelector("#file-info");
-    this.uploadButton = this.shadowRoot.querySelector("#upload-button");
 
     // Eventos
     this.fileInput.addEventListener("change", this.handleFileSelect.bind(this));
-    this.uploadButton.addEventListener("click", this.uploadFile.bind(this));
   }
 
   handleFileSelect(event) {
