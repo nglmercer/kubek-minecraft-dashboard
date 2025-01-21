@@ -3024,135 +3024,7 @@ class SidebarComponent extends HTMLElement {
     this.attachShadow({ mode: 'open', delegatesFocus: true });
     this.isVisible = false;
     this.serverlist = [];
-  }
-  getStyles() {
-    return `
-         <style>
-        :host {
-          position: fixed;
-          left: 0;
-          bottom: 0dvh;
-          top: 0dvh;
-          transform: translateY(25%);
-          font-family: inherit;
-          z-index: 4;
-        }
-
-        .sidebar {
-          min-width: 250px;
-          transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-          transform: translateX(0);
-          opacity: 1;
-        }
-
-        .sidebar-box {
-          background: var(--bg-dark-accent, #2a2a2a);
-          border-radius: 10px;
-          padding: 24px;
-          min-height: 164px;
-          margin-top: 16px;
-        }
-        .server-item,
-        .sidebar-item {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          cursor: pointer;
-          color: var(--bg-dark-accent-lighter, #888);
-          margin-top: 14px;
-        }
-
-        .sidebar-item:hover {
-          color: white;
-        }
-
-        .sidebar-item.active {
-          color: white;
-          cursor: default;
-        }
-
-        .material-symbols-rounded {
-          margin-right: 10px;
-          font-size: 24px;
-          font-family: 'Material Symbols Rounded';
-        }
-
-        .sidebar-item span:not(.material-symbols-rounded) {
-          font-size: 12pt;
-          font-weight: 600;
-        }
-
-        .icon-circle-bg {
-          border-radius: 999px;
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 10px;
-          background: var(--bg-primary-500, #4a90e2);
-        }
-
-        .icon-circle-bg .material-symbols-rounded {
-          color: white;
-          margin: 0;
-          font-size: 12pt;
-        }
-
-        #servers-list-sidebar {
-          max-height: 30vh;
-          overflow-y: auto;
-        }
-
-        #close-btn {
-          width: 100%;
-        }
-
-        @media (max-width: 768px) {
-          #close-btn {
-            display: block;
-          }
-        }
-          img {
-            width: min(32px, 100%);
-            height: min(32px, 100%);
-            object-fit: contain;
-          }
-      </style>
-    `;
-  }
-  connectedCallback() {
-    this.render();
-    this.setupEventListeners();
-  }
-  setServersList(value) {
-    this.serverlist = value;
-    this.loadServersList();
-  }
-  getSeversList() {
-    return this.serverlist;
-  }
-  toggleSidebar(isVisible) {
-    this.isVisible = !this.isVisible;
-    const sidebar = this.shadowRoot.querySelector('.sidebar');
-    this.isVisible = isVisible || this.isVisible;
-    if (this.isVisible) {
-      sidebar.style.transform = 'translateX(0)';
-      sidebar.style.opacity = '1';
-      setTimeout(() => {
-        sidebar.style.display = 'block';
-      }, 444);
-    } else {
-      sidebar.style.transform = 'translateX(-100%)';
-      sidebar.style.opacity = '0';
-      setTimeout(() => {
-        sidebar.style.display = 'none';
-      }, 444);
-    }
-  }
-
-  render() {
-    const sidebarmenu_items = [
+    this.sidebarItems = [
       { title: 'Console', icon: 'terminal', page: 'console' },
       { title: 'File Manager', icon: 'folder', page: 'fileManager' },
       { title: 'Plugins and Mods', icon: 'extension', page: 'plugins' },
@@ -3161,127 +3033,269 @@ class SidebarComponent extends HTMLElement {
       { title: 'Kubek Settings', icon: 'settings', page: 'kubekSettings' },
       { title: 'System Monitoring', icon: 'area_chart', page: 'systemMonitor' }
     ];
-    const elements = sidebarmenu_items.map(item => this.generatesidebar_item(item));
-    console.log("elements", elements, typeof elements, typeof elements[0], elements[0] instanceof HTMLElement);
-    // elements is array of HTMLElements
+  }
+
+  static get styles() {
+    return `
+      <style>
+        :host {
+          position: fixed;
+          left: -100%;
+          top: 0;
+          bottom: 0;
+          z-index: 1000;
+          transition: left 0.3s ease-in-out;
+          font-family: inherit;
+        }
+
+        .sidebar {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 280px;
+          /*add blur effect*/
+          backdrop-filter: blur(4px);
+          background:  #222c3a73;
+          padding: 1rem;
+          box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+          overflow-y: auto;
+        }
+        .material-symbols-rounded {
+                font-family: 'Material Symbols Rounded';
+                font-size: 1.5rem;
+        }
+        .sidebar-box {
+          padding: 1rem 0;
+          border-bottom: 1px solid var(--border-color, #3a3a3a);
+        }
+
+        .sidebar-header {
+          display: flex;
+          justify-content: flex-end;
+          padding-bottom: 1rem;
+        }
+
+        #servers-list-sidebar {
+          max-height: 40vh;
+          overflow-y: auto;
+        }
+
+        .sidebar-item, .server-item {
+          display: flex;
+          align-items: center;
+          padding: 0.75rem;
+          margin: 0.25rem 0;
+          border-radius: 6px;
+          cursor: pointer;
+          color: inherit;
+          transition: all 0.2s ease;
+        }
+
+        .sidebar-item:hover, .server-item:hover {
+          background: var(--hover-bg, #3a3a3a);
+          color: inherit;
+        }
+
+        .sidebar-item.active {
+          background: var(--active-bg, #4a90e2);
+          color: white;
+          cursor: default;
+        }
+
+        .material-symbols-rounded {
+          font-size: 1.5rem;
+        }
+
+        .icon-circle-bg {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--primary-color, #4a90e2);
+          margin-right: 1rem;
+        }
+
+        .icon-circle-bg img {
+          width: 20px;
+          height: 20px;
+          object-fit: contain;
+        }
+
+        button.dark-btn {
+          background: none;
+          border: none;
+          color: inherit;
+          cursor: pointer;
+          padding: 0.5rem;
+        }
+
+        @media (max-width: 400px) {
+          .sidebar {
+            padding: 0;
+          }
+        }
+          #close-btn {
+          background: #bf2121;
+          border-radius: 4px;
+          padding: 0.2em;
+        }
+          #close-btn:hover {
+          background: red;
+        }
+      </style>
+    `;
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  toggleSidebar(isVisible = !this.isVisible) {
+    this.isVisible = isVisible;
+    this.style.left = this.isVisible ? '0' : '-100%';
+    
+    const event = new CustomEvent('toggle-sidebar', {
+      detail: { isVisible: this.isVisible },
+      bubbles: true,
+      composed: true
+    });
+    this.dispatchEvent(event);
+  }
+
+  setServersList(servers) {
+    this.serverlist = servers;
+    this.loadServersList();
+  }
+
+  render() {
     this.shadowRoot.innerHTML = `
-      <style>${this.getStyles()}</style>
-      
+      ${SidebarComponent.styles}
       <div class="sidebar">
-        <button class="dark-btn icon-only" id="close-btn">
-          <span class="material-symbols-rounded">close</span>
-        </button>
+        <div class="sidebar-header">
+          <button class="dark-btn" id="close-btn">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
 
         <div class="sidebar-box" id="servers-list-sidebar">
-          <div class="sidebar-item" id="new-server-btn">
-            <div class="icon-circle-bg">
-              <span class="material-symbols-rounded">add</span>
-            </div>
-            <span>Create server</span>
-          </div>
+          ${this.createServerList()}
         </div>
 
         <div class="sidebar-box" id="main-menu-sidebar">
+          ${this.sidebarItems.map(item => this.createSidebarItem(item)).join('')}
         </div>
       </div>
     `;
-    const sidebar_box = this.shadowRoot.querySelector('#main-menu-sidebar');
-    elements.forEach(element => {
-      sidebar_box.appendChild(element);
+  }
+
+  createServerList() {
+    return `
+      <div class="sidebar-item" id="new-server-btn">
+        <div class="icon-circle-bg">
+          <span class="material-symbols-rounded">add</span>
+        </div>
+        <span>Create server</span>
+      </div>
+      ${this.serverlist.map(server => this.createServerItem(server)).join('')}
+    `;
+  }
+  setActiveElement(activeElement) {
+    // Desmarcar todos los elementos activos
+    this.shadowRoot.querySelectorAll('.sidebar-item.active, .server-item.active').forEach(item => {
+      item.classList.remove('active');
     });
+
+    // Buscar y marcar el elemento activo en los sidebarItems
+    const sidebarItem = this.shadowRoot.querySelector(`.sidebar-item[data-page="${activeElement}"]`);
+    if (sidebarItem) {
+      sidebarItem.classList.add('active');
+      return;
+    }
+
+    // Buscar y marcar el elemento activo en la lista de servidores
+    const serverItem = this.shadowRoot.querySelector(`.server-item[data-server="${activeElement}"]`);
+    if (serverItem) {
+      serverItem.classList.add('active');
+    }
+  }
+  createSidebarItem(item) {
+    return `
+      <div class="sidebar-item" data-page="${item.page}">
+        <span class="material-symbols-rounded">${item.icon}</span>
+        <span>${item.title}</span>
+      </div>
+    `;
+  }
+
+  createServerItem(server) {
+    return `
+      <div class="server-item" data-server="${server.id}">
+        <div class="icon-circle-bg">
+          <img src="${server.icon}" alt="${server.title}">
+        </div>
+        <span>${server.title}</span>
+      </div>
+    `;
   }
 
   setupEventListeners() {
-    // Setup menu item clicks
-    const sidebarItems = this.shadowRoot.querySelectorAll("#main-menu-sidebar .sidebar-item");
-    sidebarItems.forEach(item => {
-      item.addEventListener("click", () => {
-        sidebarItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-      });
+    this.shadowRoot.addEventListener('click', e => {
+      const item = e.target.closest('.sidebar-item, .server-item');
+      if (!item) return;
+
+      if (item.id === 'new-server-btn') {
+        this.dispatchNewServerEvent();
+        return;
+      }
+
+      if (item.classList.contains('sidebar-item')) {
+        this.handleSidebarItemClick(item);
+      } else if (item.classList.contains('server-item')) {
+        this.handleServerItemClick(item);
+      }
     });
 
-    // Setup new server button
-    const newServerBtn = this.shadowRoot.getElementById('new-server-btn');
-    newServerBtn.addEventListener('click', () => {
-      const event = new CustomEvent('new-server', {
-        bubbles: true,
-        composed: true
-      });
-      this.dispatchEvent(event);
-    });
+    this.shadowRoot.getElementById('close-btn').addEventListener('click', () => this.toggleSidebar(false));
+  }
 
-    const closeBtn = this.shadowRoot.getElementById('close-btn');
-    closeBtn.addEventListener('click', () => {
-      this.toggleSidebar();
-      const event = new CustomEvent('toggle-sidebar', {
-        detail: {
-          isVisible: this.isVisible
-        },
-        bubbles: true,
-        composed: true
-      });
-      this.dispatchEvent(event);
-    });
+  handleSidebarItemClick(item) {
+    this.shadowRoot.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    
+    this.dispatchEvent(new CustomEvent('page-change', {
+      detail: {
+        page: item.dataset.page,
+        item: this.sidebarItems.find(i => i.page === item.dataset.page)
+      },
+      bubbles: true,
+      composed: true
+    }));
   }
-  loadServersList(){
-    const sidebar = this.shadowRoot.querySelector("#servers-list-sidebar");
-    // eliminamos los elementos excepto el contenedor #new-server-btn
-    const elementtodelete = sidebar.querySelectorAll('.sidebar-item:not(#new-server-btn)');
-    console.log("elementtodelete", elementtodelete, this.serverlist);
-    if (elementtodelete.length > 0) {
-      elementtodelete.forEach(element => element.remove());
-    }
-    if (this.serverlist.length > 0) {
-      this.serverlist.forEach(server => {
-        const serveritem = this.generateserver_item(server);
-        console.log("serveritem", serveritem);
-        sidebar.appendChild(serveritem);
-      });
-    }
-  }
-  generatesidebar_item(item) {
-    if (!item) return;
-    const container = document.createElement('div');
-    container.className = 'sidebar-item';
-    if (item.page)  container.setAttribute('data-page', item.page);
-    container.innerHTML = `
-      <span class="material-symbols-rounded">${item.icon}</span>
-      <span>${item.title}</span>
-    `;
-    container.addEventListener('click', (e) => {
-      this.dispatchEvent(new CustomEvent('page-change', {
-        detail: {
-          page: item.page,
-          item: item
-        },
-        bubbles: true,
-        composed: true
-      }));
-    });
-    return container;
-  }
-  generateserver_item(item) {
-    if (!item) return;
-    const container = document.createElement('div');
-    container.className = 'server-item';
-    container.innerHTML = `
-      <span class="icon-circle-bg">
-        <img src="${item.icon}" alt="${item.title} logo">
-      </span>
-      <span>${item.title}</span>
-    `;
-    container.addEventListener('click', (e) => {
+
+  handleServerItemClick(item) {
+    const server = this.serverlist.find(s => s.id === item.dataset.server);
+    if (server) {
       this.dispatchEvent(new CustomEvent('server-change', {
-        detail: {
-          server: item.title,
-          item: item
-        },
+        detail: { server },
         bubbles: true,
         composed: true
       }));
-    });
-    return container;
+    }
+  }
+
+  dispatchNewServerEvent() {
+    this.dispatchEvent(new CustomEvent('new-server', {
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  loadServersList() {
+    const container = this.shadowRoot.getElementById('servers-list-sidebar');
+    container.innerHTML = this.createServerList();
   }
 }
 

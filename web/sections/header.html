@@ -1,6 +1,6 @@
 <div class="header" id="main-header">
     
-    <button class="dark-btn icon-only" id="menu-btn" onclick="KubekUI.toggleSidebar()"><span class="material-symbols-rounded">menu</span></button>
+    <button class="dark-btn icon-only" id="menu-btn" ><span class="material-symbols-rounded">menu</span></button>
     <div class="logo">
         <img src="/assets/kubek_icon.png" style="height: 32px" alt="Main icon"/>
         <img src="/assets/kubek_logo_text.svg" style="height: 20px; margin-left: 12px" alt="Kubek" />
@@ -17,6 +17,7 @@
 <script>
     // next update webcomponent reemplace KubekUI.toggleSidebar() 
     $(function () {
+
         // Получаем статус авторизации
         KubekRequests.get("/auth/isEnabled", (isAuthEnabled) => {
             if (isAuthEnabled === false) {
