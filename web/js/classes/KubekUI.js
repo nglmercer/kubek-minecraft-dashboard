@@ -1,3 +1,6 @@
+// init logs
+var uiDebugger = DebuggerGroupManager.create('UI');   
+ uiDebugger.registerCallSite('kukeb-ui.js', 0).stack
 class KubekUI {
     // Cargar sección en bloque - Reemplazamos $.get por fetch
     static loadSection = (name, container = "body", cb = () => {}) => {
@@ -62,15 +65,18 @@ class KubekUI {
         if (typeof window.localStorage.selectedServer !== "undefined") {
             selectedServer = window.localStorage.selectedServer;
             KubekServerHeaderUI.loadServerByName(selectedServer, (result) => {
+                uiDebugger.log('loadSelectedServer, loadServerByName',selectedServer, result);
                 if (result === false) {
                     KubekServers.getServersList((list) => {
                         window.localStorage.selectedServer = list[0];
+                        uiDebugger.log('loadSelectedServer, getServersList',selectedServer, list);
                         window.location.reload();
                     });
                 }
             });
         } else {
             KubekServers.getServersList((list) => {
+                uiDebugger.log('loadSelectedServer, getServersList',selectedServer, list);
                 window.localStorage.selectedServer = list[0];
                 window.location.reload();
             });
@@ -82,7 +88,16 @@ class KubekUI {
         if (sidebar) {
             sidebar.querySelectorAll(".server-item").forEach(item => item.remove());
             KubekServers.getServersList(servers => {
+                const allserver = [];
                 servers.forEach(serverItem => {
+                    const sidebar = document.querySelector('sidebar-menu');
+                    const parsedserver = {
+                        title: serverItem,
+                        icon: `/api/servers/${serverItem}/icon`
+                    }
+                    allserver.push(parsedserver);
+                    sidebar.setServersList(allserver);
+                    uiDebugger.log('loadServersList, getServersList',serverItem, servers);
                     const isActive = serverItem === localStorage.selectedServer ? " active" : "";
                     const serverElement = document.createElement("div");
                     serverElement.className = `server-item sidebar-item${isActive}`;

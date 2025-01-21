@@ -1,3 +1,4 @@
+WebDebugger.registerCallSite('kubekSereverHeaderui.js', 1).stack
 // Current server status, initialized as stopped
 let currentServerStatus = KubekPredefined.SERVER_STATUSES.STOPPED;
 
@@ -57,8 +58,8 @@ class KubekServerHeaderUI {
         }
 
         currentServerStatus = status;
-        console.log("status", status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-
+        WebDebugger.log("status", status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+        WebDebugger.toggleLogs(false);
         // Hide all conditional elements
         const headerElements = document.querySelectorAll('.content-header .hide-on-change');
         headerElements.forEach(element => element.style.display = 'none');

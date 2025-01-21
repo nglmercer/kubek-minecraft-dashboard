@@ -35,14 +35,35 @@ export const gameVersionToJava = (version) => {
 // Instalar Java en Termux
 export const installJavaTermux = async (version) => {
     try {
-        // Update package lists first
-        execSync('pkg update -y');
-        // Then install Java
-        execSync(`pkg install -y openjdk-${version}`);
-        // Verify installation
+        // Determinar arquitectura
+        const arch = process.arch === 'arm' ? 'arm' :
+                     process.arch === 'arm64' ? 'aarch64' :
+                     process.arch === 'x64' ? 'x86_64' : null;
+        if (!arch) throw new Error('Arquitectura no soportada');
+
+        // Obtener URL del archivo Packages
+        const packagesUrl = `https://packages.termux.org/apt/termux-main/dists/stable/main/binary-${arch}/Packages`;
+
+        // Descargar y parsear el archivo Packages
+        const packagesData = execSync(`curl -sL ${packagesUrl}`).toString();
+        const packageBlock = packagesData.split('\n\n').find(block => 
+            block.includes(`Package: openjdk-${version}`)
+        );
+        if (!packageBlock) throw new Error(`OpenJDK ${version} no está disponible`);
+
+        // Extraer nombre del archivo .deb
+        const filenameLine = packageBlock.split('\n').find(line => line.startsWith('Filename: '));
+        const filename = filenameLine.split(' ')[1];
+
+        // Descargar e instalar el paquete
+        const debUrl = `https://packages.termux.org/apt/termux-main/${filename}`;
+        execSync(`curl -LO ${debUrl}`, { stdio: 'inherit' });
+        execSync(`dpkg -i ${filename.split('/').pop()}`, { stdio: 'inherit' });
+        execSync('apt-get install -f -y', { stdio: 'inherit' }); // Corregir dependencias
+
         return await verifyJavaInstallation(version);
     } catch (error) {
-        console.error('Error installing Java in Termux:', error.message);
+        console.error('Error instalando Java:', error.message);
         return false;
     }
 };

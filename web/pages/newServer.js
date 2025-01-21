@@ -1,311 +1,233 @@
-SERVER_NAME_REGEXP = /^[a-zA-Z0-9\-\_]{1,20}$/;
-AIKAR_FLAGS = "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20";
+// Regular expression for validating server names (1-20 alphanumeric, hyphen, underscore)
+const SERVER_NAME_REGEXP = /^[a-zA-Z0-9\-_]{1,20}$/;
 
-currentSelectedCore = "";
-currentSelectedVersion = "";
-allServersList = [];
-$(".new-server-container #core-category .item").on("click", function () {
-    if (!$(this).hasClass("active")) {
-        $(".new-server-container #core-category .item.active").removeClass("active");
-        $(this).addClass("active");
-        if ($(this).data("item") === "list") {
-            $(".new-server-container #cores-versions-parent").show();
-            document.querySelector('#cores-grids').style.display = "block";
-            document.querySelector('#core_upload').style.display = "none";
-        } else {
-            $(".new-server-container #cores-versions-parent").hide();
-            document.querySelector('#cores-grids').style.display = "none";
-            document.querySelector('#core_upload').style.display = "block";
+// Aikar's recommended JVM flags for Minecraft servers
+const AIKAR_FLAGS = "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20";
+
+// Global state variables
+let currentSelectedCore = "";
+let currentSelectedVersion = "";
+let allServersList = [];
+
+// Core category selection handler
+document.querySelectorAll(".new-server-container #core-category .item").forEach(element => {
+    element.addEventListener("click", function() {
+        if (!this.classList.contains("active")) {
+            // Remove active class from all items
+            document.querySelectorAll(".new-server-container #core-category .item.active").forEach(activeElement => {
+                activeElement.classList.remove("active");
+            });
+            
+            this.classList.add("active");
+            const isList = this.dataset.item === "list";
+            
+            // Toggle visibility of core selection sections
+            document.querySelector(".new-server-container #cores-versions-parent").style.display = 
+                isList ? "block" : "none";
+            document.querySelector("#cores-grids").style.display = 
+                isList ? "block" : "none";
+            document.querySelector("#core_upload").style.display = 
+                isList ? "none" : "block";
+            
+            validateNewServerInputs();
         }
-        validateNewServerInputs();
-    }
+    });
 });
-$(function () {
+
     KubekUI.setTitle("Kubek | {{commons.create}} {{commons.server.lowerCase}}");
 
-    $("#servers-list-sidebar .sidebar-item span:last-child").each((i, el) => {
-        allServersList.push($(el).text());
-        console.log("allServersList", allServersList);
+    // Populate server list
+    document.querySelectorAll("#servers-list-sidebar .sidebar-item span:last-child").forEach(element => {
+        allServersList.push(element.textContent);
     });
 
+    // Initial data loading
     refreshServerCoresList(() => {
         refreshCoreVersionsList(() => {
             refreshJavaList(() => {});
         });
     });
-    $(".new-server-container #server-port").val(25565);
 
-    // Получаем кол-во ОЗУ, настраиваем поле ввода ОЗУ
-    KubekRequests.get("/kubek/hardware/usage", (usage) => {
-        let totalMemory = Math.ceil(Math.round(usage.ram.total / 1024 / 1024) / 512) * 512;
-        let totalDigit = (totalMemory / 1024).toFixed(1) / 2;
-        let maxMemory = (totalMemory / 1024).toFixed(1);
-        document.querySelector(".new-server-container #server-mem").value = totalDigit;
-        document.querySelector(".new-server-container #server-mem").max = maxMemory;
+    // Set default port
+    document.querySelector(".new-server-container #server-port").value = 25565;
+
+    // Get and configure memory settings
+    KubekRequests.get("/kubek/hardware/usage", usage => {
+        const totalMemory = Math.ceil(Math.round(usage.ram.total / 1024 / 1024) / 512) * 512;
+        const totalDigit = (totalMemory / 1024).toFixed(1) / 2;
+        const maxMemory = (totalMemory / 1024).toFixed(1);
+        
+        const memInput = document.querySelector(".new-server-container #server-mem");
+        memInput.value = totalDigit;
+        memInput.max = maxMemory;
+        
         validateNewServerInputs();
-        console.log("usage server-mem input precalculated", usage);
     });
-});
 
-function validateNewServerInputs(){
-    const server_name_input = document.querySelector('#server_name_input');
-    const cores_grid = document.querySelector('#cores-grids');
-    const core_upload = document.querySelector('#core-upload') || document.querySelector('#core_upload');
-    const customselect_versions = document.querySelector('#customselect_versions');
-    const javas_list = document.querySelector('#javas_list');
-    const server_mem = document.querySelector('#server-mem');
-    const server_port = document.querySelector('#server-port');
-    const verifyobj = {
-        server_name_input: server_name_input.getInputValues(),
-        cores_grid: cores_grid.selected,
-        core_upload: core_upload.style.display !== "none",
-        customselect_versions: customselect_versions.getSelectedOptions(),
-        javas_list: javas_list.getSelectedOptions(),
-        server_mem: server_mem.value,
-        server_port: server_port.value
-    }
-    console.log("verifyobj", verifyobj);
-    if (!verifyobj.server_name_input || !verifyobj.javas_list) {
-    return false;
-    }
-    if (verifyobj.core_upload === true) {
-        return "uploadfile"
-    }
-    if (!verifyobj.server_name_input || !verifyobj.customselect_versions || !verifyobj.javas_list) {
-    return false;
-    }
+// Validate form inputs
+function validateNewServerInputs() {
+    const inputs = {
+        serverName: document.querySelector('#server_name_input').getInputValues(),
+        coreGrid: document.querySelector('#cores-grids').selected,
+        coreUpload: document.querySelector('#core_upload').style.display !== "none",
+        version: document.querySelector('#customselect_versions').getSelectedOptions(),
+        java: document.querySelector('#javas_list').getSelectedOptions(),
+        memory: document.querySelector('#server-mem').value,
+        port: document.querySelector('#server-port').value
+    };
+
+    if (!inputs.serverName || !inputs.java) return false;
+    if (inputs.coreUpload) return "uploadfile";
+    if (!inputs.version) return false;
     return true;
 }
 
-function refreshServerCoresList(cb = () => {
-}) {
+// Refresh list of available server cores
+function refreshServerCoresList(cb = () => {}) {
     currentSelectedCore = "";
     currentSelectedVersion = "";
-    KubekCoresManager.getList((cores) => {
-        console.log("cores", cores);
-        const coresgrid = document.querySelector('#cores-grids');
-        const allcoresmap = [];
-        Object.entries(cores).forEach(([key, value]) => {
-            console.log("value", value, "key", key);
-            const parsedcore = {
-                id: key,
-                title: value.displayName,
-                img: `/assets/icons/cores/${key}.png`
-            }
-            allcoresmap.push(parsedcore);
-        });
-        coresgrid.data = allcoresmap;
-        coresgrid.addEventListener('change', (e) => {
-            console.log("e", e.detail);
+    
+    KubekCoresManager.getList(cores => {
+        const coresGrid = document.querySelector('#cores-grids');
+        const coreEntries = Object.entries(cores).map(([key, value]) => ({
+            id: key,
+            title: value.displayName,
+            img: `/assets/icons/cores/${key}.png`
+        }));
+
+        coresGrid.data = coreEntries;
+        coresGrid.addEventListener('change', e => {
             currentSelectedCore = e.detail.selected;
             refreshCoreVersionsList(() => {
                 validateNewServerInputs();
                 KubekUI.hidePreloader();
             });
         });
-        coresgrid.selected = "vanilla";
 
+        coresGrid.selected = "vanilla";
         cb(true);
     });
 }
 
-function refreshCoreVersionsList(cb = () => {
-}) {
+// Refresh versions for selected core
+function refreshCoreVersionsList(cb = () => {}) {
     currentSelectedVersion = "";
-    KubekCoresManager.getCoreVersions(currentSelectedCore, (versions) => {
-        if (!versions) {
-            cb(false);
-            return;
-        }
-        console.log("versions", versions);
-
-        const allversions = []
-
-        versions.forEach((ver) => {
-            const optionserver = {
-                label: ver,
-                value: ver
-             }
-             allversions.push(optionserver);
-        });
-        const customselect_versions = document.querySelector('#customselect_versions');
-        console.log("customselect_versions", customselect_versions);
-        customselect_versions.setOptions(allversions);
+    
+    KubekCoresManager.getCoreVersions(currentSelectedCore, versions => {
+        if (!versions) return cb(false);
+        
+        const versionSelect = document.querySelector('#customselect_versions');
+        versionSelect.setOptions(versions.map(ver => ({
+            label: ver,
+            value: ver
+        })));
+        
         cb(true);
     });
 }
 
+// Refresh available Java versions
 function refreshJavaList(cb) {
-    document.querySelector("#java-list-placeholder").style.display = "block";
-    document.querySelector("#javas-list").style.display = "none";
+    const placeholder = document.querySelector("#java-list-placeholder");
+    const javaList = document.querySelector("#javas-list");
+    
+    placeholder.style.display = "block";
+    javaList.style.display = "none";
 
-    const javas_list = document.querySelector('#javas_list');
-    const alljavas = []
-    KubekJavaManager.getAllJavas((javas) => {
-        console.log("javas", javas);
-        const parseToOptions = (data) => {
-            const itemname = (name) => {
-                return name.includes("java") ? name : "java-" + name;
-            }
-            const statename = (state) => {
-                return state === "kubek" ? "(installed)" : "";
-            }
-            return Object.entries(data).flatMap(([state, items]) =>
-                items.map(item => ({
-                    label: itemname(item),
-                    value: item,
-                    state: statename(state)
-                }))
-            );
-          };
-        alljavas.push(...parseToOptions(javas));
-        javas_list.setOptions(alljavas);
+    KubekJavaManager.getAllJavas(javas => {
+        const parseJavaOptions = data => Object.entries(data).flatMap(([state, items]) =>
+            items.map(item => ({
+                label: item.includes("java") ? item : `java-${item}`,
+                value: item,
+                state: state === "kubek" ? "(installed)" : ""
+            }))
+        );
+
+        document.querySelector('#javas_list').setOptions(parseJavaOptions(javas));
         localStorage.setItem("javas", JSON.stringify(javas));
-        document.querySelector("#java-list-placeholder").style.display = "none";
-        document.querySelector("#javas-list").style.display = "block";
+        
+        placeholder.style.display = "none";
+        javaList.style.display = "block";
         cb(true);
     });
 }
 
-// Собрать start script запуска сервера
-function generateNewServerStart(){
-    let result = "-Xmx" + document.querySelector('#server-mem').value * 1024 + "M";
-    if(document.querySelector('#add-aikar-flags').checked){
-        result = result + " " + encodeURIComponent(AIKAR_FLAGS);
+// Generate server start command
+function generateNewServerStart() {
+    let command = `-Xmx${document.querySelector('#server-mem').value * 1024}M`;
+    if (document.querySelector('#add-aikar-flags').checked) {
+        command += ` ${encodeURIComponent(AIKAR_FLAGS)}`;
     }
-    return result;
+    return command;
 }
 
-function prepareServerCreation(){
-    document.querySelector(".new-server-container #create-server-btn .text").innerHTML = "{{newServerWizard.creationStartedShort}}";
-    //document.querySelector(".new-server-container #create-server-btn").attr("disabled", "true");
-    document.querySelector(".new-server-container #create-server-btn .material-symbols-rounded:not(.spinning)").style.display = "none";
-    document.querySelector(".new-server-container #create-server-btn .material-symbols-rounded.spinning").style.display = "block";
-    let serverName = document.querySelector('#server_name_input').getInputValues();
-    let memory = document.querySelector('#server-mem').value;
-    let serverPort = document.querySelector('#server-port').value;
-    let serverCore = "";
-    let serverVersion = "";
-    let javaVersion = "";
-    let startScript = "";
-    const serverVersion_select = document.querySelector('#customselect_versions');
-    const fileUpload = document.querySelector('#core_upload');
-    serverVersion = serverVersion_select.getValue();
-    const javaversion_select = document.querySelector('#javas_list');
-    console.log("javas_list", javaversion_select);
-    javaVersion = javaversion_select.getValue();
-         startScript = generateNewServerStart();
-         serverCore = currentSelectedCore;
-    const mapedserverdata = {
-        serverName : serverName,
-        serverCore : serverCore,// create webcomponent for this list: ['vanilla', 'paper', 'waterfall', 'purpur', 'spigot',"velocity"]
-        serverVersion : serverVersion,
-        startScript : startScript, //start script
-        javaVersion : javaVersion,
-        serverPort : serverPort,
-        memory : memory,
-        formData : fileUpload.getSelectfile()
-    }
-    console.log("javaVersion mapedserverdata", mapedserverdata);
-    if(validateNewServerInputs() === true){
-        console.log("validateNewServerInputs true", validateNewServerInputs(), mapedserverdata);
-        startServerCreation(mapedserverdata);
-    } else if (validateNewServerInputs() === "uploadfile") {
-        const fileselected = fileUpload.getSelectfile();
-        console.log("fileselected", fileselected);
+// Prepare server creation process
+function prepareServerCreation() {
+    const btn = document.querySelector(".new-server-container #create-server-btn");
+    btn.querySelector(".text").textContent = "{{newServerWizard.creationStartedShort}}";
+    btn.querySelector(".material-symbols-rounded:not(.spinning)").style.display = "none";
+    btn.querySelector(".material-symbols-rounded.spinning").style.display = "block";
 
-        const serverName = document.querySelector('#server_name_input').getInputValues();
-        sendServerData(serverName, fileselected.formData, fileselected.fileName, mapedserverdata);
-        return;
-    } else {
-        console.log("validateNewServerInputs", validateNewServerInputs(), mapedserverdata);
-        return;
-    }
+    const serverData = {
+        serverName: document.querySelector('#server_name_input').getInputValues(),
+        memory: document.querySelector('#server-mem').value,
+        port: document.querySelector('#server-port').value,
+        core: currentSelectedCore,
+        version: document.querySelector('#customselect_versions').getValue(),
+        java: document.querySelector('#javas_list').getValue(),
+        startScript: generateNewServerStart(),
+        formData: document.querySelector('#core_upload').getSelectfile()
+    };
 
+    const validation = validateNewServerInputs();
+    if (validation === true) {
+        startServerCreation(serverData);
+    } else if (validation === "uploadfile") {
+        const fileData = serverData.formData;
+        sendServerData(serverData.serverName, fileData.formData, fileData.fileName, serverData);
+    }
 }
 
-
-function startServerCreation(parsedsenddatamap, fileData){
-    const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = parsedsenddatamap;
-    let fileName = serverCore
-    if (fileData && fileData.name) fileName = fileData.name
-    console.log("startServerCreation", serverName, fileName, serverVersion, startScript, javaVersion, serverPort);
-    KubekRequests.get("/servers/new?server=" + serverName + "&core=" + fileName + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
-        $(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
+// Start server creation process
+function startServerCreation({ serverName, core, version, startScript, java, port }, fileData) {
+    const fileName = fileData?.name || core;
+    const endpoint = `/servers/new?server=${serverName}&core=${fileName}&coreVersion=${version}&startParameters=${startScript}&javaVersion=${java}&port=${port}`;
+    
+    KubekRequests.get(endpoint, () => {
+        document.querySelector(".new-server-container #after-creation-text").textContent = 
+            "{{newServerWizard.creationCompleted}}";
     });
 }
-const fileUpload = document.querySelector('#core_upload');
-fileUpload.addEventListener('file-upload', (e) => {
-    const detail = e.detail;
-    console.log("detail", detail);
-    const fileselected = fileUpload.getSelectfile();
-    console.log("fileselected", fileselected);
-    const serverName = document.querySelector('#server_name_input').getInputValues();
-    sendServerData(serverName, fileselected.formData, fileselected.fileName, null);
-    console.log(checkFileDataType(fileselected.formData),"checkFileDataType");
+
+// Handle file uploads
+document.querySelector('#core_upload').addEventListener('file-upload', e => {
+    const { formData, fileName } = e.detail;
+    sendServerData(
+        document.querySelector('#server_name_input').getInputValues(),
+        formData,
+        fileName,
+        null
+    );
 });
 
-function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
-    let formDataToSend = new FormData();
-    const fileselected = fileUpload.getSelectfile();
-    if (!serverName) serverName = document.querySelector('#server_name_input').getInputValues();
+// Send server data to backend
+function sendServerData(serverName, fileData, fileName, serverData) {
+    const formData = new FormData();
+    
     if (fileData instanceof FormData) {
-        // Get the file from the existing FormData
-        const file = getFileFromFormData(fileData);
-        const fileNameparam = file.name || fileName;
-        console.log("fileNameparam", fileNameparam);
-        if (file) {
-            // Create a new FormData with the file and ensure the name is preserved
-            formDataToSend.append('server-core-input', file, fileNameparam);
-        } else {
-            console.error('No se encontró archivo en FormData');
-            return;
-        }
+        const file = [...fileData.entries()][0][1];
+        formData.append('server-core-input', file, fileName || file.name);
     } else if (fileData instanceof File) {
-        formDataToSend.append('server-core-input', fileData, fileData.name);
-    } else if (typeof fileData === 'string' && fileData.startsWith('data:')) {
-        const base64File = dataURLtoFile(fileData, fileName);
-        formDataToSend.append('server-core-input', base64File, fileName);
-    } else {
-        try {
-            const binaryFile = new File([fileData], fileName, {
-                type: 'application/octet-stream'
-            });
-            formDataToSend.append('server-core-input', binaryFile, fileName);
-        } catch (error) {
-            console.error('Error al procesar el archivo:', error);
-            return;
-        }
+        formData.append('server-core-input', fileData, fileName || fileData.name);
     }
-    if (parsedsenddatamap) {
-        Object.entries(parsedsenddatamap).forEach(([key, value]) => {
-            if (key !== 'formData' && value !== undefined) {
-                formDataToSend.append(key, value);
-            }
+
+    if (serverData) {
+        Object.entries(serverData).forEach(([key, value]) => {
+            if (key !== 'formData') formData.append(key, value);
         });
     }
-    return KubekRequests.post("/cores/" + serverName, (data) => {
-        if (parsedsenddatamap) {
-            console.log('Archivo subido exitosamente', data);
-            startServerCreation(parsedsenddatamap,data.sourceFile);
-        }
-    }, formDataToSend);
-}
-function checkFileDataType(fileData) {
-    if (fileData instanceof File) {
-        return 'FILE';
-    } else if (fileData instanceof FormData) {
-        return 'FORMDATA';
-    } else if (typeof fileData === 'string' && fileData.startsWith('data:')) {
-        return 'BASE64';
-    }
-    return 'OTHER';
-}
-function getFileFromFormData(formData) {
-    for (const [key, value] of formData.entries()) {
-        if (value instanceof File) {
-            return value;
-        }
-    }
-    return null;
+
+    KubekRequests.post("/cores/" + serverName, response => {
+        if (serverData) startServerCreation(serverData, response.sourceFile);
+    }, formData);
 }

@@ -3022,42 +3022,17 @@ class SidebarComponent extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open', delegatesFocus: true });
-    this.isVisible = true;
+    this.isVisible = false;
+    this.serverlist = [];
   }
-
-  connectedCallback() {
-    this.render();
-    this.setupEventListeners();
-  }
-
-  toggleSidebar(isVisible) {
-    this.isVisible = !this.isVisible;
-    const sidebar = this.shadowRoot.querySelector('.sidebar');
-    this.isVisible = isVisible || this.isVisible;
-    if (this.isVisible) {
-      sidebar.style.transform = 'translateX(0)';
-      sidebar.style.opacity = '1';
-      setTimeout(() => {
-        sidebar.style.display = 'block';
-      }, 444);
-    } else {
-      sidebar.style.transform = 'translateX(-100%)';
-      sidebar.style.opacity = '0';
-      setTimeout(() => {
-        sidebar.style.display = 'none';
-      }, 444);
-    }
-  }
-
-  render() {
-    this.shadowRoot.innerHTML = `
-      <style>
+  getStyles() {
+    return `
+         <style>
         :host {
-          display: block;
-          position: absolute;
+          position: fixed;
           left: 0;
-          bottom: 0;
-          top: 0;
+          bottom: 0dvh;
+          top: 0dvh;
           transform: translateY(25%);
           font-family: inherit;
           z-index: 4;
@@ -3077,7 +3052,7 @@ class SidebarComponent extends HTMLElement {
           min-height: 164px;
           margin-top: 16px;
         }
-
+        .server-item,
         .sidebar-item {
           display: flex;
           flex-direction: row;
@@ -3130,7 +3105,6 @@ class SidebarComponent extends HTMLElement {
         }
 
         #close-btn {
-          display: none;
           width: 100%;
         }
 
@@ -3139,7 +3113,59 @@ class SidebarComponent extends HTMLElement {
             display: block;
           }
         }
+          img {
+            width: min(32px, 100%);
+            height: min(32px, 100%);
+            object-fit: contain;
+          }
       </style>
+    `;
+  }
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+  setServersList(value) {
+    this.serverlist = value;
+    this.loadServersList();
+  }
+  getSeversList() {
+    return this.serverlist;
+  }
+  toggleSidebar(isVisible) {
+    this.isVisible = !this.isVisible;
+    const sidebar = this.shadowRoot.querySelector('.sidebar');
+    this.isVisible = isVisible || this.isVisible;
+    if (this.isVisible) {
+      sidebar.style.transform = 'translateX(0)';
+      sidebar.style.opacity = '1';
+      setTimeout(() => {
+        sidebar.style.display = 'block';
+      }, 444);
+    } else {
+      sidebar.style.transform = 'translateX(-100%)';
+      sidebar.style.opacity = '0';
+      setTimeout(() => {
+        sidebar.style.display = 'none';
+      }, 444);
+    }
+  }
+
+  render() {
+    const sidebarmenu_items = [
+      { title: 'Console', icon: 'terminal', page: 'console' },
+      { title: 'File Manager', icon: 'folder', page: 'fileManager' },
+      { title: 'Plugins and Mods', icon: 'extension', page: 'plugins' },
+      { title: 'Servers Settings', icon: 'settings', page: 'serverSettings' },
+      { title: 'Server.properties', icon: 'settings_ethernet', page: 'server.properties' },
+      { title: 'Kubek Settings', icon: 'settings', page: 'kubekSettings' },
+      { title: 'System Monitoring', icon: 'area_chart', page: 'systemMonitor' }
+    ];
+    const elements = sidebarmenu_items.map(item => this.generatesidebar_item(item));
+    console.log("elements", elements, typeof elements, typeof elements[0], elements[0] instanceof HTMLElement);
+    // elements is array of HTMLElements
+    this.shadowRoot.innerHTML = `
+      <style>${this.getStyles()}</style>
       
       <div class="sidebar">
         <button class="dark-btn icon-only" id="close-btn">
@@ -3156,37 +3182,13 @@ class SidebarComponent extends HTMLElement {
         </div>
 
         <div class="sidebar-box" id="main-menu-sidebar">
-          <div class="sidebar-item" data-page="console">
-            <span class="material-symbols-rounded">terminal</span>
-            <span>Console</span>
-          </div>
-          <div class="sidebar-item" data-page="fileManager">
-            <span class="material-symbols-rounded">folder</span>
-            <span>File Manager</span>
-          </div>
-          <div class="sidebar-item" data-page="plugins">
-            <span class="material-symbols-rounded">extension</span>
-            <span>Plugins</span>
-          </div>
-          <div class="sidebar-item" data-page="serverSettings">
-            <span class="material-symbols-rounded">tune</span>
-            <span>Server Settings</span>
-          </div>
-          <div class="sidebar-item" data-page="server.properties">
-            <span class="material-symbols-rounded">settings_ethernet</span>
-            <span>Server.properties</span>
-          </div>
-          <div class="sidebar-item" data-page="kubekSettings">
-            <span class="material-symbols-rounded">settings</span>
-            <span>Kubek Settings</span>
-          </div>
-          <div class="sidebar-item" data-page="systemMonitor">
-            <span class="material-symbols-rounded">area_chart</span>
-            <span>System Monitor</span>
-          </div>
         </div>
       </div>
     `;
+    const sidebar_box = this.shadowRoot.querySelector('#main-menu-sidebar');
+    elements.forEach(element => {
+      sidebar_box.appendChild(element);
+    });
   }
 
   setupEventListeners() {
@@ -3194,22 +3196,8 @@ class SidebarComponent extends HTMLElement {
     const sidebarItems = this.shadowRoot.querySelectorAll("#main-menu-sidebar .sidebar-item");
     sidebarItems.forEach(item => {
       item.addEventListener("click", () => {
-        const page = item.getAttribute("data-page");
-        
-        // Remove active class from all items
         sidebarItems.forEach(i => i.classList.remove('active'));
-        // Add active class to clicked item
         item.classList.add('active');
-
-        // Dispatch custom event
-        const event = new CustomEvent('page-change', {
-          detail: {
-            page: page
-          },
-          bubbles: true,
-          composed: true
-        });
-        this.dispatchEvent(event);
       });
     });
 
@@ -3223,7 +3211,6 @@ class SidebarComponent extends HTMLElement {
       this.dispatchEvent(event);
     });
 
-    // Setup close button
     const closeBtn = this.shadowRoot.getElementById('close-btn');
     closeBtn.addEventListener('click', () => {
       this.toggleSidebar();
@@ -3236,6 +3223,65 @@ class SidebarComponent extends HTMLElement {
       });
       this.dispatchEvent(event);
     });
+  }
+  loadServersList(){
+    const sidebar = this.shadowRoot.querySelector("#servers-list-sidebar");
+    // eliminamos los elementos excepto el contenedor #new-server-btn
+    const elementtodelete = sidebar.querySelectorAll('.sidebar-item:not(#new-server-btn)');
+    console.log("elementtodelete", elementtodelete, this.serverlist);
+    if (elementtodelete.length > 0) {
+      elementtodelete.forEach(element => element.remove());
+    }
+    if (this.serverlist.length > 0) {
+      this.serverlist.forEach(server => {
+        const serveritem = this.generateserver_item(server);
+        console.log("serveritem", serveritem);
+        sidebar.appendChild(serveritem);
+      });
+    }
+  }
+  generatesidebar_item(item) {
+    if (!item) return;
+    const container = document.createElement('div');
+    container.className = 'sidebar-item';
+    if (item.page)  container.setAttribute('data-page', item.page);
+    container.innerHTML = `
+      <span class="material-symbols-rounded">${item.icon}</span>
+      <span>${item.title}</span>
+    `;
+    container.addEventListener('click', (e) => {
+      this.dispatchEvent(new CustomEvent('page-change', {
+        detail: {
+          page: item.page,
+          item: item
+        },
+        bubbles: true,
+        composed: true
+      }));
+    });
+    return container;
+  }
+  generateserver_item(item) {
+    if (!item) return;
+    const container = document.createElement('div');
+    container.className = 'server-item';
+    container.innerHTML = `
+      <span class="icon-circle-bg">
+        <img src="${item.icon}" alt="${item.title} logo">
+      </span>
+      <span>${item.title}</span>
+    `;
+    container.addEventListener('click', (e) => {
+      this.dispatchEvent(new CustomEvent('server-change', {
+        detail: {
+          server: item.title,
+          item: item
+        },
+        bubbles: true,
+        composed: true
+      }));
+    });
+    return container;
   }
 }
 
@@ -3439,11 +3485,9 @@ class FileUpload extends HTMLElement {
     const file = event.target.files[0];
     if (file) {
       this.fileInfo.textContent = `Archivo seleccionado: ${file.name}`;
-      this.uploadButton.disabled = false;
       this.selectedFile = file;
     } else {
       this.fileInfo.textContent = "No se ha seleccionado ningún archivo";
-      this.uploadButton.disabled = true;
       this.selectedFile = null;
     }
     this.uploadFile();

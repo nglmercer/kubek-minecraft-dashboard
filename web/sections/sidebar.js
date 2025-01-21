@@ -17,9 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const sidebar = document.querySelector('sidebar-menu');
         sidebar.toggleSidebar();
         sidebar.addEventListener('page-change', (event) => {
-          const page = event.detail.page;
-          console.log('Changing to page:', page);
-          // Add your page change logic here
+          const detail = event.detail;
+          console.log('Changing to page:', detail.page);
+/*           KubekUI.changeItemByPage(detail.page);
+          KubekPageManager.gotoPage(detail.page); */
         });
       
         sidebar.addEventListener('new-server', () => {
