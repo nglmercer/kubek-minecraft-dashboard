@@ -218,25 +218,17 @@ function prepareServerCreation(){
 /*         KubekRequests.post("/cores/" + serverName, () => {
             startServerCreation(mapedserverdata);
         }, fileUpload.getSelectfile().formData); */
-        sendServerData(serverName,)
+        const fileselected = fileUpload.getSelectfile();
+        console.log("fileselected", fileselected);
+
+        const serverName = document.querySelector('#server_name_input').getInputValues();
+        sendServerData(serverName, fileselected.formData, fileselected.fileName, null);
         return;
     } else {
         console.log("validateNewServerInputs", validateNewServerInputs(), mapedserverdata);
         return;
     }
 
-
-/*     if($(".new-server-container #core-upload").css("display") === "none"){
-        serverCore = currentSelectedCore;
-        serverVersion = currentSelectedVersion;
-        startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
-    } else {
-        serverCore = $("#server-core-input")[0].files[0].name;
-        serverVersion = serverCore;
-        KubekRequests.post("/cores/" + serverName, () => {
-            startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
-        }, formData);
-    } */
 }
 
 
@@ -259,13 +251,16 @@ fileUpload.addEventListener('file-upload', (e) => {
 
 function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
     let formDataToSend = new FormData();
-    
+    const fileselected = fileUpload.getSelectfile();
+    if (!serverName) serverName = document.querySelector('#server_name_input').getInputValues();
     if (fileData instanceof FormData) {
         // Get the file from the existing FormData
         const file = getFileFromFormData(fileData);
+        const fileNameparam = file.name || fileName;
+        console.log("fileNameparam", fileNameparam);
         if (file) {
             // Create a new FormData with the file and ensure the name is preserved
-            formDataToSend.append('server-core-input', file, file.name);
+            formDataToSend.append('server-core-input', file, fileNameparam);
         } else {
             console.error('No se encontró archivo en FormData');
             return;

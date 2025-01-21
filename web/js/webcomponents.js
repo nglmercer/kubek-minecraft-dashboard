@@ -3475,7 +3475,8 @@ class FileUpload extends HTMLElement {
     });
 
     const formData = new FormData();
-    formData.append("server-core-input", file, file.name);
+    // Important: Use the same field name expected by the server
+    formData.append("server-core-input", file);
     
     const customEvent = new CustomEvent("file-upload", {
       detail: {
@@ -3505,7 +3506,7 @@ class FileUpload extends HTMLElement {
     });
 
     const formData = new FormData();
-    formData.append("server-core-input", file, file.name);
+    formData.append("server-core-input", file);
     
     return {
       formData,
@@ -3514,6 +3515,7 @@ class FileUpload extends HTMLElement {
     };
   }
 }
+
 
 // Definir el custom element
 customElements.define("file-upload", FileUpload);
