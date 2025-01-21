@@ -3357,3 +3357,148 @@ class GridSelector extends HTMLElement {
 
 // Register the web component
 customElements.define('grid-selector', GridSelector);
+
+class FileUpload extends HTMLElement {
+  constructor() {
+    super();
+
+    // Crear un shadow DOM
+    this.attachShadow({ mode: "open", delegatesFocus: true });
+
+    // Template del componente
+    this.shadowRoot.innerHTML = `
+      <style>
+      :host {
+        display: inherit;
+        font-family: Arial, sans-serif;
+      }
+      /* Estilos básicos del componente */
+      file-upload {
+        display: block;
+        margin: 1em 0;
+        font-family: Arial, sans-serif;
+      }
+
+      .upload-container {
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        transition: border-color 0.3s;
+      }
+
+      .upload-container:hover {
+        border-color: #0056b3;
+      }
+
+      .upload-container input[type="file"] {
+        display: none;
+      }
+
+      .file-label {
+        cursor: pointer;
+        color: #007bff;
+        font-weight: bold;
+      }
+
+      .file-label:hover {
+        text-decoration: underline;
+      }
+
+      .file-info {
+        margin-top: 1em;
+        font-size: 0.9em;
+        color: #333;
+      }
+
+      .upload-button {
+        margin-top: 1em;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1em;
+      }
+
+      .upload-button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+    </style>
+      <div class="upload-container">
+        <label for="file-input" class="file-label">Selecciona un archivo</label>
+        <input type="file" id="file-input" />
+        <div class="file-info" id="file-info">No se ha seleccionado ningún archivo</div>
+        <button class="upload-button" id="upload-button" disabled>Subir archivo</button>
+      </div>
+    `;
+
+    // Referencias a los elementos
+    this.fileInput = this.shadowRoot.querySelector("#file-input");
+    this.fileInfo = this.shadowRoot.querySelector("#file-info");
+    this.uploadButton = this.shadowRoot.querySelector("#upload-button");
+
+    // Eventos
+    this.fileInput.addEventListener("change", this.handleFileSelect.bind(this));
+    this.uploadButton.addEventListener("click", this.uploadFile.bind(this));
+  }
+  handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+      this.fileInfo.textContent = `Archivo seleccionado: ${file.name}`;
+      this.uploadButton.disabled = false;
+      this.selectedFile = file;
+    } else {
+      this.fileInfo.textContent = "No se ha seleccionado ningún archivo";
+      this.uploadButton.disabled = true;
+      this.selectedFile = null;
+    }
+    this.uploadFile();
+  }
+
+  async uploadFile() {
+    if (!this.selectedFile) return;
+
+    // Crear el objeto de datos para enviar
+    const serverCore = this.selectedFile.name;
+    const serverVersion = serverCore;
+
+    const parsedsenddata = {
+      serverCore,
+      serverVersion,
+      file: this.selectedFile,
+    };
+
+    console.log("parsedsenddata", parsedsenddata);
+
+    // Simulación de envío al servidor
+    try {
+      const formData = new FormData();
+      formData.append("serverCore", this.selectedFile);
+      const customEvent = new CustomEvent("file-upload", {
+        detail: {
+          parsedsenddata,
+          formData,
+        },
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      });
+  
+      this.dispatchEvent(customEvent);
+    } catch (error) {
+      console.error("Error en la subida:", error);
+    }
+  }
+  getSelectfile() {
+    const formData = new FormData();
+    formData.append("serverCore", this.selectedFile);
+    
+    return { formData, selectedFile: this.selectedFile };
+  }
+}
+
+// Definir el custom element
+customElements.define("file-upload", FileUpload);

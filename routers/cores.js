@@ -36,16 +36,24 @@ function initializeWebServer() {
         }
     });
     
-    // Endpoint для загрузки ядра
+    // Endpoint called when a core is uploaded
     router.post("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
         let q = req.params;
         let sourceFile;
-        // Проверяем присутствие файлов в запросе
+    
+        // Check if files exist in request
         if (!req.files || Object.keys(req.files).length === 0) {
             return res.status(400).send("No files were uploaded.");
         }
     
-        sourceFile = req.files["server-core-input"];
+        // Instead of looking for "server-core-input", look for "serverCore"
+        // since that's what we named it in the FormData
+        sourceFile = req.files["serverCore"];
+        
+        if (!sourceFile || !sourceFile.name) {
+            console.log("No files were uploaded.", sourceFile);
+            return res.status(400).send("No files were uploaded.");
+        }
     
         COMMONS.moveUploadedFile(q.server, sourceFile, "/" + sourceFile.name, (result) => {
             if (result === true) {
@@ -53,8 +61,9 @@ function initializeWebServer() {
             }
             console.log(result);
             res.sendStatus(400);
-        })
+        });
     });
+    
 }
 
 export { router, initializeWebServer };

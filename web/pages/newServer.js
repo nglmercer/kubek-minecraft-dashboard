@@ -13,11 +13,11 @@ $(".new-server-container #core-category .item").on("click", function () {
         if ($(this).data("item") === "list") {
             $(".new-server-container #cores-grid").show();
             $(".new-server-container #cores-versions-parent").show();
-            $(".new-server-container #core-upload").hide();
+            $(".new-server-container #core_upload").hide();
         } else {
             $(".new-server-container #cores-grid").hide();
             $(".new-server-container #cores-versions-parent").hide();
-            $(".new-server-container #core-upload").show();
+            $(".new-server-container #core_upload").show();
         }
         validateNewServerInputs();
     }
@@ -52,7 +52,7 @@ $(function () {
 function validateNewServerInputs(){
     const server_name_input = document.querySelector('#server_name_input');
     const cores_grid = document.querySelector('#cores-grids');
-    const core_upload = document.querySelector('#core-upload');
+    const core_upload = document.querySelector('#core-upload') || document.querySelector('#core_upload');
     const customselect_versions = document.querySelector('#customselect_versions');
     const javas_list = document.querySelector('#javas_list');
     const server_mem = document.querySelector('#server-mem');
@@ -67,8 +67,11 @@ function validateNewServerInputs(){
         server_port: server_port.value
     }
     console.log("verifyobj", verifyobj);
-    if (!verifyobj.server_name_input || !verifyobj.server_name_input) {
+    if (!verifyobj.server_name_input || !verifyobj.javas_list) {
     return false;
+    }
+    if (verifyobj.core_upload === true) {
+        return "uploadfile"
     }
     if (!verifyobj.server_name_input || !verifyobj.customselect_versions || !verifyobj.javas_list) {
     return false;
@@ -191,10 +194,10 @@ function prepareServerCreation(){
     let javaVersion = "";
     let startScript = "";
     const serverVersion_select = document.querySelector('#customselect_versions');
+    const fileUpload = document.querySelector('#core_upload');
     serverVersion = serverVersion_select.getValue();
     const javaversion_select = document.querySelector('#javas_list');
     console.log("javas_list", javaversion_select);
-    let formData = new FormData($("#server-core-form")[0]);
     javaVersion = javaversion_select.getValue();
          startScript = generateNewServerStart();
          serverCore = currentSelectedCore;
@@ -206,11 +209,24 @@ function prepareServerCreation(){
         javaVersion : javaVersion,
         serverPort : serverPort,
         memory : memory,
-        formData : formData
+        formData : fileUpload.getSelectfile()
     }
     console.log("javaVersion mapedserverdata", mapedserverdata);
-/*
-    if($(".new-server-container #core-upload").css("display") === "none"){
+    if(validateNewServerInputs() === true){
+        startServerCreation(mapedserverdata);
+    } else if (validateNewServerInputs() === "uploadfile") {
+/*         KubekRequests.post("/cores/" + serverName, () => {
+            startServerCreation(mapedserverdata);
+        }, fileUpload.getSelectfile().formData); */
+        uploadfiles(fileUpload.getSelectfile().formData,serverName);
+        return;
+    } else {
+        console.log("validateNewServerInputs", validateNewServerInputs(), mapedserverdata);
+        return;
+    }
+
+
+/*     if($(".new-server-container #core-upload").css("display") === "none"){
         serverCore = currentSelectedCore;
         serverVersion = currentSelectedVersion;
         startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
@@ -222,9 +238,39 @@ function prepareServerCreation(){
         }, formData);
     } */
 }
-
-function startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort){
-    KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
-        document.querySelector(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
-    });
+async function uploadfiles(formData, serverName){
+    KubekRequests.post("/cores/" + serverName, (data) => {
+        console.log("data", data);
+    }, formData);
 }
+/*     try {
+        const response = await fetch(`/your-upload-endpoint/${serverId}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Upload successful:', result);
+    } catch (error) {
+        console.error('Error uploading file:', error);
+    }
+} */
+function startServerCreation(mapedserverdata, type = "uploadfile"){
+    const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = mapedserverdata;
+    KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
+        document.querySelector(".new-server-container #after-creation-text").textContent = "{{newServerWizard.creationCompleted}}";
+    }); 
+}
+const fileUpload = document.querySelector('#core_upload');
+fileUpload.addEventListener('file-upload', (e) => {
+    const detail = e.detail;
+    console.log("detail", detail);
+    const fileselected = fileUpload.getSelectfile();
+    console.log("fileselected", fileselected);
+/*     const formData = detail.formData;
+    KubekRequests.post("/cores/" + serverName, detail.parsedsenddata.serverCore, formData); */
+});
