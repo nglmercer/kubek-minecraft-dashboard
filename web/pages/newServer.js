@@ -234,8 +234,8 @@ function startServerCreation(parsedsenddatamap, fileData){
     const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = parsedsenddatamap;
     let fileName = serverCore
     if (fileData && fileData.name) fileName = fileData.name
-    console.log("startServerCreation", serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
-    KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
+    console.log("startServerCreation", serverName, fileName, serverVersion, startScript, javaVersion, serverPort);
+    KubekRequests.get("/servers/new?server=" + serverName + "&core=" + fileName + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
         $(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
     });
 }
