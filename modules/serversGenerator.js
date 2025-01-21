@@ -61,7 +61,7 @@ export async function prepareJavaForServer(javaVersion, cb) {
     }
 }
 
-// Функция для запуска создания сервера Java
+// startJavaServerGeneration // GENERATE JAVA SERVER
 export async function startJavaServerGeneration(serverName, core, coreVersion, startParameters, javaExecutablePath, serverPort, cb) {
     let coreDownloadURL = "";
     let coreFileName = core + "-" + coreVersion + ".jar";

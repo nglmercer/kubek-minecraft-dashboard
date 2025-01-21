@@ -213,16 +213,14 @@ function prepareServerCreation(){
     }
     console.log("javaVersion mapedserverdata", mapedserverdata);
     if(validateNewServerInputs() === true){
+        console.log("validateNewServerInputs true", validateNewServerInputs(), mapedserverdata);
         startServerCreation(mapedserverdata);
     } else if (validateNewServerInputs() === "uploadfile") {
-/*         KubekRequests.post("/cores/" + serverName, () => {
-            startServerCreation(mapedserverdata);
-        }, fileUpload.getSelectfile().formData); */
         const fileselected = fileUpload.getSelectfile();
         console.log("fileselected", fileselected);
 
         const serverName = document.querySelector('#server_name_input').getInputValues();
-        sendServerData(serverName, fileselected.formData, fileselected.fileName, null);
+        sendServerData(serverName, fileselected.formData, fileselected.fileName, mapedserverdata);
         return;
     } else {
         console.log("validateNewServerInputs", validateNewServerInputs(), mapedserverdata);
@@ -232,11 +230,13 @@ function prepareServerCreation(){
 }
 
 
-function startServerCreation(mapedserverdata){
-    const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = mapedserverdata;
+function startServerCreation(parsedsenddatamap){
+    const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = parsedsenddatamap;
+
+    console.log("startServerCreation", serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
     KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
-        document.querySelector(".new-server-container #after-creation-text").textContent = "{{newServerWizard.creationCompleted}}";
-    }); 
+        $(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
+    });
 }
 const fileUpload = document.querySelector('#core_upload');
 fileUpload.addEventListener('file-upload', (e) => {
@@ -284,7 +284,7 @@ function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
     if (parsedsenddatamap) {
         Object.entries(parsedsenddatamap).forEach(([key, value]) => {
             if (key !== 'formData' && value !== undefined) {
-                formData.append(key, value);
+                formDataToSend.append(key, value);
             }
         });
     }
