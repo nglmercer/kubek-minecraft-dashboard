@@ -218,7 +218,6 @@ function prepareServerCreation(){
 /*         KubekRequests.post("/cores/" + serverName, () => {
             startServerCreation(mapedserverdata);
         }, fileUpload.getSelectfile().formData); */
-        //uploadfiles(fileUpload.getSelectfile().formData,serverName);
         sendServerData(serverName,)
         return;
     } else {
@@ -239,11 +238,7 @@ function prepareServerCreation(){
         }, formData);
     } */
 }
-async function uploadfiles(formData, serverName){
-    KubekRequests.post("/cores/" + serverName, (data) => {
-        console.log("data", data);
-    }, formData);
-}
+
 
 function startServerCreation(mapedserverdata){
     const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = mapedserverdata;
@@ -263,48 +258,41 @@ fileUpload.addEventListener('file-upload', (e) => {
 });
 
 function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
-    const formData = new FormData();
-    const fileType = checkFileDataType(fileData);
+    let formDataToSend = new FormData();
     
-    switch (fileType) {
-        case 'FILE':
-            formData.append('server-core-input', fileData);
-            break;
-            
-        case 'FORMDATA':
-            const file = getFileFromFormData(fileData);
-            if (file) {
-                formData.append('server-core-input', file);
-            } else {
-                console.error('No se encontró archivo en FormData');
-                return;
-            }
-            break;
-            
-        case 'BASE64':
-            const base64File = dataURLtoFile(fileData, fileName);
-            formData.append('server-core-input', base64File);
-            break;
-            
-        default:
-            try {
-                const binaryFile = new File([fileData], fileName, {
-                    type: 'application/octet-stream'
-                });
-                formData.append('server-core-input', binaryFile);
-            } catch (error) {
-                console.error('Error al procesar el archivo:', error);
-                return;
-            }
+    if (fileData instanceof FormData) {
+        // Get the file from the existing FormData
+        const file = getFileFromFormData(fileData);
+        if (file) {
+            // Create a new FormData with the file and ensure the name is preserved
+            formDataToSend.append('server-core-input', file, file.name);
+        } else {
+            console.error('No se encontró archivo en FormData');
+            return;
+        }
+    } else if (fileData instanceof File) {
+        formDataToSend.append('server-core-input', fileData, fileData.name);
+    } else if (typeof fileData === 'string' && fileData.startsWith('data:')) {
+        const base64File = dataURLtoFile(fileData, fileName);
+        formDataToSend.append('server-core-input', base64File, fileName);
+    } else {
+        try {
+            const binaryFile = new File([fileData], fileName, {
+                type: 'application/octet-stream'
+            });
+            formDataToSend.append('server-core-input', binaryFile, fileName);
+        } catch (error) {
+            console.error('Error al procesar el archivo:', error);
+            return;
+        }
     }
-
 
     return KubekRequests.post("/cores/" + serverName, () => {
         if (parsedsenddatamap) {
             console.log('Archivo subido exitosamente');
-             startServerCreation(parsedsenddatamap);
+            startServerCreation(parsedsenddatamap);
         }
-    }, formData);
+    }, formDataToSend);
 }
 function checkFileDataType(fileData) {
     if (fileData instanceof File) {

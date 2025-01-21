@@ -3359,15 +3359,9 @@ class GridSelector extends HTMLElement {
 customElements.define('grid-selector', GridSelector);
 
 class FileUpload extends HTMLElement {
-  constructor() {
-    super();
-
-    // Crear un shadow DOM
-    this.attachShadow({ mode: "open", delegatesFocus: true });
-
-    // Template del componente
-    this.shadowRoot.innerHTML = `
-      <style>
+  getStyles() {
+    return `
+          <style>
       :host {
         display: inherit;
         font-family: Arial, sans-serif;
@@ -3427,6 +3421,17 @@ class FileUpload extends HTMLElement {
         cursor: not-allowed;
       }
     </style>
+    `;
+  }
+  constructor() {
+    super();
+
+    // Crear un shadow DOM
+    this.attachShadow({ mode: "open", delegatesFocus: true });
+
+    // Template del componente
+    this.shadowRoot.innerHTML = `
+      ${this.getStyles()}
       <div class="upload-container">
         <label for="file-input" class="file-label">Selecciona un archivo</label>
         <input type="file" id="file-input" />
@@ -3444,6 +3449,7 @@ class FileUpload extends HTMLElement {
     this.fileInput.addEventListener("change", this.handleFileSelect.bind(this));
     this.uploadButton.addEventListener("click", this.uploadFile.bind(this));
   }
+
   handleFileSelect(event) {
     const file = event.target.files[0];
     if (file) {
@@ -3460,43 +3466,52 @@ class FileUpload extends HTMLElement {
 
   async uploadFile() {
     if (!this.selectedFile) return;
-
-    // Crear el objeto de datos para enviar
-    const serverCore = this.selectedFile.name;
-    const serverVersion = serverCore;
-
-    const parsedsenddata = {
-      serverCore,
-      serverVersion,
-      file: this.selectedFile,
-    };
-
-    console.log("parsedsenddata", parsedsenddata);
-
-    // Simulación de envío al servidor
-    try {
-      const formData = new FormData();
-      formData.append("serverCore", this.selectedFile);
-      const customEvent = new CustomEvent("file-upload", {
-        detail: {
-          parsedsenddata,
-          formData,
-        },
-        bubbles: true,
-        composed: true,
-        cancelable: true,
-      });
-  
-      this.dispatchEvent(customEvent);
-    } catch (error) {
-      console.error("Error en la subida:", error);
-    }
-  }
-  getSelectfile() {
-    const formData = new FormData();
-    formData.append("serverCore", this.selectedFile);
     
-    return { formData, selectedFile: this.selectedFile };
+    // Create a new Blob with the file content and original name
+    const blob = new Blob([this.selectedFile], { type: this.selectedFile.type });
+    const file = new File([blob], this.selectedFile.name, {
+      type: this.selectedFile.type,
+      lastModified: this.selectedFile.lastModified
+    });
+
+    const formData = new FormData();
+    formData.append("server-core-input", file, file.name);
+    
+    const customEvent = new CustomEvent("file-upload", {
+      detail: {
+        parsedsenddata: {
+          serverCore: file.name,
+          serverVersion: file.name,
+          file: file
+        },
+        formData: formData,
+        fileName: file.name
+      },
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+    });
+
+    this.dispatchEvent(customEvent);
+  }
+
+  getSelectfile() {
+    if (!this.selectedFile) return null;
+
+    const blob = new Blob([this.selectedFile], { type: this.selectedFile.type });
+    const file = new File([blob], this.selectedFile.name, {
+      type: this.selectedFile.type,
+      lastModified: this.selectedFile.lastModified
+    });
+
+    const formData = new FormData();
+    formData.append("server-core-input", file, file.name);
+    
+    return {
+      formData,
+      selectedFile: file,
+      fileName: file.name
+    };
   }
 }
 

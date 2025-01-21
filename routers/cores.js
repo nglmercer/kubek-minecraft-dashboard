@@ -44,6 +44,7 @@ function initializeWebServer() {
         // Revisar si hay archivos en el request tradicional
         if (req.files && Object.keys(req.files).length > 0) {
             sourceFile = req.files["server-core-input"];
+            console.log("sourceFile", sourceFile); 
         } 
         // Revisar si hay datos en el body que necesiten ser convertidos a archivo
         else if (req.body && req.body.fileData) {
@@ -70,7 +71,7 @@ function initializeWebServer() {
             if (result === true) {
                 return res.send(true);
             }
-            console.log(result);
+            console.log("result server", result, sourceFile);
             res.sendStatus(400);
         });
     });
