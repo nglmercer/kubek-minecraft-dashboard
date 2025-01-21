@@ -159,7 +159,7 @@ function refreshJavaList(cb) {
               items.map(item => ({
                 label: item,
                 value: item,
-                state
+                state: state
               }))
             );
           };

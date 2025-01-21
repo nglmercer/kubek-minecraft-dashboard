@@ -2798,22 +2798,26 @@ class EnhancedSelect extends HTMLElement {
   }
 
   setOptions(options) {
+    console.log("options EnhancedSelect", options);
     this.options = options;
     const optionsList = this.shadowRoot.querySelector('.options-list');
     
     optionsList.innerHTML = options.map(option => {
       let optionContent = '';
-      
+      let optionState = '';
       if (option.img || option.image) {
         optionContent += `<img src="${option.img || option.image}" alt="${option.label}">`;
       }
-      
+      if (option.state) {
+        optionState = `<span class="state">${option.state}</span>`;
+      }
       optionContent += `<span>${option.label}</span>`;
 
       return `
         <div class="option ${this.selectedValues.includes(option.value) ? 'selected' : ''}" 
              data-value="${option.value}">
           ${optionContent}
+          ${optionState}
         </div>
       `;
     }).join('');
