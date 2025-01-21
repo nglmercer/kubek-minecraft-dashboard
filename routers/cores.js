@@ -44,7 +44,7 @@ function initializeWebServer() {
         // Revisar si hay archivos en el request tradicional
         if (req.files && Object.keys(req.files).length > 0) {
             sourceFile = req.files["server-core-input"];
-            console.log("sourceFile", sourceFile); 
+            console.log("sourceFile router.post(/:server", sourceFile); 
         } 
         // Revisar si hay datos en el body que necesiten ser convertidos a archivo
         else if (req.body && req.body.fileData) {
@@ -69,7 +69,7 @@ function initializeWebServer() {
     
         COMMONS.moveUploadedFile(q.server, sourceFile, "/" + sourceFile.name, (result) => {
             if (result === true) {
-                return res.send(true);
+                return res.send({ success: true, serverName: q.server, sourceFile: sourceFile });
             }
             console.log("result server", result, sourceFile);
             res.sendStatus(400);

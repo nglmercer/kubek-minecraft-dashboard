@@ -230,9 +230,10 @@ function prepareServerCreation(){
 }
 
 
-function startServerCreation(parsedsenddatamap){
+function startServerCreation(parsedsenddatamap, fileData){
     const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = parsedsenddatamap;
-
+    let fileName = serverCore
+    if (fileData && fileData.name) fileName = fileData.name
     console.log("startServerCreation", serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
     KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
         $(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
@@ -288,10 +289,10 @@ function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
             }
         });
     }
-    return KubekRequests.post("/cores/" + serverName, () => {
+    return KubekRequests.post("/cores/" + serverName, (data) => {
         if (parsedsenddatamap) {
-            console.log('Archivo subido exitosamente');
-            startServerCreation(parsedsenddatamap);
+            console.log('Archivo subido exitosamente', data);
+            startServerCreation(parsedsenddatamap,data.sourceFile);
         }
     }, formDataToSend);
 }
