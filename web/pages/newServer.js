@@ -281,7 +281,13 @@ function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
             return;
         }
     }
-
+    if (parsedsenddatamap) {
+        Object.entries(parsedsenddatamap).forEach(([key, value]) => {
+            if (key !== 'formData' && value !== undefined) {
+                formData.append(key, value);
+            }
+        });
+    }
     return KubekRequests.post("/cores/" + serverName, () => {
         if (parsedsenddatamap) {
             console.log('Archivo subido exitosamente');
