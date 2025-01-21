@@ -11,13 +11,13 @@ $(".new-server-container #core-category .item").on("click", function () {
         $(".new-server-container #core-category .item.active").removeClass("active");
         $(this).addClass("active");
         if ($(this).data("item") === "list") {
-            $(".new-server-container #cores-grid").show();
             $(".new-server-container #cores-versions-parent").show();
-            $(".new-server-container #core_upload").hide();
+            document.querySelector('#cores-grids').style.display = "block";
+            document.querySelector('#core_upload').style.display = "none";
         } else {
-            $(".new-server-container #cores-grid").hide();
             $(".new-server-container #cores-versions-parent").hide();
-            $(".new-server-container #core_upload").show();
+            document.querySelector('#cores-grids').style.display = "none";
+            document.querySelector('#core_upload').style.display = "block";
         }
         validateNewServerInputs();
     }
