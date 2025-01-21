@@ -277,10 +277,10 @@ function prepareServerCreation(){
         formData : {},
         fileName: "",
     }
+    const parsedsenddatamap = { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort }
     if($(".new-server-container #core-upload").css("display") === "none"){
         serverCore = currentSelectedCore;
         serverVersion = currentSelectedVersion;
-        const parsedsenddatamap = { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort }
         startServerCreation(parsedsenddatamap);
         parsedsenddata.serverCore = serverCore;
         parsedsenddata.serverVersion = serverVersion;
@@ -300,7 +300,6 @@ function prepareServerCreation(){
     }
 }
 function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
-    const { serverCore, serverVersion, startScript, javaVersion, serverPort } = parsedsenddatamap;
     const formData = new FormData();
     
     if (fileData instanceof File) {
