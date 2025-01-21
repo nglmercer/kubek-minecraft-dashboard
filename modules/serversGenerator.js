@@ -63,8 +63,19 @@ export async function prepareJavaForServer(javaVersion, cb) {
 
 // startJavaServerGeneration // GENERATE JAVA SERVER
 export async function startJavaServerGeneration(serverName, core, coreVersion, startParameters, javaExecutablePath, serverPort, cb) {
+    console.log("[DEBUG] Starting server generation with params:", {
+        serverName,
+        core,
+        coreVersion,
+        startParameters,
+        javaExecutablePath,
+        serverPort
+    });
+
     let coreDownloadURL = "";
     let coreFileName = core + "-" + coreVersion + ".jar";
+
+    console.log("[DEBUG] Core filename:", coreFileName);
 
     // Создаём задачу на создание сервера
     let creationTaskID = TASK_MANAGER.addNewTask({
@@ -75,10 +86,13 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
         startParameters: startParameters,
         javaExecutablePath: javaExecutablePath,
         currentStep: null
-    })
+    });
+
+    console.log("[DEBUG] Creation task ID:", creationTaskID);
 
     // Если сервер с таким названием уже существует - не продолжаем
     if (SERVERS_MANAGER.isServerExists(serverName)) {
+        console.log("[DEBUG] Server already exists:", serverName);
         cb(false);
         return false;
     }
@@ -86,11 +100,19 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
     if (javaExecutablePath !== false) {
         // Создаём весь путь для сервера
         let serverDirectoryPath = "./servers/" + serverName;
+        console.log("[DEBUG] Server directory path:", serverDirectoryPath);
+        
         fs.mkdirSync(serverDirectoryPath, {recursive: true});
+        
+        console.log("[DEBUG] Checking core path conditions:");
+        console.log("[DEBUG] core.match(/\\:\\/\\//gim):", core.match(/\:\/\//gim));
+        console.log("[DEBUG] Local core path:", "./servers/" + serverName + path.sep + core);
+        console.log("[DEBUG] fs.existsSync result:", fs.existsSync("./servers/" + serverName + path.sep + core));
 
         if (core.match(/\:\/\//gim) === null && fs.existsSync("./servers/" + serverName + path.sep + core)) {
-            // ЕСЛИ ЯДРО РАСПОЛОЖЕНО ЛОКАЛЬНО
+            console.log("[DEBUG] Using local core file");
             tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.COMPLETED;
+            
             // Добавляем новый сервер в конфиг
             serversConfig[serverName] = {
                 status: PREDEFINED.SERVER_STATUSES.STOPPED,
@@ -100,22 +122,43 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
                 minecraftType: "java",
                 stopCommand: "stop"
             };
-            // DEVELOPED by seeeroy
+
             CONFIGURATION.writeServersConfig(serversConfig);
             writeJavaStartFiles(serverName, core, startParameters, javaExecutablePath, serverPort);
             LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.serverCreatedSuccess}}", colors.cyan(serverName)));
             cb(true);
         } else {
-            // ЕСЛИ ЯДРО НУЖНО СКАЧИВАТЬ
+            console.log("[DEBUG] Attempting to download core");
+            console.log("[DEBUG] Core:", core);
+            console.log("[DEBUG] Core version:", coreVersion);
+
             tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.SEARCHING_CORE;
+            
             CORES_MANAGER.getCoreVersionURL(core, coreVersion, (url) => {
+                console.log("[DEBUG] Retrieved core URL:", url);
                 coreDownloadURL = url;
+                
+                if (!url) {
+                    console.error("[ERROR] Core URL is undefined");
+                    tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.FAILED;
+                    LOGGER.warning(MULTILANG.translateText(mainConfig.language, "{{console.coreDownloadFailed}}"));
+                    cb(false);
+                    return;
+                }
+
                 tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.CHECKING_JAVA;
-                // Скачиваем ядро для сервера
                 tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.DOWNLOADING_CORE;
+                
+                console.log("[DEBUG] Starting core download:");
+                console.log("[DEBUG] Download URL:", coreDownloadURL);
+                console.log("[DEBUG] Download path:", serverDirectoryPath + path.sep + coreFileName);
+
                 DOWNLOADS_MANAGER.addDownloadTask(coreDownloadURL, serverDirectoryPath + path.sep + coreFileName, (coreDlResult) => {
+                    console.log("[DEBUG] Download result:", coreDlResult);
+                    
                     if (coreDlResult === true) {
                         tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.COMPLETED;
+                        
                         // Добавляем новый сервер в конфиг
                         serversConfig[serverName] = {
                             status: PREDEFINED.SERVER_STATUSES.STOPPED,
@@ -125,6 +168,7 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
                             minecraftType: "java",
                             stopCommand: "stop"
                         };
+                        
                         CONFIGURATION.writeServersConfig(serversConfig);
                         writeJavaStartFiles(serverName, coreFileName, startParameters, javaExecutablePath, serverPort);
                         LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.serverCreatedSuccess}}", colors.cyan(serverName)));
