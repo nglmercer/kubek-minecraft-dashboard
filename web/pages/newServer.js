@@ -178,12 +178,16 @@ function refreshCoreVersionsList(cb = () => {
 
 // Вызвать диалог для выбора файла ядра
 function uploadCore() {
+    const server_core_input = document.querySelector('#server-core-input');
     $("#server-core-input").trigger("click");
     $("#server-core-input").off("change");
-    $("#server-core-input").on("change", () => {
-        console.log("core-upload", $("#server-core-input")[0].files[0].name);
-        $(".new-server-container #core-upload #uploaded-file-name").text($("#server-core-input")[0].files[0].name);
-        validateNewServerInputs();
+    server_core_input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            console.log("file", file);
+            $(".new-server-container #core-upload #uploaded-file-name").text(file.name);
+            validateNewServerInputs();
+        }
     });
 }
 
@@ -288,39 +292,92 @@ function prepareServerCreation(){
     } else {
         serverCore = $("#server-core-input")[0].files[0].name;
         serverVersion = serverCore;
-        let formData = new FormData($("#server-core-form")[0]);
+        let formData = new FormData(document.querySelector('#server-core-form'));
         parsedsenddata.serverCore = serverCore;
         parsedsenddata.serverVersion = serverVersion;
         parsedsenddata.formData = formData;
         const fileInput = document.querySelector('#server-core-input');
         parsedsenddata.fileName = fileInput.files[0].name;
-        sendServerData(serverName, fileInput.files[0], fileInput.files[0].name, parsedsenddatamap);
+        sendServerData(serverName, formData, fileInput.files[0].name, parsedsenddatamap);
         
         console.log("parsedsenddata", parsedsenddata);
     }
 }
+function checkFileDataType(fileData) {
+    if (fileData instanceof File) {
+        return 'FILE';
+    } else if (fileData instanceof FormData) {
+        return 'FORMDATA';
+    } else if (typeof fileData === 'string' && fileData.startsWith('data:')) {
+        return 'BASE64';
+    }
+    return 'OTHER';
+}
+
+// Función para obtener el archivo de FormData
+function getFileFromFormData(formData) {
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+            return value;
+        }
+    }
+    return null;
+}
+
+// Función modificada para manejar la subida de archivos
 function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
     const formData = new FormData();
+    const fileType = checkFileDataType(fileData);
     
-    if (fileData instanceof File) {
-        // Si ya es un archivo, usarlo directamente
-        formData.append('server-core-input', fileData);
-    } else if (typeof fileData === 'string' && fileData.startsWith('data:')) {
-        // Si es base64, convertirlo a archivo
-        const file = dataURLtoFile(fileData, fileName);
-        formData.append('server-core-input', file);
-    } else {
-        // Si es contenido binario/texto, crear nuevo archivo
-        const file = new File([fileData], fileName, {
-            type: 'application/octet-stream'
+    switch (fileType) {
+        case 'FILE':
+            formData.append('server-core-input', fileData);
+            break;
+            
+        case 'FORMDATA':
+            const file = getFileFromFormData(fileData);
+            if (file) {
+                formData.append('server-core-input', file);
+            } else {
+                console.error('No se encontró archivo en FormData');
+                return;
+            }
+            break;
+            
+        case 'BASE64':
+            const base64File = dataURLtoFile(fileData, fileName);
+            formData.append('server-core-input', base64File);
+            break;
+            
+        default:
+            try {
+                const binaryFile = new File([fileData], fileName, {
+                    type: 'application/octet-stream'
+                });
+                formData.append('server-core-input', binaryFile);
+            } catch (error) {
+                console.error('Error al procesar el archivo:', error);
+                return;
+            }
+    }
+
+    // Agregar datos adicionales si existen
+    if (parsedsenddatamap) {
+        Object.entries(parsedsenddatamap).forEach(([key, value]) => {
+            if (key !== 'formData' && value !== undefined) {
+                formData.append(key, value);
+            }
         });
-        formData.append('server-core-input', file);
     }
 
     return KubekRequests.post("/cores/" + serverName, () => {
-        startServerCreation(parsedsenddatamap);
+        if (parsedsenddatamap) {
+            console.log('Archivo subido exitosamente');
+           startServerCreation(parsedsenddatamap);
+        }
     }, formData);
 }
+
 
 function startServerCreation(parsedsenddatamap){
     const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = parsedsenddatamap;
