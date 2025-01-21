@@ -274,12 +274,14 @@ function prepareServerCreation(){
         startScript : startScript, //start script
         javaVersion : javaVersion,
         serverPort : serverPort,
-        formData : {}
+        formData : {},
+        fileName: "",
     }
     if($(".new-server-container #core-upload").css("display") === "none"){
         serverCore = currentSelectedCore;
         serverVersion = currentSelectedVersion;
-        startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
+        const parsedsenddatamap = { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort }
+        startServerCreation(parsedsenddatamap);
         parsedsenddata.serverCore = serverCore;
         parsedsenddata.serverVersion = serverVersion;
         console.log("parsedsenddata", parsedsenddata);
@@ -290,15 +292,42 @@ function prepareServerCreation(){
         parsedsenddata.serverCore = serverCore;
         parsedsenddata.serverVersion = serverVersion;
         parsedsenddata.formData = formData;
-        KubekRequests.post("/cores/" + serverName, () => {
-            startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
-        }, formData);
+        const fileInput = document.querySelector('#server-core-input');
+        parsedsenddata.fileName = fileInput.files[0].name;
+        sendServerData(serverName, fileInput.files[0], fileInput.files[0].name, parsedsenddatamap);
+        
         console.log("parsedsenddata", parsedsenddata);
     }
 }
+function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
+    const { serverCore, serverVersion, startScript, javaVersion, serverPort } = parsedsenddatamap;
+    const formData = new FormData();
+    
+    if (fileData instanceof File) {
+        // Si ya es un archivo, usarlo directamente
+        formData.append('server-core-input', fileData);
+    } else if (typeof fileData === 'string' && fileData.startsWith('data:')) {
+        // Si es base64, convertirlo a archivo
+        const file = dataURLtoFile(fileData, fileName);
+        formData.append('server-core-input', file);
+    } else {
+        // Si es contenido binario/texto, crear nuevo archivo
+        const file = new File([fileData], fileName, {
+            type: 'application/octet-stream'
+        });
+        formData.append('server-core-input', file);
+    }
 
-function startServerCreation(serverName, serverCore, serverVersion, startScript, javaVersion, serverPort){
-/*     KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
+    return KubekRequests.post("/cores/" + serverName, () => {
+        startServerCreation(parsedsenddatamap);
+    }, formData);
+}
+
+function startServerCreation(parsedsenddatamap){
+    const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = parsedsenddatamap;
+
+    console.log("startServerCreation", serverName, serverCore, serverVersion, startScript, javaVersion, serverPort);
+    KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
         $(".new-server-container #after-creation-text").text("{{newServerWizard.creationCompleted}}");
-    }); */
+    });
 }
