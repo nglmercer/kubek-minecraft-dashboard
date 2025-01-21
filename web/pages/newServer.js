@@ -302,7 +302,7 @@ function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
     return KubekRequests.post("/cores/" + serverName, () => {
         if (parsedsenddatamap) {
             console.log('Archivo subido exitosamente');
-            // startServerCreation(parsedsenddatamap);
+             startServerCreation(parsedsenddatamap);
         }
     }, formData);
 }

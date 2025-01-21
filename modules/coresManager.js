@@ -3,7 +3,7 @@ import * as CORES_URL_GEN from "./coresURLGenerator.js";
 export const getCoreVersions = (core, cb) => {
     if (typeof PREDEFINED.SERVER_CORES[core] !== "undefined") {
         let coreItem = PREDEFINED.SERVER_CORES[core];
-        if (!coreItem || !coreItem.name || !coreItem.versionsMethod) {
+        if (!coreItem) {
             cb(false);
             console.log("coreItem false", coreItem);
             return;
@@ -37,7 +37,7 @@ export const getCoreVersions = (core, cb) => {
 export const getCoreVersionURL = (core, version, cb) => {
     if (typeof PREDEFINED.SERVER_CORES[core] !== "undefined" && version !== "undefined") {
         let coreItem = PREDEFINED.SERVER_CORES[core];
-        if (!coreItem || !coreItem.name || !coreItem.versionsMethod) {
+        if (!coreItem) {
             cb(false);
             console.log("coreItem false", coreItem);
             return;
