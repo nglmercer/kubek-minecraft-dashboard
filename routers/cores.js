@@ -41,18 +41,29 @@ function initializeWebServer() {
         let q = req.params;
         let sourceFile;
     
-        // Check if files exist in request
-        if (!req.files || Object.keys(req.files).length === 0) {
-            return res.status(400).send("No files were uploaded.");
-        }
-    
-        // Instead of looking for "server-core-input", look for "serverCore"
-        // since that's what we named it in the FormData
-        sourceFile = req.files["serverCore"];
-        
-        if (!sourceFile || !sourceFile.name) {
-            console.log("No files were uploaded.", sourceFile);
-            return res.status(400).send("No files were uploaded.");
+        // Revisar si hay archivos en el request tradicional
+        if (req.files && Object.keys(req.files).length > 0) {
+            sourceFile = req.files["server-core-input"];
+        } 
+        // Revisar si hay datos en el body que necesiten ser convertidos a archivo
+        else if (req.body && req.body.fileData) {
+            // Si los datos vienen en base64
+            if (req.body.fileData.startsWith('data:')) {
+                const base64Data = req.body.fileData.split(';base64,').pop();
+                sourceFile = {
+                    name: req.body.fileName,
+                    data: Buffer.from(base64Data, 'base64')
+                };
+            } 
+            // Si los datos vienen en otro formato
+            else {
+                sourceFile = {
+                    name: req.body.fileName,
+                    data: Buffer.from(req.body.fileData)
+                };
+            }
+        } else {
+            return res.status(400).send("No file data provided");
         }
     
         COMMONS.moveUploadedFile(q.server, sourceFile, "/" + sourceFile.name, (result) => {

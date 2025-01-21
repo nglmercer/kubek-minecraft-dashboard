@@ -218,7 +218,8 @@ function prepareServerCreation(){
 /*         KubekRequests.post("/cores/" + serverName, () => {
             startServerCreation(mapedserverdata);
         }, fileUpload.getSelectfile().formData); */
-        uploadfiles(fileUpload.getSelectfile().formData,serverName);
+        //uploadfiles(fileUpload.getSelectfile().formData,serverName);
+        sendServerData(serverName,)
         return;
     } else {
         console.log("validateNewServerInputs", validateNewServerInputs(), mapedserverdata);
@@ -243,23 +244,8 @@ async function uploadfiles(formData, serverName){
         console.log("data", data);
     }, formData);
 }
-/*     try {
-        const response = await fetch(`/your-upload-endpoint/${serverId}`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('Upload successful:', result);
-    } catch (error) {
-        console.error('Error uploading file:', error);
-    }
-} */
-function startServerCreation(mapedserverdata, type = "uploadfile"){
+
+function startServerCreation(mapedserverdata){
     const { serverName, serverCore, serverVersion, startScript, javaVersion, serverPort } = mapedserverdata;
     KubekRequests.get("/servers/new?server=" + serverName + "&core=" + serverCore + "&coreVersion=" + serverVersion + "&startParameters=" + startScript + "&javaVersion=" + javaVersion + "&port=" + serverPort, () => {
         document.querySelector(".new-server-container #after-creation-text").textContent = "{{newServerWizard.creationCompleted}}";
@@ -271,6 +257,70 @@ fileUpload.addEventListener('file-upload', (e) => {
     console.log("detail", detail);
     const fileselected = fileUpload.getSelectfile();
     console.log("fileselected", fileselected);
-/*     const formData = detail.formData;
-    KubekRequests.post("/cores/" + serverName, detail.parsedsenddata.serverCore, formData); */
+    const serverName = document.querySelector('#server_name_input').getInputValues();
+    sendServerData(serverName, fileselected.formData, fileselected.fileName, null);
+    console.log(checkFileDataType(fileselected.formData),"checkFileDataType");
 });
+
+function sendServerData(serverName, fileData, fileName, parsedsenddatamap) {
+    const formData = new FormData();
+    const fileType = checkFileDataType(fileData);
+    
+    switch (fileType) {
+        case 'FILE':
+            formData.append('server-core-input', fileData);
+            break;
+            
+        case 'FORMDATA':
+            const file = getFileFromFormData(fileData);
+            if (file) {
+                formData.append('server-core-input', file);
+            } else {
+                console.error('No se encontró archivo en FormData');
+                return;
+            }
+            break;
+            
+        case 'BASE64':
+            const base64File = dataURLtoFile(fileData, fileName);
+            formData.append('server-core-input', base64File);
+            break;
+            
+        default:
+            try {
+                const binaryFile = new File([fileData], fileName, {
+                    type: 'application/octet-stream'
+                });
+                formData.append('server-core-input', binaryFile);
+            } catch (error) {
+                console.error('Error al procesar el archivo:', error);
+                return;
+            }
+    }
+
+
+    return KubekRequests.post("/cores/" + serverName, () => {
+        if (parsedsenddatamap) {
+            console.log('Archivo subido exitosamente');
+            // startServerCreation(parsedsenddatamap);
+        }
+    }, formData);
+}
+function checkFileDataType(fileData) {
+    if (fileData instanceof File) {
+        return 'FILE';
+    } else if (fileData instanceof FormData) {
+        return 'FORMDATA';
+    } else if (typeof fileData === 'string' && fileData.startsWith('data:')) {
+        return 'BASE64';
+    }
+    return 'OTHER';
+}
+function getFileFromFormData(formData) {
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+            return value;
+        }
+    }
+    return null;
+}
