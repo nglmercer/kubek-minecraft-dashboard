@@ -9,7 +9,40 @@ const NOTIFY_MODAL_TEMPLATE = `
         </div>
     </div>
 `;
+//3
+const getNotify_modal_template = (parseddata) =>  {
+    const {id,icon,caption,description,buttonText,additionalElements} = parseddata;
+    const modal = document.createElement('div');
+    modal.className = "notify-modal modal-bg";
+    modal.id = id;
 
+    const notify_window = document.createElement('div');
+    notify_window.className = "notify-window";
+
+    const notify_icon = document.createElement('div');
+    notify_icon.className = "notify-icon";
+    notify_icon.innerHTML = icon;
+
+    const notify_caption = document.createElement('div');
+    notify_caption.className = "notify-caption";
+    notify_caption.innerHTML = caption;
+
+    const notify_description = document.createElement('div');
+    notify_description.className = "notify-description";
+    notify_description.innerHTML = description;
+
+    const cmbtn = document.createElement('button');
+    cmbtn.id = `${id}`;
+    cmbtn.className = "primary-btn";
+    cmbtn.innerHTML = buttonText;
+    notify_window.appendChild(notify_icon);
+    notify_window.appendChild(notify_caption);
+    notify_window.appendChild(notify_description);
+    notify_window.appendChild(cmbtn);
+    notify_window.appendChild(additionalElements);
+    modal.appendChild(notify_window);
+    return modal;
+}
 class KubekNotifyModal {
     /**
      * Crear una ventana modal de notificación
@@ -27,32 +60,31 @@ class KubekNotifyModal {
 
         const randomID = `notify-${Math.floor(Math.random() * 991) + 10}`;
         const iconElement = `<span class='material-symbols-rounded'>${icon}</span>`;
-
-        // Crear el contenido del modal
-        const modalHTML = NOTIFY_MODAL_TEMPLATE
-            .replace("{id}", randomID)
-            .replace("{icon}", iconElement)
-            .replace("{caption}", caption)
-            .replace("{description}", text)
-            .replace("{buttonText}", buttonText)
-            .replace("{additionalElements}", additionalElements);
-
+        const parseddata = {
+            id: randomID,
+            icon: iconElement,
+            caption: caption,
+            description: text,
+            buttonText: buttonText,
+            additionalElements: additionalElements,
+        }
+        const modalHTML = getNotify_modal_template(parseddata);
         // Insertar el modal en el body
         const modalElement = document.createElement("div");
         modalElement.innerHTML = modalHTML;
         document.body.appendChild(modalElement.firstElementChild);
-
-        // Configurar el evento del botón principal
-        const button = document.getElementById(`cmbtn-${randomID}`);
+        const button = document.getElementById(`${id}`);
+        console.log("button",button);
         if (button) {
-            button.addEventListener("click", () => {
-                this.animateCSS(`#${randomID}`, "fadeOut").then(() => {
-                    const modal = document.getElementById(randomID);
+/*             button.addEventListener("click", () => {
+                console.log("button",button);
+                animateCSS(`#${id}`, "fadeOut").then(() => {
+                    const modal = document.getElementById(id);
                     if (modal) modal.remove();
                 });
                 if (blurScreen) blurScreen.style.display = "none";
-                cb();
-            });
+                cb(); 
+            }) */
         }
     }
 

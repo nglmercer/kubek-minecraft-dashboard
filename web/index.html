@@ -118,18 +118,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
             KubekServers.getServersList((servers) => {
                 if (servers.length === 0) {
-                    if (act !== "newServer" && act !== "console") {
+                    console.log("servers","loadServersList if",servers);
+                    
+                    if (act !== "newServer") {
                         KubekPageManager.gotoPage("welcome");
                     } else {
                         KubekPageManager.gotoPage("newServer");
                     }
-                    document.querySelector("#main-menu-sidebar").style.display = "none";
-                    document.querySelectorAll("#servers-list-sidebar .sidebar-item:not(.server-item)").forEach(item => {
-                        item.classList.add("animate__animated", "animate__headShake");
-                        item.style.animationIterationCount = "infinite";
-                    });
-                    document.querySelector(".content-header").style.display = "none";
                 } else {
+                    console.log("servers","loadServersList if else",servers);
                     // Проверим существование сервера
                     if (act !== null) {
                         console.log("[UI]", "act is not null, trying to load", act);
