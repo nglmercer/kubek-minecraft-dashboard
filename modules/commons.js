@@ -4,16 +4,23 @@ import axios from "axios";
 import path from "path";
 
 export const detectUserLocale = () => {
+    // Idiomas soportados por la aplicación
+    const supportedLocales = ["ru", "nl", "en", "es"];
+
+    // Detectar el idioma del usuario
     let userLocale = Intl.DateTimeFormat()
         .resolvedOptions()
         .locale.toString()
-        .split("-")[0];
-    if (userLocale !== "ru" && userLocale !== "nl") {
-        userLocale = "en";
-    }
-    return userLocale.toLowerCase();
-};
+        .split("-")[0]
+        .toLowerCase();
 
+    // Verificar si el idioma detectado está soportado
+    if (!supportedLocales.includes(userLocale)) {
+        userLocale = "en"; // Idioma predeterminado
+    }
+
+    return userLocale;
+};
 export const makeBaseDirs = () => {
     PREDEFINED.BASE_DIRS.forEach(function (dir) {
         if (!fs.existsSync("./" + dir)) {
@@ -73,5 +80,60 @@ export const testForRegexArray = (text, regexArray) => {
     });
     return testResult;
 };
+export const downloadFileFromUrl = (server, url, filePath, cb) => {
+    try {
+        // Validación de parámetros
+        if (!isObjectsValid(server, url, filePath)) {
+            return cb(false, "Parámetros inválidos");
+        }
 
+        // Validación de URL
+        if (!isValidUrl(url)) {
+            return cb(false, "URL inválida");
+        }
+
+        // Construir ruta completa
+        const uploadPath = path.join("./servers", server, filePath);
+
+        // Crear directorio si no existe
+        fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+
+        // Descargar archivo
+        axios({
+            method: "get",
+            url: url,
+            responseType: "stream"
+        })
+        .then(response => {
+            const writer = fs.createWriteStream(uploadPath);
+            response.data.pipe(writer);
+
+            writer.on("finish", () => cb(true));
+            writer.on("error", err => {
+                fs.unlink(uploadPath, () => cb(false, err.message));
+            });
+        })
+        .catch(error => {
+            cb(false, error.message);
+        });
+
+    } catch (error) {
+        cb(false, error.message);
+    }
+};
+export const isValidUrl = (url) => {
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+        return false;
+    }
+};
+export const getSafeFilename = (url) => {
+    const parsed = new URL(url);
+    return parsed.pathname
+        .split("/")
+        .pop()
+        .replace(/[^a-z0-9\.]/gi, "_");
+};
 // DEVELOPED by seeeroy

@@ -56,5 +56,27 @@ router.delete("/:server", WEBSERVER.serversRouterMiddleware, function (req, res)
     }
     res.sendStatus(400);
 });
+// En el router de mods
+router.post("/:server/from-url", WEBSERVER.serversRouterMiddleware, (req, res) => {
+    const { server } = req.params;
+    const { url } = req.body;
+
+    // Validación básica
+    if (!COMMONS.isObjectsValid(server, url)) {
+        return res.status(400).send("Parámetros inválidos");
+    }
+
+    // Descargar y mover el archivo
+    COMMONS.downloadFileFromUrl(
+        server,
+        url,
+        "/mods/" +COMMONS.getSafeFilename(url),
+        (result, error) => {
+            if (result === true) return res.send(true);
+            console.error(error);
+            res.status(500).send(error || "Error al descargar el mod");
+        }
+    );
+});
 }
 export { router, initializeWebServer };
