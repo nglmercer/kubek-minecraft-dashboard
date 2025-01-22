@@ -263,7 +263,7 @@ KubekSettingsUI = class {
             allelements.htmlinputs.forEach(element => {
               const htmlelement = document.querySelector(`#${element}`);
               // data.permissions is array of strings
-              console.log("htmlelement", htmlelement, element);
+            //console.log("htmlelement", htmlelement, element);
               if (!data || !htmlelement) return;
               if (element === "login_username") {
                 htmlelement.setInputValues(data.username);
@@ -287,7 +287,7 @@ KubekSettingsUI = class {
               });
             });
 
-            const custom_dialog = document.querySelector('custom-dialog');
+            const custom_dialog = document.querySelector('#userModal_dialog');
             custom_dialog.options = [
               {
                 label: "{{commons.save}}",
@@ -471,7 +471,6 @@ async function getparsedtranslations(element,subelement, lang = "en") {
   const translationsraw = await localStorage.getItem("rawlanguages");
   let alltranslations = [];
   for (const [key, value] of Object.entries(JSON.parse(translationsraw))) {
-      console.log("key", key, value);
       const langmaped = {
           lang: value.info.code,
           code: value.info.code,

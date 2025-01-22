@@ -1206,7 +1206,7 @@ class CustomDialog extends HTMLElement {
                 } else {
                   form.classList.remove('invalid');
                 }
-                console.log("form_validity", form_validity);
+            //console.log("form_validity", form_validity);
               });
             }
 
@@ -1223,7 +1223,7 @@ class CustomDialog extends HTMLElement {
                 } else {
                   isValid = true;
                 }
-                console.log("form_validity", form_validity);
+             // console.log("form_validity", form_validity);
               });
             }
             return isValid;
