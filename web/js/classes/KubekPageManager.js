@@ -42,7 +42,8 @@ class KubekPageManager {
 
                     // Load the page itself
                     contentPlace.insertAdjacentHTML('beforeend', result);
-                    document.getElementById('content-preloader').remove();
+                    const content_preloader = document.getElementById('content-preloader');
+                    if (content_preloader) content_preloader.remove();
                 }, 100);
             })
             .catch(error => {

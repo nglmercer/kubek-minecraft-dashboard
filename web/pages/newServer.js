@@ -1,4 +1,5 @@
-// Regular expression for validating server names (1-20 alphanumeric, hyphen, underscore)
+function initializenewServer() {
+    // Regular expression for validating server names (1-20 alphanumeric, hyphen, underscore)
 const SERVER_NAME_REGEXP = /^[a-zA-Z0-9\-_]{1,20}$/;
 
 // Aikar's recommended JVM flags for Minecraft servers
@@ -231,3 +232,5 @@ function sendServerData(serverName, fileData, fileName, serverData) {
         if (serverData) startServerCreation(serverData, response.sourceFile);
     }, formData);
 }
+}
+initializenewServer();

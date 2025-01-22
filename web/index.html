@@ -131,20 +131,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.querySelector(".content-header").style.display = "none";
                 } else {
                     // Проверим существование сервера
+                    if (act !== null) {
+                        console.log("[UI]", "act is not null, trying to load", act);
+                        KubekPageManager.gotoPage(act);
+                        return;
+                    } else {
+                        console.log("[UI]", "act is null, loading console", act);
+                        KubekPageManager.gotoPage("console");
+                    }
                     KubekServers.getServersList((serversList) => {
+                        if (!serversList || !selectedServer) return;
                         if (!serversList.includes(selectedServer)) {
                             window.localStorage.selectedServer = serversList[0];
                             window.location.reload();
                         }
                     });
                     // Ищем act и загружаем страницу
-                    if (act !== null && localStorage.getItem("active-page") !== act && act !== "console") {
-                        console.log("[UI]", "act is not null, trying to load", act);
-                        KubekPageManager.gotoPage(act);
-                    } else {
-                        console.log("[UI]", "act is null, loading console", act);
-                        KubekPageManager.gotoPage("console");
-                    }
+
                 }
             });
 
