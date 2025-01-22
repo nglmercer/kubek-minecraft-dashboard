@@ -77,71 +77,13 @@
   <!-- Кнопка сохранения -->
   <button class="primary-btn" onclick="KubekServerSettingsUI.writeSettings()">{{commons.save}}</button>
   <dialog-container id="deletedialog" style="border-radius: 16px;">
-    <custom-dialog style="background-color: #151e27; border-radius: 16px;"
+    <custom-dialog id="deletedialog_content" style="background-color: #151e27; border-radius: 16px;"
     title="nombre del servidor" 
     description="desea borrar este servidor"
     theme="dark">
   </custom-dialog>
   </dialog-container>
   <script>
-    async function getelementStore(element) {
-      try {
-        const result = await localStorage.getItem(element);
-        return JSON.parse(result);
-        console.log("element", element,JSON.parse(result));
-      } catch (error) {
-        return false;
-      }
-      return JSON.parse(localStorage.getItem(element));
-    }
-    async function getTranslatestore(lang = "en") {
-      let objfind = [];
-      const datarray = await getelementStore("rawlanguages");
-      console.log("datarray", datarray, lang);
-      if (!datarray) return [];
-      for (const [key, value] of Object.entries(datarray)) {
-        if (value.translations && value.info){
-          console.log("value.translations", value,lang);
-          if (value.info.code === lang){
-            objfind = value.translations;
-            break;
-          }
-        }
-      }
-      if (objfind.length <= 0 && datarray.length > 0) {
-        objfind = datarray[0].translations;
-      }
-      return objfind;
-    }
-    var deleteServerDialog = document.querySelector('#deletedialog');
-    var deleteServerBtn = document.querySelector('#deleteServerBtn');
 
-    deleteServerBtn.addEventListener('click', ()=>deleteServerDialog.show());
-    async function translatedialog(){
-      const translations = await getTranslatestore(localStorage.getItem("userlang"));
-      console.log("translations", translations["serverSettings"]);
-      const dialogcontent = document.querySelector('custom-dialog');
-      dialogcontent._title = localStorage.getItem("selectedServer");
-      dialogcontent._description = translations["serverSettings"].deleteServer;
-      dialogcontent.options = [
-        {
-          label: translations.commons.delete,
-          class: "delete-btn",
-          callback: () => {
-            deleteServerDialog.hide();
-            //KubekRequests.delete("/servers/" + selectedServer, () => {});
-          }
-        },
-        {
-          label: translations.commons.cancel,
-          class: "cancel-btn",
-          callback: () => {
-            deleteServerDialog.hide();
-          }
-        }
-        
-      ];
-    }
-    translatedialog();
   </script>
 </div>
