@@ -226,7 +226,7 @@ KubekSettingsUI = class {
     // Открыть редактор в режиме создания нового пользователя
     static showNewUserEditor = () => {
         this.resetUserEditorValues();
-        const custom_dialog = document.querySelector('custom-dialog');
+        const custom_dialog = document.querySelector('#userModal_dialog');
         custom_dialog.options = [
           {
               label: "{{commons.save}}",
