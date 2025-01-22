@@ -143,19 +143,8 @@
 </style>
 
 <script>
-    function uploadServerIcon() {
-        let inputElement = $("#server-icon-input");
-        inputElement.trigger("click");
-        inputElement.off("change");
-        inputElement.on("change", () => {
-            let formData = new FormData($("#server-icon-form")[0]);
-            KubekRequests.post("/servers/" + selectedServer + "/icon", () => {
-                KubekServerHeaderUI.loadServerByName(selectedServer, () => {
-                    KubekUI.loadServersList();
-                })
-            }, formData);
-        });
-    }
+    console.log("uploadServerIcon");
+
 
     //popup.show();
 </script>

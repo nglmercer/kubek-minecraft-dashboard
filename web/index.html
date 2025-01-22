@@ -187,7 +187,34 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem("rawlanguages", JSON.stringify(langs));
     });
 });
-
+function uploadServerIcon() {
+    // Obtener el elemento input
+    const inputElement = document.getElementById('server-icon-input');
+    
+    // Simular click en el input para abrir el selector de archivos
+    inputElement.click();
+    
+    // Remover event listeners previos para evitar duplicados
+    inputElement.removeEventListener('change', handleFileChange);
+    
+    // Agregar nuevo event listener
+    inputElement.addEventListener('change', handleFileChange);
+    
+    // Función para manejar el cambio de archivo
+    function handleFileChange() {
+        // Crear FormData a partir del formulario
+        const formElement = document.getElementById('server-icon-form');
+        const formData = new FormData(formElement);
+        
+        // Realizar la petición POST
+        KubekRequests.post(`/servers/${selectedServer}/icon`, () => {
+            // Recargar la UI después de subir el ícono
+            KubekServerHeaderUI.loadServerByName(selectedServer, () => {
+                KubekUI.loadServersList();
+            });
+        }, formData);
+    }
+}
 </script>
 
 <style>

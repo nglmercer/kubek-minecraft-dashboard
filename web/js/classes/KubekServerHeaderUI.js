@@ -78,7 +78,7 @@ class KubekServerHeaderUI {
             case KubekPredefined.SERVER_STATUSES.RUNNING:
                 statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
                 document.querySelector('.content-header #server-restart-btn').style.display = 'block';
-                document.querySelector('.content-header #server-stop-btn').style.display = 'block';
+                document.querySelector('.content-header #server-stop-btn').style.display = 'flex';
                 moreButton.style.display = 'block';
                 break;
 
