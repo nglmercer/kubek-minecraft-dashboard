@@ -170,7 +170,7 @@ async function getelementStore(element) {
         class: "delete-btn",
         callback: () => {
           deleteServerDialog.hide();
-          //KubekRequests.delete("/servers/" + selectedServer, () => {});
+          KubekRequests.delete("/servers/" + selectedServer, () => {});
         }
       },
       {
