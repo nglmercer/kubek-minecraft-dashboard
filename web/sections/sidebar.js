@@ -47,7 +47,11 @@ document.addEventListener("DOMContentLoaded", () => {
         //window.localStorage.selectedServer = `test1231`; window.location.reload()
           console.log('Changing to server:', event.detail);
           window.localStorage.selectedServer = event.detail.server;
-          window.location.reload();
+          if (window.location.search.includes("newServer")) {
+            KubekPageManager.gotoPage("console");
+          } else {
+            window.location.reload();
+          }
         });
     }, 555);
 });

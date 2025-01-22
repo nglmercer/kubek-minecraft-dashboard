@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (act !== null) {
                         console.log("[UI]", "act is not null, trying to load", act);
                         KubekPageManager.gotoPage(act);
-                        return;
+                        if (!selectedServer) return;
                     } else {
                         console.log("[UI]", "act is null, loading console", act);
                         KubekPageManager.gotoPage("console");

@@ -1,45 +1,54 @@
+var globalvars = {
+    SERVER_NAME_REGEXP: /^[a-zA-Z0-9\-_]{1,20}$/,
+    AIKAR_FLAGS : "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20",
+    currentSelectedCore: "",
+    currentSelectedVersion: "",
+    allServersList: [],
+    initialized: false
+}
+/**    // Regular expression for validating server names (1-20 alphanumeric, hyphen, underscore)
+    const SERVER_NAME_REGEXP = /^[a-zA-Z0-9\-_]{1,20}$/;
+
+    // Aikar's recommended JVM flags for Minecraft servers
+    const AIKAR_FLAGS = "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20";
+
+    // Global state variables
+    let currentSelectedCore = "";
+    let globalvars.currentSelectedVersion = "";
+    let allServersList = []; */
 function initializenewServer() {
-    // Regular expression for validating server names (1-20 alphanumeric, hyphen, underscore)
-const SERVER_NAME_REGEXP = /^[a-zA-Z0-9\-_]{1,20}$/;
+    initialized = true;
 
-// Aikar's recommended JVM flags for Minecraft servers
-const AIKAR_FLAGS = "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20";
-
-// Global state variables
-let currentSelectedCore = "";
-let currentSelectedVersion = "";
-let allServersList = [];
-
-// Core category selection handler
-document.querySelectorAll(".new-server-container #core-category .item").forEach(element => {
-    element.addEventListener("click", function() {
-        if (!this.classList.contains("active")) {
-            // Remove active class from all items
-            document.querySelectorAll(".new-server-container #core-category .item.active").forEach(activeElement => {
-                activeElement.classList.remove("active");
-            });
-            
-            this.classList.add("active");
-            const isList = this.dataset.item === "list";
-            
-            // Toggle visibility of core selection sections
-            document.querySelector(".new-server-container #cores-versions-parent").style.display = 
-                isList ? "block" : "none";
-            document.querySelector("#cores-grids").style.display = 
-                isList ? "block" : "none";
-            document.querySelector("#core_upload").style.display = 
-                isList ? "none" : "block";
-            
-            validateNewServerInputs();
-        }
+    // Core category selection handler
+    document.querySelectorAll(".new-server-container #core-category .item").forEach(element => {
+        element.addEventListener("click", function() {
+            if (!this.classList.contains("active")) {
+                // Remove active class from all items
+                document.querySelectorAll(".new-server-container #core-category .item.active").forEach(activeElement => {
+                    activeElement.classList.remove("active");
+                });
+                
+                this.classList.add("active");
+                const isList = this.dataset.item === "list";
+                
+                // Toggle visibility of core selection sections
+                document.querySelector(".new-server-container #cores-versions-parent").style.display = 
+                    isList ? "block" : "none";
+                document.querySelector("#cores-grids").style.display = 
+                    isList ? "block" : "none";
+                document.querySelector("#core_upload").style.display = 
+                    isList ? "none" : "block";
+                
+                validateNewServerInputs();
+            }
+        });
     });
-});
 
     KubekUI.setTitle("Kubek | {{commons.create}} {{commons.server.lowerCase}}");
 
     // Populate server list
     document.querySelectorAll("#servers-list-sidebar .sidebar-item span:last-child").forEach(element => {
-        allServersList.push(element.textContent);
+    globalvars.allServersList.push(element.textContent);
     });
 
     // Initial data loading
@@ -65,6 +74,20 @@ document.querySelectorAll(".new-server-container #core-category .item").forEach(
         validateNewServerInputs();
     });
 
+// Handle file uploads
+document.querySelector('#core_upload').addEventListener('file-upload', e => {
+    const { formData, fileName } = e.detail;
+    sendServerData(
+        document.querySelector('#server_name_input').getInputValues(),
+        formData,
+        fileName,
+        null
+    );
+});
+
+
+}
+if (!globalvars.initialized) initializenewServer();
 // Validate form inputs
 function validateNewServerInputs() {
     const inputs = {
@@ -85,8 +108,8 @@ function validateNewServerInputs() {
 
 // Refresh list of available server cores
 function refreshServerCoresList(cb = () => {}) {
-    currentSelectedCore = "";
-    currentSelectedVersion = "";
+    globalvars.currentSelectedCore = "";
+    globalvars.currentSelectedVersion = "";
     
     KubekCoresManager.getList(cores => {
         const coresGrid = document.querySelector('#cores-grids');
@@ -98,7 +121,7 @@ function refreshServerCoresList(cb = () => {}) {
 
         coresGrid.data = coreEntries;
         coresGrid.addEventListener('change', e => {
-            currentSelectedCore = e.detail.selected;
+            globalvars.currentSelectedCore = e.detail.selected;
             refreshCoreVersionsList(() => {
                 validateNewServerInputs();
                 KubekUI.hidePreloader();
@@ -112,9 +135,9 @@ function refreshServerCoresList(cb = () => {}) {
 
 // Refresh versions for selected core
 function refreshCoreVersionsList(cb = () => {}) {
-    currentSelectedVersion = "";
+    globalvars.currentSelectedVersion = "";
     
-    KubekCoresManager.getCoreVersions(currentSelectedCore, versions => {
+    KubekCoresManager.getCoreVersions(globalvars.currentSelectedCore, versions => {
         if (!versions) return cb(false);
         
         const versionSelect = document.querySelector('#customselect_versions');
@@ -157,7 +180,7 @@ function refreshJavaList(cb) {
 function generateNewServerStart() {
     let command = `-Xmx${document.querySelector('#server-mem').value * 1024}M`;
     if (document.querySelector('#add-aikar-flags').checked) {
-        command += ` ${encodeURIComponent(AIKAR_FLAGS)}`;
+        command += ` ${encodeURIComponent(globalvars.AIKAR_FLAGS)}`;
     }
     return command;
 }
@@ -173,7 +196,7 @@ function prepareServerCreation() {
         serverName: document.querySelector('#server_name_input').getInputValues(),
         memory: document.querySelector('#server-mem').value,
         port: document.querySelector('#server-port').value,
-        core: currentSelectedCore,
+        core: globalvars.currentSelectedCore,
         version: document.querySelector('#customselect_versions').getValue(),
         java: document.querySelector('#javas_list').getValue(),
         startScript: generateNewServerStart(),
@@ -200,17 +223,6 @@ function startServerCreation({ serverName, core, version, startScript, java, por
     });
 }
 
-// Handle file uploads
-document.querySelector('#core_upload').addEventListener('file-upload', e => {
-    const { formData, fileName } = e.detail;
-    sendServerData(
-        document.querySelector('#server_name_input').getInputValues(),
-        formData,
-        fileName,
-        null
-    );
-});
-
 // Send server data to backend
 function sendServerData(serverName, fileData, fileName, serverData) {
     const formData = new FormData();
@@ -232,5 +244,3 @@ function sendServerData(serverName, fileData, fileName, serverData) {
         if (serverData) startServerCreation(serverData, response.sourceFile);
     }, formData);
 }
-}
-initializenewServer();
