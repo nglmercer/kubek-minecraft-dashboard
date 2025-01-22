@@ -45,6 +45,7 @@ router.get("/version", function (req, res) {
 
 // Endpoint для получения настроек Kubek
 router.get("/settings", function (req, res) {
+    console.log("settings /kubek/settings",mainConfig); 
     res.send(mainConfig);
 });
 
@@ -66,7 +67,9 @@ router.put("/settings", function (req, res) {
 
 // Endpoint для соглашения с EULA
 router.get("/eula/accept", function (req, res) {
+    console.log("eula accept", mainConfig.eulaAccepted);
     mainConfig.eulaAccepted = true;
+    console.log("eula accept", mainConfig.eulaAccepted);
     CONFIGURATION.writeMainConfig(mainConfig);
     CONFIGURATION.reloadAllConfigurations();
     res.send(true);

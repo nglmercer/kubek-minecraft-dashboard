@@ -42,7 +42,7 @@
 <script>
     setTimeout(() => {
         const acceptEulaBtn = document.getElementById("accept-eula-btn");
-
+        console.log("acceptEulaBtn",acceptEulaBtn);
     if (acceptEulaBtn) {
         acceptEulaBtn.addEventListener("click", function () {
             KubekRequests.get("/kubek/eula/accept", function () {

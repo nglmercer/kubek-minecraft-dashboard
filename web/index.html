@@ -58,7 +58,20 @@
 
 </head>
 
+<dialog-container
+ id="Eula_dialog_container" 
+ required="true"
+>
+    <custom-dialog id="Eula_dialog" 
+    title=""
+    description="{{commons.eula}}"
+    style=" max-width: 500px; color: white;"
+    theme="dark"
+    >
+    </custom-dialog>
+</dialog-container>
 <body>
+
 <div class="main-layout">
     <div id="content-place" class="content"></div>
 </div>
@@ -78,22 +91,34 @@
 <div class="uiPool bottom right" id="tasks-pool"></div>
 
 
+
 </body>
 <script>
-    console.log("[UI] Starting Kubek UI...");
+    const Eula_dialog = document.querySelector("#Eula_dialog");
+    Eula_dialog.options = [
+        {
+            label: "{{commons.iAccept}}",
+            class: "save-btn",
+            callback: () => {
+                console.log("accept");
+                KubekRequests.get("/kubek/eula/accept", function () {
+                    window.location.reload();
+                });
+            }
+        }
+        ];	
+console.log("[UI] Starting Kubek UI...");
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 let act = urlParams.get("act");
 let selectedServer = "";
 let consoleRamUsageBar, consoleCpuUsageBar;
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () { 
     KubekRequests.get("/kubek/settings", (settings) => {
+        console.log("settings /kubek/settings",settings);
         if (settings.eulaAccepted === false) {
-            KubekUI.loadSection("eula", "body", () => {
-                document.querySelector(".eulaModal").style.display = "block";
-                document.querySelector(".blurScreen").style.display = "block";
-            });
+            document.querySelector("#Eula_dialog_container").show();
         }
     });
 
@@ -119,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
             KubekServers.getServersList((servers) => {
                 if (servers.length === 0) {
                     console.log("servers","loadServersList if",servers);
-                    
+                    document.querySelector(".content-header").style.display = "none";
                     if (act !== "newServer") {
                         KubekPageManager.gotoPage("welcome");
                     } else {

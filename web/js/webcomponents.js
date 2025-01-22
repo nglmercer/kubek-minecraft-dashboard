@@ -468,6 +468,7 @@ class CustomDialog extends HTMLElement {
           background-color: inherit;
           background: inherit;
           color: inherit;
+          max-width: inherit;
         }
   
         .container {
@@ -503,6 +504,9 @@ class CustomDialog extends HTMLElement {
           color: inherit;
           opacity: 0.8;
           margin-bottom: 1.5rem;
+          max-height: 500px;
+          text-wrap: wrap;
+          overflow-y: auto;
         }
   
         .options {
@@ -561,7 +565,7 @@ class CustomDialog extends HTMLElement {
         </style>
         <div class="container ${this._theme}">
           <h2 class="title">${this._title}</h2>
-          <p class="description">${this._description}</p>
+          <pre class="description">${this._description}</pre>
           <div class="options">
             ${this._options.map((option, index) => `
               <button data-index="${index}" style="${option.style || ''}" class="${option.class || ''}">${option.label}</button>
@@ -598,7 +602,7 @@ class CustomDialog extends HTMLElement {
     }
   
     static get observedAttributes() {
-      return ['visible'];
+      return ['visible','required'];
     }
   
     attributeChangedCallback(name, oldValue, newValue) {
@@ -731,7 +735,7 @@ class CustomDialog extends HTMLElement {
       // Agregar evento para cerrar al hacer clic fuera
       const overlay = this.shadowRoot.querySelector('.dialog-overlay');
       overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
+        if (e.target === overlay && !this.hasAttribute('required')) {
           this.hide();
         }
       });
