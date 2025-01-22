@@ -59,10 +59,10 @@ class KubekPluginsUI {
       }, formData);
     });
   }
-}
-/* KubekPluginsUI.downloadAndUploadFromURL("plugin","https://github.com/minekube/connect-java/releases/download/latest/connect-spigot.jar");
- */// Clase principal para gestionar el estado de plugins y mods
- 
+} 
+//KubekPluginsUI.downloadAndUploadFromURL("plugin","https://github.com/minekube/connect-java/releases/download/latest/connect-spigot.jar");
+ /// Clase principal para gestionar el estado de plugins y mods
+
 class PluginsAndModsManager {
   constructor() {
     this._state = {

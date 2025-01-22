@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<style>
+  body {
+    background-color: black;
+    color: white;
+  }
+</style>
+<body theme="dark">
+  
+</body>
+  <script>
+    const base = "https://api.modrinth.com/v2/project/";
+    const searchBase = "https://api.modrinth.com/v2/search";
+    const projectBase = "https://api.modrinth.com/v2/project/";
+
+//getDownloads("geyser", "1.20.1", "fabric"); // Cambia la versión y loader según sea necesario
+
+async function getDownloads(slug, version, loader) {
+  try {
+    // Fetch the project versions
+    const response = await fetch(`${base}${slug}/version`);
+    if (!response.ok) {
+      console.error(`HTTP error! Status: ${response.status}`);
+      return;
+    }
+
+    const versions = await response.json();
+
+    // Filtrar por versión y loader
+    const filteredVersion = versions.find(v => 
+      v.game_versions.includes(version) && 
+      v.loaders.includes(loader)
+    );
+
+    if (!filteredVersion) {
+      console.log(`No se encontraron versiones para ${version} con loader ${loader}.`);
+      return;
+    }
+
+    // Mostrar enlaces de descarga
+    const downloadLinks = filteredVersion.files.map(file => file.url);
+    console.log("Enlaces de descarga:", downloadLinks, filteredVersion, versions);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+}
+  
+
+
+searchAndFetchDetails("geyser"); // Cambia "geyser" por tu término de búsqueda
+
+async function searchAndFetchDetails(query) {
+  try {
+    // Realizar la búsqueda por query
+    const searchResponse = await fetch(`${searchBase}?query=${query}`);
+    if (!searchResponse.ok) {
+      console.error(`HTTP error! Status: ${searchResponse.status}`);
+      return;
+    }
+
+    const searchResults = await searchResponse.json();
+
+    // Si no hay resultados
+    if (searchResults.hits.length === 0) {
+      console.log(`No se encontraron proyectos para la búsqueda: ${query}`);
+      return;
+    }
+
+    const projectDetails = await Promise.all(
+      searchResults.hits.map(async (project) => {
+        const projectSlug = project.slug;
+
+        // Obtener las versiones del proyecto
+        const versionResponse = await fetch(`${projectBase}${projectSlug}/version`);
+        if (!versionResponse.ok) {
+          console.error(`Error al obtener versiones para el slug ${projectSlug}`);
+          return null;
+        }
+
+        const versions = await versionResponse.json();
+
+        // Extraer las versiones y loaders
+        const versionData = versions.map((v) => ({
+          version: v.version_number,
+          loaders: v.loaders,
+        }));
+
+        return {
+          slug: projectSlug,
+          name: project.title,
+          versions: versionData,
+        };
+      })
+    );
+
+    // Filtrar resultados nulos (en caso de fallos al obtener las versiones)
+    const filteredDetails = projectDetails.filter((detail) => detail !== null);
+
+    // Mostrar el resultado final
+    console.log("Detalles de los proyectos:", filteredDetails);
+  } catch (error) {
+    console.error("Error buscando proyectos o obteniendo datos:", error);
+  }
+}
+
+searchAndFiltersearchs("geyser", "paper"); // Cambia "geyser" por tu término de búsqueda y "paper" por el loader deseado
+
+async function searchAndFiltersearchs(query, loader) {
+  try {
+    // Realizar la búsqueda por query
+    const searchResponse = await fetch(`${searchBase}?query=${query}`);
+    if (!searchResponse.ok) {
+      console.error(`HTTP error! Status: ${searchResponse.status}`);
+      return;
+    }
+
+    const searchResults = await searchResponse.json();
+
+    // Si no hay resultados
+    if (searchResults.hits.length === 0) {
+      console.log(`No se encontraron proyectos para la búsqueda: ${query}`);
+      return;
+    }
+
+    const projectDetails = await Promise.all(
+      searchResults.hits.map(async (project) => {
+        const projectSlug = project.slug;
+
+        // Obtener las versiones del proyecto
+        const versionResponse = await fetch(`${projectBase}${projectSlug}/version`);
+        if (!versionResponse.ok) {
+          console.error(`Error al obtener versiones para el slug ${projectSlug}`);
+          return null;
+        }
+
+        const versions = await versionResponse.json();
+
+        // Filtrar por loader específico
+        const filteredVersions = versions
+          .filter((v) => v.loaders.includes(loader)) // Filtrar por loader
+          .map((v) => ({
+            version: v.version_number,
+            loaders: v.loaders,
+          }));
+
+        // Si no hay versiones con el loader especificado, no incluir el proyecto
+        if (filteredVersions.length === 0) return null;
+
+        return {
+          slug: projectSlug,
+          name: project.title,
+          versions: filteredVersions,
+        };
+      })
+    );
+
+    // Filtrar resultados nulos (en caso de fallos o proyectos sin versiones con el loader especificado)
+    const filteredDetails = projectDetails.filter((detail) => detail !== null);
+
+    // Mostrar el resultado final
+    console.log("Detalles de los proyectos:", filteredDetails);
+  } catch (error) {
+    console.error("Error buscando proyectos o obteniendo datos:", error);
+  }
+}
+
+  </script>
+<!-- <script type="module">
+  // Función para detectar el idioma del usuario (puedes personalizarla)
+const detectUserLocale = () => {
+  return navigator.language || 'en'; // Devuelve el idioma del navegador o 'en' por defecto
+};
+
+// Función para validar URLs
+const isValidUrl = (url) => {
+  try {
+    new URL(url);
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+// Función para obtener datos de la API
+const getDataByURL = async (url, headers) => {
+  try {
+    const response = await fetch(url, { headers });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return null;
+  }
+};
+
+// Función principal para obtener mods o plugins
+export const getAvailableItems = async (type, cb) => {
+  const locale = detectUserLocale();
+  const userAgent = 'TuApp/1.0.0 android (Android 12; SDK 30; x86_64; en_US; Google Pixel 4)';
+
+  // Define el tipo de proyecto (mod o plugin)
+  const projectType = type === 'mods' ? 'mod' : 'plugin';
+
+  // URL de la API de Modrinth con filtro por tipo de proyecto
+  const apiUrl = `https://api.modrinth.com/v2/search?facets=[["project_type:${projectType}"]]&index=updated&limit=100`;
+
+  // Obtener datos de la API
+  const data = await getDataByURL(apiUrl, { 'User-Agent': userAgent });
+
+  if (!data || !Array.isArray(data.hits)) {
+    return cb([]); // Si no hay datos, devuelve un array vacío
+  }
+
+  // Mapear los datos según el tipo
+      const items = data.hits.map((item) => ({
+      name: item.title,
+      version: item.latest_version,
+      author: item.owner?.username || 'Unknown',
+      url: `https://modrinth.com/${projectType}/${item.slug}`, // URL directa al proyecto
+      compatibleVersions: item.game_versions,
+      supportedVersions: item.loaders,
+      downloads: item.downloads, // Número de descargas :cite[9]
+      description: item.description // Descripción del proyecto
+    }));
+
+  // Llamar al callback con los datos procesados
+  cb(items);
+};
+
+// Ejemplo de uso:
+// Obtener mods
+getAvailableItems('mods', (mods) => {
+  console.log('Mods disponibles:', mods);
+});
+
+// Obtener plugins
+getAvailableItems('plugins', (plugins) => {
+  console.log('Plugins disponibles:', plugins);
+});
+</script> -->
+</html>
