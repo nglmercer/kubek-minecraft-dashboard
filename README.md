@@ -71,27 +71,6 @@ docker run -d --name kubek --network host \
 			-v /YOUR_DIRECTORY/config.json:/usr/kubek/config.json \
 			seeroy/kubek-minecraft-dashboard
 ```
-
-## add new webcomponent extend html
-
-methods:
-- getStyles()
-- getinputvalues()
-- setInputValues()
-- resetInputValues()
-- connectedCallback()
-input atribute:
-- type: number, text || string, checkbox || switch || boolean
-- id: unique id
-- name: unique name
-- value: default value
-- placeholder: placeholder
-- disabled: disabled
-- readonly: readonly
-custom elements:
-- textarea and split lines with \n (for multiline) return array
-
-
 ## Use termux (Android)
 
 1. Install termux
