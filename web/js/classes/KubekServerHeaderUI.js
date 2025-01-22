@@ -83,7 +83,7 @@ class KubekServerHeaderUI {
                 break;
 
             case KubekPredefined.SERVER_STATUSES.STOPPED:
-                document.querySelector('.content-header #server-start-btn').style.display = 'block';
+                document.querySelector('.content-header #server-start-btn').style.display = 'flex';
                 statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
                 break;
         }

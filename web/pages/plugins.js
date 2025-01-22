@@ -12,8 +12,39 @@ const ITEM_TYPES = {
   MODS: 'mods'
 };
 
-// Clase para manejar la subida de archivos
 class KubekPluginsUI {
+  /**
+   * Descarga un archivo desde una URL y lo sube al servidor.
+   * @param {string} itemType - Tipo de archivo (plugin o mod).
+   * @param {string} fileUrl - URL del archivo a descargar.
+   */
+  static async downloadAndUploadFromURL(itemType, fileUrl) {
+    const uploadURL = `/${itemType}s/${selectedServer}/from-url`;
+
+    try {
+        // Validar la URL
+        if (!fileUrl || !fileUrl.startsWith("http")) {
+            throw new Error("URL inválida");
+        }
+
+        // Enviar la URL al servidor para que descargue el archivo
+        KubekRequests.post(uploadURL, (response) => {
+            if (response === true) {
+                console.log("Archivo descargado y subido correctamente");
+                pluginsAndModsController.refresh(itemType); // Actualizar la lista de plugins/mods
+            } else {
+                console.error("Error en el servidor:", response);
+                KubekAlerts.addAlert("Error en el servidor", "error", response, 5000);
+            }
+        }, { url: fileUrl }); // Enviar la URL en el cuerpo de la solicitud
+
+    } catch (error) {
+        console.error("Error en downloadAndUploadFromURL:", error.message);
+        KubekAlerts.addAlert("Error al descargar/subir el archivo", "error", error.message, 5000);
+    }
+}
+
+  // Método existente para subir archivos locales
   static uploadItem(itemType) {
     const baseelement = `#server-${itemType}`;
     const inputElement = document.querySelector(`${baseelement}-input`);
@@ -24,13 +55,14 @@ class KubekPluginsUI {
       const formData = new FormData(document.querySelector(`${baseelement}-form`));
       KubekRequests.post(uploadURL, () => {
         pluginsAndModsController.refresh(itemType);
-        console.log('Upload completed:', { uploadURL, selectedServer, formData });
+        console.log("Upload completed:", { uploadURL, selectedServer, formData });
       }, formData);
     });
   }
 }
-
-// Clase principal para gestionar el estado de plugins y mods
+/* KubekPluginsUI.downloadAndUploadFromURL("plugin","https://github.com/minekube/connect-java/releases/download/latest/connect-spigot.jar");
+ */// Clase principal para gestionar el estado de plugins y mods
+ 
 class PluginsAndModsManager {
   constructor() {
     this._state = {

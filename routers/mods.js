@@ -65,7 +65,7 @@ router.post("/:server/from-url", WEBSERVER.serversRouterMiddleware, (req, res) =
     if (!COMMONS.isObjectsValid(server, url)) {
         return res.status(400).send("Parámetros inválidos");
     }
-
+    console.log("url mod", url);
     // Descargar y mover el archivo
     COMMONS.downloadFileFromUrl(
         server,

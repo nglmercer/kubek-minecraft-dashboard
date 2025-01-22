@@ -36,7 +36,38 @@ class KubekRequests {
                 cb(false, error.message, error);
             });
     };
-
+/*     static makeAjaxRequestA = (url, type, data = "", apiEndpoint = true, cb = () => {}) => {
+        if (apiEndpoint) {
+            url = KubekPredefined.API_ENDPOINT + url;
+        }
+    
+        const options = {
+            method: type.toString().toUpperCase(),
+            headers: {
+                'Content-Type': 'application/json' // <--- Siempre enviar como JSON
+            }
+        };
+    
+        if (data !== "") {
+            options.body = JSON.stringify(data); // <--- Serializar el objeto
+        }
+    
+        fetch(url, options)
+            .then(async (response) => {
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        KubekAlerts.addAlert("{{commons.failedToRequest}}", "warning", "{{commons.maybeUDoesntHaveAccess}}", 5000);
+                    }
+                    cb(false, response.statusText, await response.text());
+                } else {
+                    const responseData = await response.json();
+                    cb(responseData);
+                }
+            })
+            .catch((error) => {
+                cb(false, error.message, error);
+            });
+    }; */
     // Función para cada tipo de solicitud
     static get = (url, cb, apiEndpoint = true) => {
         this.makeAjaxRequest(url, "GET", "", apiEndpoint, cb);

@@ -75,23 +75,6 @@ function initializeWebServer() {
             res.sendStatus(400);
         });
     });
-    router.post("/:server/from-url", WEBSERVER.serversRouterMiddleware, (req, res) => {
-        const { server } = req.params;
-        const { url } = req.body;
-    
-        COMMONS.downloadFileFromUrl(
-            server,
-            url,
-            "/plugins/" + COMMONS.getSafeFilename(url),
-            (result, error) => {
-                if (result === true) return res.send(true);
-                console.error(error);
-                res.status(500).send(error || "Error al descargar el plugin");
-            }
-        );
-    });
-    
-
 }
 
 export { router, initializeWebServer };

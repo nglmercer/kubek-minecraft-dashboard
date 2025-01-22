@@ -122,6 +122,10 @@ export const downloadFileFromUrl = (server, url, filePath, cb) => {
     }
 };
 export const isValidUrl = (url) => {
+    if (!url || typeof url !== "string") {
+        console.warn("isValidUrl: Invalid URL:", url);
+        return false;
+    }
     try {
         const parsed = new URL(url);
         return parsed.protocol === "http:" || parsed.protocol === "https:";
@@ -130,6 +134,10 @@ export const isValidUrl = (url) => {
     }
 };
 export const getSafeFilename = (url) => {
+    if (!url || typeof url !== "string") {
+        console.warn("isValidUrl: Invalid URL:", url);
+        return false;
+    }
     const parsed = new URL(url);
     return parsed.pathname
         .split("/")

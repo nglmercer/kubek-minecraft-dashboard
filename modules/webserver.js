@@ -33,6 +33,8 @@ import * as updatesRouter from "./../routers/updates.js";
 let webServer = express();
 globalThis.webPagesPermissions = {};
 webServer.use(cookieParser());
+webServer.use(express.json());
+webServer.use(express.urlencoded({ extended: true }));
 webServer.use(
     fileUpload({
         useTempFiles: true,
