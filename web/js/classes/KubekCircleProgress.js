@@ -1,4 +1,4 @@
-class KubekCircleProgress {
+/* class KubekCircleProgress {
     // Конструктор
     constructor(el, value, radius, centerColor, bgColor, activeColor, text = "") {
         this.value = value;
@@ -76,7 +76,7 @@ class KubekCircleProgress {
     static generateGradient(centerColor, bgColor, activeColor, value) {
         return 'radial-gradient(closest-side, ' + centerColor + ' 79%, transparent 80% 100%), conic-gradient(' + activeColor + ' ' + value + '%, ' + bgColor + ' 0)'
     }
-}
+} */
 class KubekCircleProgress1 extends HTMLElement {
     // Constructor
     constructor() {

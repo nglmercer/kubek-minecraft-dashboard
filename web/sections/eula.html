@@ -40,11 +40,15 @@
 </style>
 
 <script>
-    $(function(){
-        $("#accept-eula-btn").on("click", () => {
-           KubekRequests.get("/kubek/eula/accept", () => {
+    setTimeout(() => {
+        const acceptEulaBtn = document.getElementById("accept-eula-btn");
+
+    if (acceptEulaBtn) {
+        acceptEulaBtn.addEventListener("click", function () {
+            KubekRequests.get("/kubek/eula/accept", function () {
                 window.location.reload();
-           })
+            });
         });
-    })
+    }
+    }, 500);
 </script>

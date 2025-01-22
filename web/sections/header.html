@@ -15,39 +15,50 @@
 </div>
 
 <script>
-    // next update webcomponent reemplace KubekUI.toggleSidebar() 
-    $(function () {
-
+    setTimeout(() => {
         // Получаем статус авторизации
-        KubekRequests.get("/auth/isEnabled", (isAuthEnabled) => {
+        KubekRequests.get("/auth/isEnabled", function (isAuthEnabled) {
+            const accountElement = document.querySelector(".header .account");
+
             if (isAuthEnabled === false) {
                 // Если выключена - скрываем item аккаунта
-                $(".header .account").hide();
+                if (accountElement) {
+                    accountElement.style.display = "none";
+                }
             } else {
                 // Если включена - загружаем логин
-                KubekRequests.get("/auth/login", (myLogin) => {
-                    $(".header .account .login").text(myLogin);
+                KubekRequests.get("/auth/login", function (myLogin) {
+                    const loginElement = document.querySelector(".header .account .login");
+                    if (loginElement) {
+                        loginElement.textContent = myLogin;
+                    }
                 });
             }
-        })
-
-        $("#main-header .account").on("click", (e) => {
-            // Выход из аккаунта
-            openAccountDropdown(e);
         });
-    });
 
-    function openAccountDropdown(e){
-        let accountDrpData = [{
-            "icon": "logout",
-            "text": "{{commons.logout}}",
-            "data": "logout"
-        }]
-        KubekDropdowns.addDropdown(accountDrpData, e.clientX, e.clientY, 5, (clickResult) => {
-            if(clickResult === "logout"){
-                KubekRequests.get("/auth/logout", () => {
-                   console.log("User logged out!");
-                   window.location = "/login.html";
+        // Добавляем обработчик клика для аккаунта
+        const accountElement = document.querySelector("#main-header .account");
+        if (accountElement) {
+            accountElement.addEventListener("click", function (e) {
+                openAccountDropdown(e);
+            });
+        }
+    }, 500);
+
+    function openAccountDropdown(e) {
+        const accountDrpData = [
+            {
+                icon: "logout",
+                text: "{{commons.logout}}",
+                data: "logout",
+            },
+        ];
+
+        KubekDropdowns.addDropdown(accountDrpData, e.clientX, e.clientY, 5, function (clickResult) {
+            if (clickResult === "logout") {
+                KubekRequests.get("/auth/logout", function () {
+                    console.log("User logged out!");
+                    window.location = "/login.html";
                 });
             }
         });
