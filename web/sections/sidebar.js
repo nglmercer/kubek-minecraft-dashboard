@@ -24,7 +24,14 @@ document.addEventListener("DOMContentLoaded", () => {
           KubekUI.changeItemByPage(detail.page);
           KubekPageManager.gotoPage(detail.page);
         });
-      
+        setTimeout(() => {
+          if (window.location.search.includes("act")) {
+            sidebar.setActiveElement(window.location.search.split("act=")[1]);
+          } else 
+          if (window.localStorage.selectedServer) {
+            sidebar.setActiveElement(window.localStorage.selectedServer);
+          }
+        }, 555);
         sidebar.addEventListener('new-server', () => {
           console.log('Creating new server');
           // Add your new server logic here
@@ -42,5 +49,5 @@ document.addEventListener("DOMContentLoaded", () => {
           window.localStorage.selectedServer = event.detail.server;
           window.location.reload();
         });
-    }, 444);
+    }, 555);
 });

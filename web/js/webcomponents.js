@@ -3105,7 +3105,12 @@ class SidebarComponent extends HTMLElement {
         .material-symbols-rounded {
           font-size: 1.5rem;
         }
-
+        .selected,
+        .active {
+          background: var(--active-bg, #4a90e2);
+          color: white;
+          cursor: default;
+        }
         .icon-circle-bg {
           display: flex;
           align-items: center;
@@ -3207,7 +3212,12 @@ class SidebarComponent extends HTMLElement {
     this.shadowRoot.querySelectorAll('.sidebar-item.active, .server-item.active').forEach(item => {
       item.classList.remove('active');
     });
-
+    if (!activeElement) return;
+    const newServerBtn = this.shadowRoot.querySelector('#new-server-btn');
+    if (activeElement.includes("newServer")) {
+      newServerBtn.classList.add('selected');
+      return;
+    }
     // Buscar y marcar el elemento activo en los sidebarItems
     const sidebarItem = this.shadowRoot.querySelector(`.sidebar-item[data-page="${activeElement}"]`);
     if (sidebarItem) {
@@ -3232,7 +3242,7 @@ class SidebarComponent extends HTMLElement {
 
   createServerItem(server) {
     return `
-      <div class="server-item" data-server="${server.id}">
+      <div class="server-item" data-server="${server.title}">
         <div class="icon-circle-bg">
           <img src="${server.icon}" alt="${server.title}">
         </div>
@@ -3257,7 +3267,6 @@ class SidebarComponent extends HTMLElement {
         this.handleServerItemClick(item);
       }
     });
-
     this.shadowRoot.getElementById('close-btn').addEventListener('click', () => this.toggleSidebar(false));
   }
 
@@ -3276,7 +3285,7 @@ class SidebarComponent extends HTMLElement {
   }
 
   handleServerItemClick(item) {
-    const server = this.serverlist.find(s => s.id === item.dataset.server);
+    const server = item.dataset.server
     if (server) {
       this.dispatchEvent(new CustomEvent('server-change', {
         detail: { server },

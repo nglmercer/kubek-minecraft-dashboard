@@ -84,11 +84,10 @@ class KubekUI {
     }
 
     static loadServersList() {
-        const sidebar = document.querySelector("#servers-list-sidebar");
-        if (sidebar) {
-            sidebar.querySelectorAll(".server-item").forEach(item => item.remove());
             KubekServers.getServersList(servers => {
                 const allserver = [];
+                if (!servers) return;
+                console.log("servers getServersList", servers);
                 servers.forEach(serverItem => {
                     const sidebar = document.querySelector('sidebar-menu');
                     const parsedserver = {
@@ -114,7 +113,7 @@ class KubekUI {
                     sidebar.appendChild(serverElement);
                 });
             });
-        }
+        
     }
 
     static connectionLost() {

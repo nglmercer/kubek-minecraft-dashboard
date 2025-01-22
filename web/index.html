@@ -106,7 +106,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
-
+    setTimeout(() => {
+        console.log("servers","loadServersList");
+        KubekUI.loadServersList();
+    }, 1000);
     // Загружаем все секции
     KubekUI.loadSection("content-header", ".main-layout", () => {
         KubekUI.loadSelectedServer();
