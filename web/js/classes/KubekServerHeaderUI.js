@@ -60,6 +60,8 @@ class KubekServerHeaderUI {
         WebDebugger.toggleLogs(false);
         // Hide all conditional elements
         const headerElements = document.querySelectorAll('.content-header .hide-on-change');
+        const actionButtons = document.querySelector('action-buttons');
+        actionButtons.hideAllButtons();
         headerElements.forEach(element => element.style.display = 'none');
         
         const moreButton = document.querySelector('.content-header #server-more-btn');
@@ -71,10 +73,15 @@ class KubekServerHeaderUI {
             case KubekPredefined.SERVER_STATUSES.STOPPING:
                 statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
                 moreButton.style.display = 'block';
+                actionButtons.showButton('more-server-actions');
                 break;
 
             case KubekPredefined.SERVER_STATUSES.RUNNING:
                 statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+                actionButtons.hideButton('start-server');
+                actionButtons.showButton('restart-server');
+                actionButtons.showButton('stop-server');
+                actionButtons.showButton('more-server-actions');
                 document.querySelector('.content-header #server-restart-btn').style.display = 'block';
                 document.querySelector('.content-header #server-stop-btn').style.display = 'flex';
                 moreButton.style.display = 'block';

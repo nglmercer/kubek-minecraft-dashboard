@@ -4028,6 +4028,16 @@ class ActionButtons extends HTMLElement {
     const btn = this.shadowRoot.getElementById(buttonId);
     if (btn) btn.disabled = false;
   }
+  hideAllButtons() {
+    const buttons = this.shadowRoot.querySelectorAll('button');
+    buttons.forEach(btn => btn.classList.add('hidden'));
+  }
+
+  showAllButtons() {
+    const buttons = this.shadowRoot.querySelectorAll('button');
+    buttons.forEach(btn => btn.classList.remove('hidden'));
+  }
+
 }
 
 customElements.define('action-buttons', ActionButtons);

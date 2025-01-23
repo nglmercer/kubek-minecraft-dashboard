@@ -78,23 +78,60 @@
     <div class="caption"></div>
     <status-element status="STOPPED"></status-element>
     <div class="actions">
-        <button class="dark-btn icon-only hide-on-change" id="server-start-btn"
-                onclick="KubekServers.startServer(selectedServer)">
-            <span class="material-symbols-rounded"> play_arrow </span>
-            <span>{{commons.start}}</span>
-        </button>
-        <button class="dark-btn icon-only hide-on-change" id="server-stop-btn"
-                onclick="KubekServers.stopServer(selectedServer)">
-            <span class="material-symbols-rounded"> stop </span>
-            <span>{{commons.stop}}</span>
-        </button>
-        <button class="dark-btn icon-only hide-on-change" id="server-restart-btn"
-                onclick="KubekServers.restartServer(selectedServer)">
-            <span class="material-symbols-rounded"> restart_alt </span>
-        </button>
-        <button class="dark-btn icon-only" id="server-more-btn">
-            <span class="material-symbols-rounded"> more_horiz </span>
-        </button>
+        <action-buttons></action-buttons>
+        <script>
+            const actionButtons = document.querySelector('action-buttons');
+            actionButtons.addButton({
+                id: 'start-server',
+                label: '{{commons.start}}',
+                icon: 'play_arrow',
+                action: 'start-server'
+            });
+            actionButtons.addButton({
+                id: 'stop-server',
+                label: '{{commons.stop}}',
+                icon: 'stop',
+                action: 'stop-server'
+            });
+            actionButtons.addButton({
+                id: 'restart-server',
+                label: '{{commons.restart}}',
+                icon: 'restart_alt',
+                iconOnly: true,
+                action: 'restart-server'
+            });
+            actionButtons.addButton({
+                id: 'kill-server',
+                label: '{{commons.kill}}',
+                icon: 'cancel',
+                action: 'kill-server'
+            });
+            actionButtons.addButton({
+                id: 'more-server-actions',
+                label: '{{commons.more}}',
+                icon: 'more_horiz',
+                iconOnly: true,
+                action: 'more-server-actions'   
+            });
+            actionButtons.hideButton('more-server-actions');
+            actionButtons.hideButton('kill-server');
+            actionButtons.hideButton('restart-server');
+            actionButtons.hideButton('stop-server');
+            actionButtons.addEventListener('button-clicked', (e) => {
+                console.log("button-clicked", e);
+                const {action, id} = e.detail;
+                if (action === 'start-server') {
+                    KubekServers.startServer(window.localStorage.selectedServer);
+                } else if (action === 'stop-server') {
+                    KubekServers.stopServer(window.localStorage.selectedServer);
+                } else if (action === 'restart-server') {
+                    KubekServers.restartServer(window.localStorage.selectedServer);
+                } else if (action === "more-server-actions") {
+                    
+                }
+
+            });
+        </script>
     </div>
 </div>
 <custom-popup id="server-popup" class="material-symbols-rounded">
@@ -259,40 +296,7 @@
                 </div>
             </div>
             <kubek-refresher id="kubekRefresher"></kubek-refresher>
-            <action-buttons></action-buttons>
-            <script>
-                const actionButtons = document.querySelector('action-buttons');
-                actionButtons.addButton({
-                    id: 'start-server',
-                    label: '{{commons.start}}',
-                    icon: 'play_arrow',
-                    action: 'start-server'
-                });
-                actionButtons.addButton({
-                    id: 'stop-server',
-                    label: '{{commons.stop}}',
-                    icon: 'stop',
-                    action: 'stop-server'
-                });
-                actionButtons.addButton({
-                    id: 'restart-server',
-                    label: '{{commons.restart}}',
-                    icon: 'restart_alt',
-                    action: 'restart-server'
-                });
-                actionButtons.addButton({
-                    id: 'kill-server',
-                    label: '{{commons.kill}}',
-                    icon: 'cancel',
-                    action: 'kill-server'
-                });
-                actionButtons.hideButton('kill-server');
-                actionButtons.hideButton('restart-server');
-                actionButtons.hideButton('stop-server');
-                actionButtons.addEventListener('button-clicked', (e) => {
-                    console.log("button-clicked", e);
-                });
-            </script>
+
         </div>
 
         </div>

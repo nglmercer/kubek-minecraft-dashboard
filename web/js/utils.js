@@ -587,33 +587,29 @@ var uiDebugger = DebuggerGroupManager.create('UI');
       currentServerStatus = status;
       WebDebugger.log("status", status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
       WebDebugger.toggleLogs(false);
-      // Hide all conditional elements
-      const headerElements = document.querySelectorAll('.content-header .hide-on-change');
-      headerElements.forEach(element => element.style.display = 'none');
-      
-      const moreButton = document.querySelector('.content-header #server-more-btn');
-      moreButton.style.display = 'none';
+      const actionButtons = document.querySelector('action-buttons');
+      actionButtons.hideAllButtons();
 
       // Show relevant buttons based on status
       switch (status) {
-          case KubekPredefined.SERVER_STATUSES.STARTING:
-          case KubekPredefined.SERVER_STATUSES.STOPPING:
-              statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-              moreButton.style.display = 'block';
-              break;
+        case KubekPredefined.SERVER_STATUSES.STARTING:
+        case KubekPredefined.SERVER_STATUSES.STOPPING:
+            statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+            actionButtons.showButton('more-server-actions');
+            break;
 
-          case KubekPredefined.SERVER_STATUSES.RUNNING:
-              statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-              document.querySelector('.content-header #server-restart-btn').style.display = 'block';
-              document.querySelector('.content-header #server-stop-btn').style.display = 'flex';
-              moreButton.style.display = 'block';
-              break;
+        case KubekPredefined.SERVER_STATUSES.RUNNING:
+            statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+            actionButtons.showButton('restart-server');
+            actionButtons.showButton('stop-server');
+            actionButtons.showButton('more-server-actions');
+            break;
 
-          case KubekPredefined.SERVER_STATUSES.STOPPED:
-              document.querySelector('.content-header #server-start-btn').style.display = 'flex';
-              statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
-              break;
-      }
+        case KubekPredefined.SERVER_STATUSES.STOPPED:
+            actionButtons.showButton('start-server');
+            statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+            break;
+    }
 
       return true;
   }
