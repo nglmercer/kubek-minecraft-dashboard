@@ -59,7 +59,6 @@ function initializenewServer() {
     });
 
     // Set default port
-    document.querySelector(".new-server-container #server-port").value = 25565;
 
     // Get and configure memory settings
     KubekRequests.get("/kubek/hardware/usage", usage => {
@@ -75,19 +74,9 @@ function initializenewServer() {
     });
 
 // Handle file uploads
-document.querySelector('#core_upload').addEventListener('file-upload', e => {
-    const { formData, fileName } = e.detail;
-    sendServerData(
-        document.querySelector('#server_name_input').getInputValues(),
-        formData,
-        fileName,
-        null
-    );
-});
 
 
 }
-if (!globalvars.initialized) initializenewServer();
 // Validate form inputs
 function validateNewServerInputs() {
     const inputs = {
@@ -244,3 +233,17 @@ function sendServerData(serverName, fileData, fileName, serverData) {
         if (serverData) startServerCreation(serverData, response.sourceFile);
     }, formData);
 }
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector("#server-port").value = 25565;
+    document.querySelector('#core_upload').addEventListener('file-upload', e => {
+        const { formData, fileName } = e.detail;
+        sendServerData(
+            document.querySelector('#server_name_input').getInputValues(),
+            formData,
+            fileName,
+            null
+        );
+    });
+    if (!globalvars.initialized) initializenewServer();
+
+});

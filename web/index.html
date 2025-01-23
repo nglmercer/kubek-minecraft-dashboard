@@ -1084,58 +1084,6 @@ function uploadServerIcon() {
 </style>
 
 <script>
-    //* Sidebar*/
-    document.addEventListener("DOMContentLoaded", () => {
-  console.log("sidebar", document.querySelector('sidebar-menu'));
-
-  setTimeout(() => {
-      /*       document.querySelector('#menu-btn').addEventListener('click', () => {
-        document.querySelector('sidebar-menu').toggleSidebar();
-        console.log("toggleSidebar", document.querySelector('sidebar-menu'));
-    }); */
-        const sidebarItems = document.querySelectorAll("#main-menu-sidebar .sidebar-item");
-
-        sidebarItems.forEach(item => {
-            item.addEventListener("click", () => {
-                console.log("click", item);
-                const page = item.getAttribute("data-page");
-                KubekUI.changeItemByPage(page);
-            });
-        });
-
-        const sidebar = document.querySelector('sidebar-menu');
-        sidebar.addEventListener('page-change', (event) => {
-          const detail = event.detail;
-          console.log('Changing to page:', detail.page);
-          KubekUI.changeItemByPage(detail.page);
-        });
-        setTimeout(() => {
-          if (window.location.search.includes("act")) {
-          } else 
-          if (window.localStorage.selectedServer) {
-          }
-        }, 555);
-        sidebar.addEventListener('new-server', () => {
-          console.log('Creating new server');
-          // Add your new server logic here
-          // href="/?act=newServer"
-          window.location = '/?act=newServer';
-        });
-      
-        sidebar.addEventListener('toggle-sidebar', () => {
-          console.log('Toggling sidebar');
-          // Add your sidebar toggle logic here
-        });
-        sidebar.addEventListener('server-change', (event) => {
-        //window.localStorage.selectedServer = `test1231`; window.location.reload()
-          console.log('Changing to server:', event.detail);
-          window.localStorage.selectedServer = event.detail.server;
-          if (window.location.search.includes("newServer")) {
-          } else {
-          }
-        });
-    }, 555);
-});
 function changeProgressvalue(element, value, action = "setvalue") {
     const cpuElem = document.getElementById("cpu-bar");
     const ramElem = document.getElementById("ram-bar");
@@ -1176,7 +1124,16 @@ KubekConsoleUI = class {
         KubekServers.sendCommandToServer(selectedServer, detail.command);
     });
 
-
+    const server_menu = document.querySelector('server-menu');
+    server_menu.addEventListener('server-change', (e) => {
+        console.log("server-change", e);
+    });
+    server_menu.addEventListener('new-server', (e) => {
+        console.log("new-server", e);
+        const url = new URL(window.location.href);
+        // redirect to new server 
+        window.location.href = url.origin + '/createserver.html';
+    });
 </script>
 <script src="pages/fileManager.js"></script>
 <script src="pages/serverSettings.js"></script>

@@ -694,13 +694,13 @@ class KubekUI {
                 console.log("servers getServersList", servers);
                 servers.forEach(serverItem => {
                     const sidebar = document.querySelector('server-menu');
-                    console.log("sidebar", sidebar);
                     const parsedserver = {
-                        title: serverItem,
-                        icon: `/api/servers/${serverItem}/icon`
+                      title: serverItem,
+                      icon: `/api/servers/${serverItem}/icon`
                     }
                     allserver.push(parsedserver);
                     sidebar.setServersList(allserver);
+                    console.log("sidebar", sidebar, parsedserver, allserver);
                     uiDebugger.log('loadServersList, getServersList',serverItem, servers);
                     const isActive = serverItem === localStorage.selectedServer ? " active" : "";
                     const serverElement = document.createElement("div");
@@ -849,8 +849,10 @@ class KubekRefresher {
         }, "tasksList");
     }
 }
-KubekRefresher.addRefreshServerLogInterval();
-KubekRefresher.addRefreshServerHeaderInterval();
-KubekRefresher.addRefreshUsageInterval();
-KubekRefresher.addRefreshTasksInterval();
-KubekUI.loadServersList();
+if (!window.location.href.includes("login")) {
+  KubekRefresher.addRefreshServerLogInterval();
+  KubekRefresher.addRefreshServerHeaderInterval();
+  KubekRefresher.addRefreshUsageInterval();
+  KubekRefresher.addRefreshTasksInterval();
+  KubekUI.loadServersList();
+}
