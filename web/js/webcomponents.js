@@ -3321,7 +3321,7 @@ class SidebarComponent extends HTMLElement {
 class CreateServer extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open', delegatesFocus: true });
     this.serverlist = [];
   }
 
@@ -3333,8 +3333,9 @@ class CreateServer extends HTMLElement {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
           --primary-color: #5865F2;
           --active-bg: #5865F2;
+          --hover-bg: inherit;
           --hover-bg: rgba(88, 101, 242, 0.1);
-          --text-color: #2e3338;
+          --text-color: inherit;
         }
 
         #servers-list-sidebar {
@@ -3439,7 +3440,7 @@ class CreateServer extends HTMLElement {
     return `
       <div class="sidebar-item" id="new-server-btn">
         <div class="icon-circle-bg">
-          <span class="material-symbols-rounded">add</span>
+          <span class="material-symbols-rounded">+</span>
         </div>
         <span>Create server</span>
       </div>

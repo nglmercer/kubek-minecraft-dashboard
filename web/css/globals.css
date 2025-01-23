@@ -19,7 +19,17 @@
 
   color: white;
 }
-
+.open-modal-btn {
+  background: var(--bg-primary-700);
+  border-radius: 4px;
+  padding: 8px;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.open-modal-btn:hover {
+  background: var(--bg-primary-900);
+}
 table * {
   border: none !important;
 }
