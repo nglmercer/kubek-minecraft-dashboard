@@ -272,12 +272,16 @@ class AppConfig {
         icon: returniconfont("area_chart", "systemMonitor", '')
     },
   }
+  static getslotcontent(tabname) {
+    return `<slot name="${tabname}-content">${this.PAGE_CONFIG[tabname].label}</slot>`;
+  }
   static slots = {
-    1: '<slot name="1-content">No content available for Dashboard</slot>',
-    2: '<slot name="2-content">No content available for Projects</slot>',
-    3: '<slot name="3-content">No content available for Messages</slot>',
-    4: '<slot name="4-content">No content available for Settings</slot>',
-    5: '<slot name="5-content">No content available for Login</slot>'
+    1: `<slot name="1-content">${this.getslotcontent(this.PAGES.tab1)}</slot>`,
+    2: `<slot name="2-content">${this.getslotcontent(this.PAGES.tab2)}</slot>`,
+    3: `<slot name="3-content">${this.getslotcontent(this.PAGES.tab3)}</slot>`,
+    4: `<slot name="4-content">${this.getslotcontent(this.PAGES.tab4)}</slot>`,
+    5: `<slot name="5-content">${this.getslotcontent(this.PAGES.tab5)}</slot>`,
+    6: `<slot name="6-content">${this.getslotcontent(this.PAGES.tab6)}</slot>`
   };
   static getSvgIcon(page) {
     return this.PAGE_CONFIG[page]?.icon || '';
