@@ -3911,3 +3911,123 @@ class KubekCircleProgress1 extends HTMLElement {
 
 // Definir el nuevo elemento personalizado
 customElements.define('kubek-circle-progress', KubekCircleProgress1);
+class ActionButtons extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.buttons = [];
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        .actions {
+          display: flex;
+          gap: 8px;
+          padding: 8px;
+        }
+        
+        .dark-btn {
+          background: #2d2d2d;
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: opacity 0.2s;
+        }
+        
+        .dark-btn:hover {
+          opacity: 0.8;
+        }
+        
+        .dark-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        
+        .icon-only {
+          padding: 8px;
+        }
+        
+        .material-symbols-rounded {
+          font-family: 'Material Symbols Rounded';
+          font-size: 20px;
+        }
+        
+        .hidden {
+          display: none !important;
+        }
+      </style>
+      <div class="actions">
+        ${this.buttons.map(btn => this.createButtonHTML(btn)).join('')}
+      </div>
+    `;
+
+    this.shadowRoot.querySelectorAll('button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        this.dispatchEvent(new CustomEvent('button-clicked', {
+          detail: {
+            id: button.id,
+            action: button.dataset.action
+          }
+        }));
+      });
+    });
+  }
+
+  createButtonHTML(button) {
+    return `
+      <button 
+        id="${button.id}"
+        class="dark-btn ${button.iconOnly ? 'icon-only' : ''}"
+        data-action="${button.action}"
+        ${button.disabled ? 'disabled' : ''}
+      >
+        <span class="material-symbols-rounded">${button.icon}</span>
+        ${button.iconOnly ? '' : `<span>${button.label}</span>`}
+      </button>
+    `;
+  }
+
+  addButton(config) {
+    this.buttons.push({
+      id: config.id,
+      label: config.label || '',
+      icon: config.icon,
+      iconOnly: config.iconOnly || false,
+      action: config.action || '',
+      disabled: config.disabled || false
+    });
+    this.render();
+  }
+
+  hideButton(buttonId) {
+    const btn = this.shadowRoot.getElementById(buttonId);
+    if (btn) btn.classList.add('hidden');
+  }
+
+  showButton(buttonId) {
+    const btn = this.shadowRoot.getElementById(buttonId);
+    if (btn) btn.classList.remove('hidden');
+  }
+
+  disableButton(buttonId) {
+    const btn = this.shadowRoot.getElementById(buttonId);
+    if (btn) btn.disabled = true;
+  }
+
+  enableButton(buttonId) {
+    const btn = this.shadowRoot.getElementById(buttonId);
+    if (btn) btn.disabled = false;
+  }
+}
+
+customElements.define('action-buttons', ActionButtons);

@@ -157,8 +157,9 @@
 
     .console-layout .settings .layout-accent-box {
         width: 40vw !important;
-        height: 200px !important;
         margin: 0 4px !important;
+        gap: 1em !important;
+        display: flex !important;
     }
 
     .console-layout .console,

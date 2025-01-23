@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="assets/fonts/Gilroy/stylesheet.css"/>
     <link rel="stylesheet" href="assets/fonts/RobotoMono/stylesheet.css"/>
     <link rel="stylesheet" href="assets/fonts/MSR/stylesheet.css"/>
+    <script src="js/classes/KubekFileManager.js"></script>
 
     <script src="js/classes/KubekRequests.js"></script>
     <!-- Scripts -->
@@ -42,7 +43,6 @@
     <script src="/sections/sidebar.js"></script>
     <script src="js/classes/KubekUI.js"></script>
     <script type="module" src="/initialize.js"></script>
-    <script src="js/classes/KubekFileManager.js"></script>
 
 </head>
 
@@ -259,7 +259,40 @@
                 </div>
             </div>
             <kubek-refresher id="kubekRefresher"></kubek-refresher>
-
+            <action-buttons></action-buttons>
+            <script>
+                const actionButtons = document.querySelector('action-buttons');
+                actionButtons.addButton({
+                    id: 'start-server',
+                    label: '{{commons.start}}',
+                    icon: 'play_arrow',
+                    action: 'start-server'
+                });
+                actionButtons.addButton({
+                    id: 'stop-server',
+                    label: '{{commons.stop}}',
+                    icon: 'stop',
+                    action: 'stop-server'
+                });
+                actionButtons.addButton({
+                    id: 'restart-server',
+                    label: '{{commons.restart}}',
+                    icon: 'restart_alt',
+                    action: 'restart-server'
+                });
+                actionButtons.addButton({
+                    id: 'kill-server',
+                    label: '{{commons.kill}}',
+                    icon: 'cancel',
+                    action: 'kill-server'
+                });
+                actionButtons.hideButton('kill-server');
+                actionButtons.hideButton('restart-server');
+                actionButtons.hideButton('stop-server');
+                actionButtons.addEventListener('button-clicked', (e) => {
+                    console.log("button-clicked", e);
+                });
+            </script>
         </div>
 
         </div>
