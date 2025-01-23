@@ -96,8 +96,8 @@ pkg update
 pkg upgrade
 pkg install git
 pkg install nodejs
-git clone https://github.com/nglmercer/kubek-minecraft-dashboard
-cd kubek-minecraft-dashboard
+git clone https://github.com/nglmercer/server-minecraft-dashboard
+cd server-minecraft-dashboard
 npm install
 npm run start
 ```
