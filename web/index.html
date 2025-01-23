@@ -101,12 +101,6 @@
                 action: 'restart-server'
             });
             actionButtons.addButton({
-                id: 'kill-server',
-                label: '{{commons.kill}}',
-                icon: 'cancel',
-                action: 'kill-server'
-            });
-            actionButtons.addButton({
                 id: 'more-server-actions',
                 label: '{{commons.more}}',
                 icon: 'more_horiz',
@@ -382,19 +376,59 @@
         <div class="fm-container animate__animated animate__fadeIn animate__faster">
             <h2 class="title">{{sections.fileManager}}</h2>
             <div class="actions">
-                <button class="dark-btn icon-only" id="fm-newfile" onclick="KubekFileManagerUI.openEmptyEditor()">
-                    <span class="material-symbols-rounded">add_circle</span>
-                    <span>{{commons.create}} {{commons.file.lowerCase}}</span>
-                </button>
-                <button class="dark-btn icon-only" onclick="KubekFileManagerUI.refreshDir()">
-                    <span class="material-symbols-rounded">refresh</span>
-                </button>
-                <button class="developed-by-seeeroy dark-btn icon-only" onclick="KubekFileManagerUI.newDirectory()">
-                    <span class="material-symbols-rounded"> create_new_folder </span>
-                </button>
-                <button class="dark-btn icon-only" onclick="KubekFileManagerUI.uploadFile()">
-                    <span class="material-symbols-rounded"> upload_file </span>
-                </button>
+                <action-buttons id="fm-actions"></action-buttons>
+                <script>
+
+                    const actionfmButtons = document.querySelector('#fm-actions');
+                    actionfmButtons.addButton({
+                        id: 'new-file',
+                        label: '{{commons.create}} {{commons.file.lowerCase}}',
+                        icon: 'add_circle',
+                        action: 'new-file'
+                    });
+                    actionfmButtons.addButton({
+                        id: 'upload-file',
+                        label: '{{commons.uploadFile}}',
+                        icon: 'upload_file',
+                        action: 'upload-file',
+                        iconOnly: true
+                    });
+                    actionfmButtons.addButton({
+                        id: 'new-folder',
+                        label: '{{commons.create}} {{commons.folder.lowerCase}}',
+                        icon: 'create_new_folder',
+                        action: 'new-folder',
+                        iconOnly: true
+                    });
+                    actionfmButtons.addButton({
+                        id: 'refresh-folder',
+                        label: '{{commons.refresh}}',
+                        icon: 'refresh',
+                        action: 'refresh-folder',
+                        iconOnly: true
+                    });
+                    actionfmButtons.addEventListener('button-clicked', (e) => {
+                        console.log("button-clicked", e);
+                        const {action, id} = e.detail;
+                        if (action === 'new-file') {
+                            KubekFileManagerUI.openEmptyEditor();
+                        } else if (action === 'upload-file') {
+                            KubekFileManagerUI.uploadFile();
+                        } else if (action === 'new-folder') {
+                            KubekFileManagerUI.newDirectory();
+                        } else if (action === 'refresh-folder') {
+                            KubekFileManagerUI.refreshDir();
+                        }
+                    });
+                    document.addEventListener('DOMContentLoaded', () => {
+                        KubekFileManagerUI.initaddeventlisteners();
+                    KubekFileManagerUI.refreshDir();
+                    // Event listener for code editing
+                    document.getElementById("code-edit").addEventListener("input", function() {
+                        KubekFileManagerUI.formatCode();
+                    });
+                    });
+                </script>
             </div>
             <div class="breadcrumb" id="fm-breadcrumb"></div>
             <div class="table-container table">
@@ -1051,7 +1085,11 @@
             <system-monitor></system-monitor>
           </div>
       </main-content>
+      <div id="alerts-pool">
+        <div class="alert"></div>
+      </div>
 </body>
+<kubek-alerts id="alerts_pool"></kubek-alerts>
 <script>
     const Eula_dialog = document.querySelector("#Eula_dialog");
     Eula_dialog.options = [

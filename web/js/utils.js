@@ -163,51 +163,8 @@ class DebuggerGroupManager {
 const TASK_ITEM_PLACEHOLDER = "<div class='alert' data-id='$0'><div class='$1'>$2</div><div class='content-2'><span class='caption'>$3</span><span class='description'>$4</span></div></div>";
 
 let isConnectionLost = false;
-class KubekAlerts {
-  // Функция для добавления нового алёрта
-  static addAlert(text, icon = "info", description = "", duration = 5000, iconClasses = "", callback = () => {
-  }) {
-      let alertsPoolElement = $("#alerts-pool");
-      let newID = this.generateAlertID();
-      let alertCode = "<div id='alert-" + newID + "' class='alert animate__animate animate__fadeIn animate__faster'>";
-      if (iconClasses !== "") {
-          alertCode = alertCode + "<div class='icon-bg " + iconClasses + "'><span class='material-symbols-rounded'>" + icon + "</span></div>";
-      } else {
-          alertCode = alertCode + "<div class='icon-bg'><span class='material-symbols-rounded'>" + icon + "</span></div>";
-      }
-      if (description !== "") {
-          alertCode = alertCode + "<div class='content-2'><div class='caption'>" + text + "</div><div class='description'>" + description + "</div></div>";
-      } else {
-          alertCode = alertCode + "<div class='caption'>" + text + "</div>";
-      }
-      alertCode = alertCode + "</div>";
-      alertsPoolElement.append(alertCode);
-      $("#alert-" + newID).on("click", function () {
-          $(this).remove();
-          callback();
-      });
-      if (duration > 0) {
-          $("#alert-" + newID)
-              .delay(duration)
-              .queue(function () {
-                  let rid = "#" + $(this)[0].id;
-                  animateCSSJ(rid, "fadeOut", false).then(() => {
-                      $(this).remove();
-                  });
-              });
-      }
-  }
 
-  // Получить ID для нового alert`а
-  static generateAlertID() {
-      return $("#alerts-pool .alert").length;
-  }
 
-  // Удалить все алёрты
-  static removeAllAlerts() {
-      $("#alerts-pool").html("");
-  }
-}
 class KubekTasksUI {
     static addTask(id, icon, title, description, append = true, iconType = "symbol", iconBgClasses = "icon-bg colored") {
         let iconPrepared = "";
@@ -216,13 +173,19 @@ class KubekTasksUI {
         } else if (iconType === "image") {
             iconPrepared = "<img src='" + icon + "' style='width: 24px; height: 24px;'/>";
         }
+        
         let taskHTML = TASK_ITEM_PLACEHOLDER.replace(/\$0/g, id).replace(/\$1/g, iconBgClasses).replace(/\$2/g, iconPrepared).replace(/\$3/g, title).replace(/\$4/g, description);
-        let tasksPool = document.querySelector("#tasks-pool");
-        if (append) {
-            tasksPool.insertAdjacentHTML('beforeend', taskHTML);
-        } else {
-            tasksPool.insertAdjacentHTML('afterbegin', taskHTML);
-        }
+        const parsedalert = {
+            id: id,
+            icon: icon,
+            title: title,
+            description: description,
+            iconBgClasses: iconBgClasses,
+            iconType: iconType,
+            taskHTML: taskHTML
+        }   
+        //KubekAlerts.addAlert(title, icon, description, 5000, iconBgClasses);
+        KubekAlerts2.addTask(parsedalert);
     }
 
     static removeTaskByID(id) {
@@ -234,19 +197,24 @@ class KubekTasksUI {
     }
 
     static removeAllTasks() {
-        document.querySelector("#tasks-pool").innerHTML = "";
+        KubekAlerts2.removeAllTasks();
     }
 
     static refreshTasksList() {
         fetch(KubekPredefined.API_ENDPOINT + "/tasks")
             .then(response => response.json())
             .then(tasks => {
+                if (tasks.length === 0 || Object.keys(tasks).length === 0) {
+                    this.removeAllTasks();
+                    return;
+                }
+                console.log("tasks", tasks);
                 if (isConnectionLost) {
-                    KubekUI.connectionRestored();
+                 //   KubekUI.connectionRestored();
                 }
                 isConnectionLost = false;
-                this.removeAllTasks();
                 for (const [id, task] of Object.entries(tasks)) {
+
                     let icon = "";
                     let title = "";
                     let description = "";
@@ -718,12 +686,12 @@ class KubekUI {
     }
 
     static connectionLost() {
-        KubekAlerts.addAlert("{{commons.connectionLost}}", "warning", moment().format("DD.MM / HH:MM:SS"), 6000);
+       // KubekAlerts.addAlert("{{commons.connectionLost}}", "warning", moment().format("DD.MM / HH:MM:SS"), 6000);
         this.showPreloader();
     }
 
     static connectionRestored() {
-        KubekAlerts.addAlert("{{commons.connectionRestored}}", "check", moment().format("DD.MM / HH:MM:SS"), 3000);
+       // KubekAlerts.addAlert("{{commons.connectionRestored}}", "check", moment().format("DD.MM / HH:MM:SS"), 3000);
         setTimeout(() => {
           //console.log("connectionRestored");
         }, 1000);
@@ -762,6 +730,389 @@ class KubekUI {
 setInterval(() => {
   KubekUI.refreshConsoleLog();
 }, 1000);
+class KubekAlerts {
+    static stylesInjected = false;
+
+    static injectStyles() {
+        if (this.stylesInjected) return;
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                    transform: translateY(0) translateX(-50%);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateY(20px) translateX(-50%);
+                }
+            }
+
+            .animate__animated {
+                animation-duration: 0.5s;
+                animation-fill-mode: both;
+            }
+
+            .animate__faster {
+                animation-duration: 0.3s !important;
+            }
+
+            .animate__fadeIn {
+                animation-name: fadeIn;
+            }
+
+            .animate__fadeOut {
+                animation-name: fadeOut;
+            }
+
+            .alert {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                background: #1a1a1a;
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                max-width: 90%;
+                width: max-content;
+                z-index: 1000;
+                cursor: pointer;
+                transition: 0.2s all ease;
+            }
+
+            .alert:hover {
+            }
+
+            .icon-bg {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 8px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .icon-bg span {
+                font-size: 20px;
+                display: block;
+                width: 24px;
+                height: 24px;
+            }
+
+            .content-2 {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .caption {
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+
+            .description {
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.7);
+                line-height: 1.4;
+            }
+        `;
+
+        document.head.appendChild(style);
+        this.stylesInjected = true;
+    }
+
+    static addAlert(
+        text,
+        icon = "info",
+        description = "",
+        duration = 5000,
+        iconClasses = "",
+        callback = () => {}
+    ) {
+        this.injectStyles();
+        const newID = this.generateAlertID();
+        
+        const alertHTML = `
+            <div id="alert-${newID}" class="alert animate__animated animate__fadeIn animate__faster">
+                ${this.buildIconSection(icon, iconClasses)}
+                ${this.buildContentSection(text, description)}
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', alertHTML);
+        const alertElement = document.getElementById(`alert-${newID}`);
+        
+        alertElement.addEventListener('click', () => this.handleAlertClick(alertElement, callback));
+        
+        if (duration > 0) {
+            this.setAutoDismiss(alertElement, duration);
+        }
+    }
+
+    static buildIconSection(icon, iconClasses) {
+        const classes = iconClasses ? `icon-bg ${iconClasses}` : 'icon-bg';
+        return `
+            <div class="${classes}">
+                <span class="material-symbols-rounded">${icon}</span>
+            </div>
+        `;
+    }
+
+    static buildContentSection(text, description) {
+        return description 
+            ? `<div class="content-2">
+                <div class="caption">${text}</div>
+                <div class="description">${description}</div>
+               </div>`
+            : `<div class="caption">${text}</div>`;
+    }
+
+    static handleAlertClick(alertElement, callback) {
+        alertElement.remove();
+        callback();
+    }
+
+    static setAutoDismiss(alertElement, duration) {
+        setTimeout(() => {
+            alertElement.classList.add('animate__fadeOut');
+            alertElement.addEventListener('animationend', () => alertElement.remove());
+        }, duration);
+    }
+
+    static generateAlertID() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    static removeAllAlerts() {
+        document.querySelectorAll('.alert').forEach(alert => alert.remove());
+    }
+}
+class KubekAlerts2 {
+    static stylesInjected = false;
+
+    static injectStyles() {
+        if (this.stylesInjected) return;
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                    transform: translateY(0) translateX(-50%);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateY(20px) translateX(-50%);
+                }
+            }
+
+            .animate__animated {
+                animation-duration: 0.5s;
+                animation-fill-mode: both;
+            }
+
+            .animate__faster {
+                animation-duration: 0.3s !important;
+            }
+
+            .animate__fadeIn {
+                animation-name: fadeIn;
+            }
+
+            .animate__fadeOut {
+                animation-name: fadeOut;
+            }
+
+            .alert {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                background: #1a1a1a;
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                max-width: max(300px, 90%);
+                width: auto;
+                z-index: 1000;
+                cursor: pointer;
+                transition: 0.2s all ease;
+            }
+
+            .alert:hover {
+            }
+
+            .icon-bg {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 8px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .icon-bg span {
+                font-size: 20px;
+                display: block;
+                width: 24px;
+                height: 24px;
+            }
+
+            .content-2 {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .caption {
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+
+            .description {
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.7);
+                line-height: 1.4;
+            }
+        `;
+
+        document.head.appendChild(style);
+        this.stylesInjected = true;
+    }
+
+    static addAlert(
+        text,
+        icon = "info",
+        description = "",
+        duration = 5000,
+        iconClasses = "",
+        callback = () => {}
+    ) {
+        this.injectStyles();
+        const newID = this.generateAlertID();
+        
+        const alertHTML = `
+            <div id="alert-${newID}" class="alert animate__animated animate__fadeIn animate__faster">
+                ${this.buildIconSection(icon, iconClasses)}
+                ${this.buildContentSection(text, description)}
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', alertHTML);
+        const alertElement = document.getElementById(`alert-${newID}`);
+        
+        alertElement.addEventListener('click', () => this.handleAlertClick(alertElement, callback));
+        
+        if (duration > 0) {
+            this.setAutoDismiss(alertElement, duration);
+        }
+    }
+
+    static addTask(task) {
+        this.injectStyles();
+        
+        const alertHTML = `
+            <div id="alert-${task.id}" class="alert animate__animated animate__fadeIn animate__faster">
+                ${task.taskHTML || this.buildTaskHTML(task)}
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', alertHTML);
+        const alertElement = document.getElementById(`alert-${task.id}`);
+        
+        alertElement.addEventListener('click', () => this.handleAlertClick(alertElement, task.callback || (() => {})));
+        
+        if (task.duration > 0) {
+            this.setAutoDismiss(alertElement, task.duration);
+        }
+    }
+
+    static buildTaskHTML(task) {
+        return `
+            <div class="${task.iconBgClasses}">
+                <span class="material-symbols-rounded">${task.icon}</span>
+            </div>
+            <div class="content-2">
+                <span class="caption">${task.title}</span>
+                <span class="description">${task.description}</span>
+            </div>
+        `;
+    }
+
+    static buildIconSection(icon, iconClasses) {
+        const classes = iconClasses ? `icon-bg ${iconClasses}` : 'icon-bg';
+        return `
+            <div class="${classes}">
+                <span class="material-symbols-rounded">${icon}</span>
+            </div>
+        `;
+    }
+
+    static buildContentSection(text, description) {
+        return description 
+            ? `<div class="content-2">
+                <div class="caption">${text}</div>
+                <div class="description">${description}</div>
+               </div>`
+            : `<div class="caption">${text}</div>`;
+    }
+
+    static handleAlertClick(alertElement, callback) {
+        alertElement.remove();
+        callback();
+    }
+
+    static setAutoDismiss(alertElement, duration) {
+        setTimeout(() => {
+            alertElement.classList.add('animate__fadeOut');
+            alertElement.addEventListener('animationend', () => alertElement.remove());
+        }, duration);
+    }
+
+    static generateAlertID() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    static removeAllAlerts() {
+        document.querySelectorAll('.alert').forEach(alert => alert.remove());
+    }
+}
+setTimeout(() => {
+    KubekAlerts1.setDarkMode(true);
+  //  KubekAlerts.addAlert("Mensaje de éxito", "✅", "Descripción adicional", 3000, "bg-success");
+}, 2000);
 const animateCSSJ = (element, animation, fast = true, prefix = "animate__") => {
     return new Promise((resolve) => {
         const animationName = `${prefix}${animation}`;
@@ -846,9 +1197,467 @@ class KubekRefresher {
     }
 }
 if (!window.location.href.includes("login")) {
-  KubekRefresher.addRefreshServerLogInterval();
-  KubekRefresher.addRefreshServerHeaderInterval();
-  KubekRefresher.addRefreshUsageInterval();
-  KubekRefresher.addRefreshTasksInterval();
-  KubekUI.loadServersList();
+    KubekRefresher.addRefreshServerHeaderInterval();
+    KubekRefresher.addRefreshUsageInterval();
+    KubekUI.loadServersList();
+}
+KubekRefresher.addRefreshServerLogInterval();
+KubekRefresher.addRefreshTasksInterval();
+// Constants
+const UPPER_DIR_ITEM = "<tr onclick='KubekFileManagerUI.upperDir()'><td></td><td>..</td><td></td><td></td></tr>";
+const DIR_ITEM_PLACEHOLDER = "<tr data-filename='$0' data-path='$1' data-type='$5'><td><div class='icon-bg'><span class='material-symbols-rounded'>$2</span></div></td><td>$0</td><td>$3</td><td>$4</td></tr>";
+const FILE_NAME_REGEXP = /^[\w,\s-]+\.[A-Za-z]{1,15}$/gi;
+
+let currentPath = "/";
+let currentEditorLang = "plaintext";
+let currentDataParts = [];
+let currentChunkID = null;
+let currentChunkWriting = null;
+
+const editableExtensions = [
+    "txt", "log", "yml", "xml", "cfg", "conf", "config",
+    "json", "yaml", "properties", "sh", "bat"
+];
+
+// Initialize on DOM load
+    KubekUI.setTitle("Kubek | {{sections.fileManager}}");
+    const hoverStyles = `
+    <style>
+        .dropdown-item {
+            background: var(--bg-dark-accent);
+            border-radius: 8px;
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            cursor: pointer;
+            height: 48px;
+            font-size: 12pt;
+            width: 100%;
+        }
+        .dropdown-item:hover {
+            background: #2e3e53;
+        }
+    </style>
+    `;
+
+class KubekFileManagerUI {
+    static refreshDir(saveScroll = true) {
+        KubekFileManager.readDirectory(currentPath, (data) => {
+            // Sort data to put directories on top
+            if (data.length > 0) {
+                data = sortToDirsAndFiles(data);
+            }
+
+            let bindEvent = window.matchMedia("(min-width: 320px)").matches && 
+                           window.matchMedia("(max-width: 480px)").matches ? "click" : "dblclick";
+
+            // Save scroll position if needed
+            const scrollData = saveScroll ? 
+                document.querySelector(".fm-container").scrollTop : 0;
+            const tableListElement = document.querySelector("#fm-table tbody");
+
+            tableListElement.innerHTML = "";
+            console.log("currentPath", currentPath, "data", data);
+            const explorer = document.querySelector('file-explorer');
+            explorer.data = data;
+            document.getElementById('path-display').textContent = `Current Path: ${currentPath}`;
+            // Bind breadcrumb events
+            this.bindBreadcrumbClicks();
+
+
+            // Bind file list events
+            this.bindFMFilesList(bindEvent);
+
+            document.getElementById("fm-table").scrollTop = scrollData;
+        });
+    }
+    static selectedServer = window.localStorage.selectedServer;
+    static initaddeventlisteners() {
+        const explorer = document.querySelector('file-explorer');
+        explorer.addEventListener('item-dblclick', (e) => {
+            explorer.setAttribute('current-path', currentPath);
+            console.log('Double click en:', e.detail);
+            if (!e.detail.item) { this.upperDir(); return; }
+                const { path, name, type } = e.detail.item;
+                explorer.setAttribute('current-path', currentPath);
+                console.log("verify", editableExtensions.includes(KubekUtils.pathExt(name)),"e",e.detail);
+                const verifycurrentpath = currentPath.endsWith("/") ? currentPath : currentPath + "/";
+                if (type === 'directory') {
+                    currentPath = verifycurrentpath + name;
+
+                    KubekFileManagerUI.refreshDir();
+                } else if (type === 'file' && 
+                         editableExtensions.includes(KubekUtils.pathExt(name))) {
+                            KubekFileManagerUI.editFile(verifycurrentpath + name);
+                }
+        });
+
+        explorer.addEventListener('item-contextmenu', (e) => {
+            console.log('Click derecho en:', e.detail.item);
+            if (!e.detail.item) return;
+            console.log('Posición:', e.detail.x, e.detail.y);
+        });
+    }
+    static bindFMFilesList(bindEvent) {
+        const baseOptions = [
+            {
+                id: 'delete',
+                text: '{{commons.delete}}',
+                icon: 'delete',
+                callback: (dataTarget) => {
+                    console.log('delete', dataTarget);
+                    const path = dataTarget.path;
+                    KubekNotifyModal.create(
+                        "{{commons.delete}}", 
+                        "{{fileManager.areYouWantToDelete}} " + KubekUtils.pathFilename(path),
+                        "{{commons.delete}}", 
+                        "delete",
+                        () => {
+                            KubekFileManager.delete(path, (result) => {
+                                if (result === false) {
+                                    KubekAlerts.addAlert(
+                                        "{{commons.actionFailed}}", 
+                                        "warning",
+                                        "{{commons.delete}} " + KubekUtils.pathFilename(path),
+                                        4000,
+                                        "colored"
+                                    );
+                                }
+                                KubekFileManagerUI.refreshDir();
+                            });
+                        },
+                        KubekPredefined.MODAL_CANCEL_BTN
+                    );
+                }
+            },
+            {
+                id: 'rename',
+                text: '{{commons.rename}}',
+                icon: 'bookmark_manager',
+                callback: (dataTarget) => {
+                    KubekNotifyModal.askForInput(
+                        "{{commons.rename}}",
+                        "bookmark_manager",
+                        (txt) => {
+                            KubekFileManager.renameFile(dataTarget.path, txt, () => {
+                                KubekFileManagerUI.refreshDir();
+                            });
+                        },
+                        "",
+                        "{{fileManager.enterName}}",
+                        KubekUtils.pathFilename(dataTarget.path),
+                        "text"
+                    );
+                }
+            }
+        ];
+
+        const downloadOption = {
+            id: 'download',
+            text: '{{commons.download}}',
+            icon: 'download',
+            callback: (dataTarget) => {
+                const basePath = currentPath.length < 1 ? "" : currentPath;
+                const parsedPath = (basePath.endsWith("/") ? basePath : basePath + "/") + dataTarget.filename;
+                KubekFileManager.downloadFile(parsedPath, () => {});
+            }
+        };
+
+        const getElementData = (target) => {
+            const parent = target.closest('tr');
+            return {
+                filename: parent.dataset.filename,
+                path: parent.dataset.path,
+                type: parent.dataset.type
+            };
+        };
+
+        // Bind context menu
+        document.querySelectorAll('#fm-table tbody tr').forEach(row => {
+            row.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const dataTarget = getElementData(e.target);
+                const options = [...baseOptions];
+                
+                if (dataTarget.type !== 'directory') {
+                    options.push(downloadOption);
+                }
+
+                const popupOptions = options.map(option => ({
+                    html: `${hoverStyles}
+                        <div class="dropdown-item">
+                            <span class="material-symbols-rounded">${option.icon}</span>
+                            <span class="default-font">${option.text}</span>
+                        </div>
+                    `,
+                    callback: () => option.callback(dataTarget)
+                }));
+
+                setPopupOptions(popupOptions);
+                openPopup(e.target);
+            });
+
+            // Bind click/double-click
+            row.addEventListener(bindEvent, function(e) {
+                const data = getElementData(e.target);
+                console.log("data", data);
+                if (data.type === "directory") {
+                    currentPath = currentPath + data.filename;
+                    KubekFileManagerUI.refreshDir();
+                } else if (data.type === "file" && 
+                         editableExtensions.includes(KubekUtils.pathExt(data.filename))) {
+                    KubekFileManagerUI.editFile(currentPath + data.filename);
+                }
+            });
+        });
+    }
+
+    static bindBreadcrumbClicks() {
+        const breadcrumbLinks = document.querySelectorAll("#fm-breadcrumb a:not(:last-child)");
+        
+        breadcrumbLinks.forEach(link => {
+            link.addEventListener("click", function() {
+                if (this.textContent === this.selectedServer) {
+                    currentPath = "/";
+                    KubekFileManagerUI.refreshDir(false);
+                    return;
+                }
+
+                let path = "";
+                const currentIndex = Array.from(breadcrumbLinks).indexOf(this);
+                
+                breadcrumbLinks.forEach((item, index) => {
+                    if (item.textContent !== this.selectedServer && index <= currentIndex) {
+                        path += item.textContent + "/";
+                    }
+                });
+
+                currentPath = path;
+                KubekFileManagerUI.refreshDir(false);
+            });
+        });
+    }
+
+    static newDirectory() {
+        KubekNotifyModal.askForInput(
+            "{{fileManager.newDirectory}}",
+            "create_new_folder",
+            (txt) => {
+                KubekFileManager.newDirectory(currentPath, txt, () => {
+                    KubekFileManagerUI.refreshDir();
+                });
+            },
+            "",
+            "{{commons.input}}",
+            "",
+            "text"
+        );
+    }
+
+    static upperDir() {
+        const pathParts = currentPath.split("/");
+        pathParts.pop();
+        pathParts.pop();
+        currentPath = pathParts.join("/") + "/";
+        KubekFileManagerUI.refreshDir(false);
+        console.log("currentPath", currentPath);
+    }
+
+    static uploadFile() {
+        const inputElement = document.getElementById("g-file-input");
+        inputElement.click();
+        
+        // Remove old listener and add new one
+        const oldListener = inputElement.onchange;
+        if (oldListener) {
+            inputElement.removeEventListener('change', oldListener);
+        }
+
+        inputElement.addEventListener("change", () => {
+            const formData = new FormData(document.getElementById("g-file-form"));
+            KubekRequests.post(
+                `/fileManager/upload?server=${this.selectedServer}&path=${currentPath}`,
+                () => { KubekFileManagerUI.refreshDir(); },
+                formData
+            );
+        });
+    }
+
+
+    static editFile(path) {
+        const fileExt = KubekUtils.pathExt(path);
+        const languageMap = {
+            'xml': 'xml',
+            'yml': 'yaml',
+            'yaml': 'yaml',
+            'css': 'css',
+            'js': 'javascript',
+            'json': 'json',
+            'properties': 'ini'
+        };
+        
+        currentEditorLang = languageMap[fileExt] || "plaintext";
+
+        KubekFileManager.readFile(path, (data) => {
+            const codeEdit = document.getElementById("code-edit");
+            codeEdit.textContent = data;
+            this.formatCode(false);
+            
+            document.querySelector(".blurScreen").style.display = "block";
+            document.querySelector(".fileEditor input").value = KubekUtils.pathFilename(path);
+            document.querySelector(".fileEditor").style.display = "block";
+        });
+    }
+
+    static writeFile() {
+        const inputElement = document.querySelector(".fileEditor input");
+        if (!inputElement.value || !FILE_NAME_REGEXP.test(inputElement.value)) {
+            return false;
+        }
+
+        const path = currentPath + inputElement.value;
+        const data = document.getElementById("code-edit").textContent;
+        
+        this.closeEditor();
+        currentDataParts = data.match(/[\s\S]{1,500}/g) || [];
+        currentChunkWriting = -1;
+
+        KubekFileManager.startChunkWrite(path, (result) => {
+            currentChunkID = result;
+            console.log("Starting write for", currentChunkID);
+            this.writeNextChunk();
+        });
+
+        return true;
+    }
+
+    static writeNextChunk() {
+        currentChunkWriting++;
+        if (currentDataParts[currentChunkWriting]) {
+            console.log("Writing chunk", currentChunkWriting, "to ID", currentChunkID);
+            KubekFileManager.addChunkWrite(
+                currentChunkID,
+                Base64.encodeURI(currentDataParts[currentChunkWriting]),
+                () => { this.writeNextChunk(); }
+            );
+        } else {
+            KubekFileManager.endChunkWrite(currentChunkID, () => {
+                console.log("Write of", currentChunkID, "ended");
+                currentChunkID = null;
+                currentDataParts = null;
+                currentChunkWriting = null;
+                KubekAlerts.addAlert("{{fileManager.writeEnd}}", "check", "", 4000);
+                this.refreshDir();
+            });
+        }
+    }
+
+    static formatCode(saveCaret = true) {
+        const codeEdit = document.getElementById("code-edit");
+        let restore;
+        
+        if (saveCaret) {
+            restore = saveCaretPosition(codeEdit);
+        }
+
+        const result = hljs.highlight(codeEdit.textContent, {
+            language: currentEditorLang
+        });
+        
+        codeEdit.innerHTML = result.value;
+        
+        if (saveCaret) {
+            restore();
+        }
+    }
+
+    static closeEditor() {
+        document.querySelector(".fileEditor").style.display = "none";
+        document.querySelector(".fileEditor input").value = "";
+        document.getElementById("code-edit").textContent = "";
+        document.querySelector(".blurScreen").style.display = "none";
+    }
+}
+
+function sortToDirsAndFiles(data) {
+    let dirs = [];
+    let files = [];
+    data.forEach(function (item) {
+        if (item.type === "directory") {
+            dirs.push(item);
+        } else {
+            files.push(item);
+        }
+    });
+    let datanew = [];
+    dirs.forEach(function (item) {
+        datanew.push(item);
+    });
+    files.forEach(function (item) {
+        datanew.push(item);
+    });
+    return datanew;
+}
+
+function saveCaretPosition(context) {
+    let selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+        let range = selection.getRangeAt(0);
+        range.setStart(context, 0);
+        let len = range.toString().length;
+
+        return function restore() {
+            let pos = getTextNodeAtPosition(context, len);
+            selection.removeAllRanges();
+            let range = new Range();
+            range.setStart(pos.node, pos.position);
+            selection.addRange(range);
+
+        }
+    } else {
+        return function restore() {
+        }
+    }
+}
+
+function getTextNodeAtPosition(root, index) {
+    const NODE_TYPE = NodeFilter.SHOW_TEXT;
+    let treeWalker = document.createTreeWalker(root, NODE_TYPE, function next(elem) {
+        if (index > elem.textContent.length) {
+            index -= elem.textContent.length;
+            return NodeFilter.FILTER_REJECT
+        }
+        return NodeFilter.FILTER_ACCEPT;
+    });
+    let c = treeWalker.nextNode();
+    return {
+        node: c ? c : root,
+        position: index
+    };
+}
+function openPopup(element, popupId = "#fm-popup") {
+    const popupElement = document.querySelector(popupId);
+    if (!popupElement) return;
+    if (typeof element === "string") {
+        const buttonElement  = document.querySelector(element);
+            popupElement.showAtElement(buttonElement);
+    } else {
+        const buttonElement = element;
+        popupElement.showAtElement(buttonElement);
+    }
+}
+
+
+function setPopupOptions(popupOptions){
+    const popupElement = document.querySelector('#fm-popup');
+    popupElement.options = popupOptions;
+}
+function gettemplatebutton(text, icon) {
+    return `${hoverStyles}
+        <div class="dropdown-item">
+            <span class="material-symbols-rounded">${icon}</span>
+            <span class="default-font">${text}</span>
+        </div>
+    `;
 }

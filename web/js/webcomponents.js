@@ -1639,16 +1639,16 @@ class CustomDialog extends HTMLElement {
                 </style>
                 <div class="system-monitor">
                     <div class="system-info">
-                        <h3>Sistema Operativo</h3>
-                        <p>Nombre: <span id="os-name"></span></p>
-                        <p>Build: <span id="os-build"></span></p>
-                        <p>RAM Total: <span id="total-ram"></span></p>
-                        <p>Tiempo Activo: <span id="kubek-uptime"></span></p>
-                        <p>CPU: <span id="cpu-model"></span></p>
-                        <p>Velocidad CPU: <span id="cpu-speed"></span></p>
+                        <h3>{{systemMonitor.os}}</h3>
+                        <p>{{systemMonitor.os}}: <span id="os-name"></span></p>
+                        <p>{{systemMonitor.osBuild}}: <span id="os-build"></span></p>
+                        <p>{{systemMonitor.totalRam}}: <span id="total-ram"></span></p>
+                        <p>{{systemMonitor.kubekUptime}}: <span id="kubek-uptime"></span></p>
+                        <p>{{systemMonitor.cpuModel}}: <span id="cpu-model"></span></p>
+                        <p>{{systemMonitor.cpuSpeed}}: <span id="cpu-speed"></span></p>
                     </div>
                     
-                    <h3>Variables de Entorno</h3>
+                    <h3>{{systemMonitor.environment}}</h3>
                     <table id="enviroment-table">
                         <colgroup>
                             <col style="width: 30%">
@@ -1656,7 +1656,7 @@ class CustomDialog extends HTMLElement {
                         </colgroup>
                     </table>
                     
-                    <h3>Interfaces de Red</h3>
+                    <h3>{{systemMonitor.networkInterfaces}}</h3>
                     <table id="networks-table">
                         <colgroup>
                             <col style="width: 30%">
@@ -1664,7 +1664,7 @@ class CustomDialog extends HTMLElement {
                         </colgroup>
                     </table>
                     
-                    <h3>Discos</h3>
+                    <h3>{{systemMonitor.disks}}</h3>
                     <table id="disks-table">
                         <colgroup>
                             <col style="width: 20%">
@@ -3932,7 +3932,7 @@ class ActionButtons extends HTMLElement {
         }
         
         .dark-btn {
-          background: #2d2d2d;
+          background: #222c3a;
           color: white;
           border: none;
           padding: 8px 12px;
@@ -3945,7 +3945,7 @@ class ActionButtons extends HTMLElement {
         }
         
         .dark-btn:hover {
-          opacity: 0.8;
+          background: #2e3e53;
         }
         
         .dark-btn:disabled {
@@ -3970,8 +3970,15 @@ class ActionButtons extends HTMLElement {
         ${this.buttons.map(btn => this.createButtonHTML(btn)).join('')}
       </div>
     `;
-
+    /** agregar un tooltip a los botones */
     this.shadowRoot.querySelectorAll('button').forEach(button => {
+      button.addEventListener('mouseover', (e) => {
+        const tooltip = button.dataset.tooltip;
+        if (tooltip) {
+          button.setAttribute('title', tooltip);
+          button.classList.add('tooltip');
+        }
+      });
       button.addEventListener('click', (e) => {
         this.dispatchEvent(new CustomEvent('button-clicked', {
           detail: {
@@ -3986,6 +3993,7 @@ class ActionButtons extends HTMLElement {
   createButtonHTML(button) {
     return `
       <button 
+        data-tooltip="${button.action}"
         id="${button.id}"
         class="dark-btn ${button.iconOnly ? 'icon-only' : ''}"
         data-action="${button.action}"
@@ -4041,3 +4049,201 @@ class ActionButtons extends HTMLElement {
 }
 
 customElements.define('action-buttons', ActionButtons);
+class KubekAlerts1 extends HTMLElement {
+  static instances = new Set();
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = `
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+      <style>
+        :host {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 1000;
+          display: block;
+          width: 350px;
+        }
+        .alerts-pool {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .alert {
+          display: flex;
+          align-items: center;
+          padding: 15px;
+          border-radius: 8px;
+          background-color: var(--alert-bg, #ffffff);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          transition: transform 0.3s ease, opacity 0.3s ease;
+          color: var(--alert-text, #333);
+        }
+        .alert:hover {
+          transform: translateY(-2px);
+        }
+        .icon-bg {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          margin-right: 15px;
+          background-color: var(--icon-bg, #e3f2fd);
+        }
+        .icon-bg.info {
+          background-color: var(--icon-info, #e3f2fd);
+        }
+        .icon-bg.success {
+          background-color: var(--icon-success, #e8f5e9);
+        }
+        .icon-bg.warning {
+          background-color: var(--icon-warning, #fff3e0);
+        }
+        .icon-bg.error {
+          background-color: var(--icon-error, #ffebee);
+        }
+        .material-symbols-rounded {
+          font-size: 24px;
+          color: var(--icon-color, #333);
+        }
+        .content-2 {
+          flex-grow: 1;
+        }
+        .caption {
+          font-weight: bold;
+          font-size: 14px;
+          color: var(--alert-text, #333);
+        }
+        .description {
+          font-size: 12px;
+          color: var(--alert-description, #666);
+          margin-top: 5px;
+        }
+
+        /* Modo oscuro */
+        :host([dark]) .alert {
+          --alert-bg: #2d2d2d;
+          --alert-text: #ffffff;
+          --alert-description: #cccccc;
+          --icon-bg: #3d3d3d;
+          --icon-info: #1e3a5f;
+          --icon-success: #2e7d32;
+          --icon-warning: #ff8f00;
+          --icon-error: #c62828;
+          --icon-color: #ffffff;
+        }
+      </style>
+      <div class="alerts-pool"></div>
+    `;
+    
+    KubekAlerts1.instances.add(this);
+  }
+
+  disconnectedCallback() {
+    KubekAlerts1.instances.delete(this);
+  }
+
+  static addAlert(
+    text, 
+    icon = "info",
+    description = "",
+    duration = 5000,
+    iconClasses = "",
+    callback = () => {}
+  ) {
+    for (const instance of KubekAlerts1.instances) {
+      const newID = instance.generateAlertID();
+      const alertHTML = `
+        <div id="alert-${newID}" class="alert animate__animated animate__fadeIn animate__faster">
+          ${this.buildIconSection(icon, iconClasses)}
+          ${this.buildContentSection(text, description)}
+        </div>
+      `;
+
+      const alertsPool = instance.shadowRoot.querySelector('.alerts-pool');
+      alertsPool.insertAdjacentHTML('beforeend', alertHTML);
+      
+      const alertElement = instance.shadowRoot.getElementById(`alert-${newID}`);
+      this.setupAlertBehavior(alertElement, duration, callback);
+    }
+  }
+
+  static buildIconSection(icon, iconClasses) {
+    const classes = iconClasses ? `icon-bg ${iconClasses}` : 'icon-bg';
+    return `
+      <div class="${classes}">
+        <span class="material-symbols-rounded">${icon}</span>
+      </div>
+    `;
+  }
+
+  static buildContentSection(text, description) {
+    return description 
+      ? `<div class="content-2">
+           <div class="caption">${text}</div>
+           <div class="description">${description}</div>
+         </div>`
+      : `<div class="caption">${text}</div>`;
+  }
+
+  static setupAlertBehavior(alertElement, duration, callback) {
+    alertElement.addEventListener('click', () => {
+      animateCSS(alertElement, 'fadeOut').then(() => {
+        alertElement.remove();
+        callback();
+      });
+    });
+  
+    if (duration > 0) {
+      setTimeout(() => {
+        animateCSS(alertElement, 'fadeOut').then(() => {
+          alertElement.remove();
+        });
+      }, duration);
+    }
+  }
+
+  generateAlertID() {
+    return this.shadowRoot.querySelectorAll('.alert').length;
+  }
+
+  static removeAllAlerts() {
+    for (const instance of KubekAlerts1.instances) {
+      instance.shadowRoot.querySelector('.alerts-pool').innerHTML = '';
+    }
+  }
+
+  static setDarkMode(enabled) {
+    for (const instance of KubekAlerts1.instances) {
+      if (enabled) {
+        instance.setAttribute('dark', '');
+      } else {
+        instance.removeAttribute('dark');
+      }
+    }
+  }
+}
+
+// Función para animar elementos
+function animateCSS(element, animation, prefix = 'animate__') {
+  return new Promise((resolve) => {
+    const animationName = `${prefix}${animation}`;
+    element.classList.add(`${prefix}animated`, animationName);
+
+    function handleAnimationEnd(event) {
+      event.stopPropagation();
+      element.classList.remove(`${prefix}animated`, animationName);
+      resolve('Animation ended');
+    }
+
+    element.addEventListener('animationend', handleAnimationEnd, { once: true });
+  });
+}
+
+// Registrar el componente
+customElements.define('kubek-alerts', KubekAlerts1);

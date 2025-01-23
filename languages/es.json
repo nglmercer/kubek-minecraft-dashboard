@@ -137,6 +137,7 @@
       "cpuModel": "CPU model",
       "cpuSpeed": "Frecuencia de la CPU",
       "mountPoint": "Punto de montaje",
+      "disks": "Discos",
       "diskUsed": "Usado en el disco",
       "diskFree": "Libre en el disco",
       "diskTotal": "Tamaño del disco"
