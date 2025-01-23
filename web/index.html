@@ -1129,6 +1129,8 @@ KubekConsoleUI = class {
     const server_menu = document.querySelector('server-menu');
     server_menu.addEventListener('server-change', (e) => {
         console.log("server-change", e);
+        window.localStorage.selectedServer = event.detail.server;
+
     });
     server_menu.addEventListener('new-server', (e) => {
         console.log("new-server", e);

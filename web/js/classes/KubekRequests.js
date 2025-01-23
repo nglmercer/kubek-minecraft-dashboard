@@ -1,4 +1,5 @@
 class KubekRequests {
+    static selectedServer = window.localStorage.selectedServer;
     // Hacer una solicitud AJAX con las configuraciones necesarias
     static makeAjaxRequest = (url, type, data = "", apiEndpoint = true, cb = () => {}) => {
         if (apiEndpoint) {
@@ -134,27 +135,27 @@ class KubekCoresManager extends KubekBase {
 class KubekFileManager extends KubekBase {
     // Получить содержимое папки
     static readDirectory(path, cb) {
-        this.get("/fileManager/get?server=" + selectedServer + "&path=" + path, cb);
+        this.get("/fileManager/get?server=" + KubekRequests.selectedServer + "&path=" + path, cb);
     }
 
     // Переименовать файл
     static renameFile(path, newName, cb) {
-        this.get("/fileManager/rename?server=" + selectedServer + "&path=" + path + "&newName=" + newName, cb);
+        this.get("/fileManager/rename?server=" + KubekRequests.selectedServer + "&path=" + path + "&newName=" + newName, cb);
     }
 
     // Удалить файл/директорию
     static delete(path, cb) {
-        this.get("/fileManager/delete?server=" + selectedServer + "&path=" + path, cb);
+        this.get("/fileManager/delete?server=" + KubekRequests.selectedServer + "&path=" + path, cb);
     }
 
     // Создать новую директорию
     static newDirectory(path, name, cb) {
-        this.get("/fileManager/newDirectory?server=" + selectedServer + "&path=" + path + "&name=" + name, cb);
+        this.get("/fileManager/newDirectory?server=" + KubekRequests.selectedServer + "&path=" + path + "&name=" + name, cb);
     }
 
     // Скачать файл
     static downloadFile(path, cb) {
-        window.open("/api/fileManager/download?server=" + selectedServer + "&path=" + path, "_blank")
+        window.open("/api/fileManager/download?server=" + KubekRequests.selectedServer + "&path=" + path, "_blank")
     }
 
     // Прочитать файл
@@ -169,7 +170,7 @@ class KubekFileManager extends KubekBase {
 
     // Создать элемент для записи
     static startChunkWrite(path, cb){
-        this.get("/fileManager/chunkWrite/start?server=" + selectedServer + "&path=" + path, cb);
+        this.get("/fileManager/chunkWrite/start?server=" + KubekRequests.selectedServer + "&path=" + path, cb);
     }
 
     // Дополнить элемент для записи
@@ -218,12 +219,12 @@ class KubekJavaManager extends KubekBase {
 class KubekPlugins extends KubekBase {
     // Список плагинов
     static getPluginsList (cb) {
-        this.get("/plugins/" + selectedServer, cb);
+        this.get("/plugins/" + KubekRequests.selectedServer, cb);
     }
 
     // Список модов
     static getModsList(cb) {
-        this.get("/mods/" + selectedServer, cb);
+        this.get("/mods/" + KubekRequests.selectedServer, cb);
     }
 }
 

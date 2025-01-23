@@ -67,6 +67,7 @@ class KubekFileManagerUI {
             document.getElementById("fm-table").scrollTop = scrollData;
         });
     }
+    static selectedServer = window.localStorage.selectedServer;
     static initaddeventlisteners() {
         const explorer = document.querySelector('file-explorer');
         explorer.addEventListener('item-dblclick', (e) => {
@@ -212,7 +213,7 @@ class KubekFileManagerUI {
         
         breadcrumbLinks.forEach(link => {
             link.addEventListener("click", function() {
-                if (this.textContent === selectedServer) {
+                if (this.textContent === this.selectedServer) {
                     currentPath = "/";
                     KubekFileManagerUI.refreshDir(false);
                     return;
@@ -222,7 +223,7 @@ class KubekFileManagerUI {
                 const currentIndex = Array.from(breadcrumbLinks).indexOf(this);
                 
                 breadcrumbLinks.forEach((item, index) => {
-                    if (item.textContent !== selectedServer && index <= currentIndex) {
+                    if (item.textContent !== this.selectedServer && index <= currentIndex) {
                         path += item.textContent + "/";
                     }
                 });
@@ -271,7 +272,7 @@ class KubekFileManagerUI {
         inputElement.addEventListener("change", () => {
             const formData = new FormData(document.getElementById("g-file-form"));
             KubekRequests.post(
-                `/fileManager/upload?server=${selectedServer}&path=${currentPath}`,
+                `/fileManager/upload?server=${this.selectedServer}&path=${currentPath}`,
                 () => { KubekFileManagerUI.refreshDir(); },
                 formData
             );
