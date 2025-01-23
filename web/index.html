@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="assets/fonts/RobotoMono/stylesheet.css"/>
     <link rel="stylesheet" href="assets/fonts/MSR/stylesheet.css"/>
 
+    <script src="js/classes/KubekRequests.js"></script>
     <!-- Scripts -->
      <script src="js/utils.js"></script>
      <script src="js/webcomponents.js"></script>
@@ -38,10 +39,11 @@
 
     <!-- Classes -->
     <script src="js/classes/KubekPredefined.js"></script>
-    <script src="js/classes/KubekRequests.js"></script>
     <script src="/sections/sidebar.js"></script>
     <script src="js/classes/KubekUI.js"></script>
     <script type="module" src="/initialize.js"></script>
+    <script src="js/classes/KubekFileManager.js"></script>
+
 </head>
 
 <body>
@@ -212,8 +214,7 @@
       </nav-bar>
       <side-bar>
         <div slot="sidebar-content">
-
-          
+            <server-menu></server-menu>
         </div>
       </side-bar>
       <main-content>
@@ -967,19 +968,6 @@
             <system-monitor></system-monitor>
           </div>
       </main-content>
-      <footer>
-        <div class="footer-content">
-            <div class="footer-left">
-                <div class="footer-item">
-                    <h3>Kubek</h3>
-                    <p>Version: {{kubekVersion}}</p>
-                </div>
-                <div class="footer-item">
-                    <h3>Server.properties</h3>
-                    <p>Version: {{serverPropertiesVersion}}</p>
-                </div>
-        </div>
-      </footer>
 </body>
 <script>
     const Eula_dialog = document.querySelector("#Eula_dialog");
@@ -1025,60 +1013,6 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem("selectedServer", servers[0]);
         selectedServer = servers[0];
     });
-/*     setTimeout(() => {
-        console.log("servers","loadServersList");
-        KubekUI.loadServersList();
-    }, 1000);
-    // Загружаем все секции
-    KubekUI.loadSection("content-header", ".main-layout", () => {
-        KubekUI.loadSelectedServer();
-        KubekUI.loadSection("sidebar", ".main-layout", () => {
-            KubekUI.loadServersList();
-
-            KubekServers.getServersList((servers) => {
-                if (servers.length === 0) {
-                    console.log("servers","loadServersList if",servers);
-                    document.querySelector(".content-header").style.display = "none";
-                    if (act !== "newServer") {
-                        KubekPageManager.gotoPage("welcome");
-                    } else {
-                        KubekPageManager.gotoPage("newServer");
-                    }
-                } else {
-                    console.log("servers","loadServersList if else",servers);
-                    // Проверим существование сервера
-                    if (act !== null) {
-                        console.log("[UI]", "act is not null, trying to load", act);
-                        KubekPageManager.gotoPage(act);
-                        if (!selectedServer) return;
-                    } else {
-                        console.log("[UI]", "act is null, loading console", act);
-                        KubekPageManager.gotoPage("console");
-                    }
-                    KubekServers.getServersList((serversList) => {
-                        if (!serversList || !selectedServer) return;
-                        if (!serversList.includes(selectedServer)) {
-                            window.localStorage.selectedServer = serversList[0];
-                            window.location.reload();
-                        }
-                    });
-                    // Ищем act и загружаем страницу
-
-                }
-            });
-
-            KubekUI.loadSection("header", ".main-layout", () => {
-                KubekUI.hidePreloader();
-                KubekRefresher.refreshConsoleLog();
-                KubekRefresher.addRefreshServerLogInterval();
-                KubekRefresher.addRefreshServerHeaderInterval();
-                KubekRefresher.addRefreshUsageInterval();
-                KubekRefresher.addRefreshTasksInterval();
-                // TODO
-            });
-        });
-    }); */
-
     KubekRequests.get("/kubek/rawlanguages", (langs) => {
         localStorage.setItem("rawlanguages", JSON.stringify(langs));
     });
@@ -1154,8 +1088,8 @@ function uploadServerIcon() {
     document.addEventListener("DOMContentLoaded", () => {
   console.log("sidebar", document.querySelector('sidebar-menu'));
 
-    setTimeout(() => {
-/*       document.querySelector('#menu-btn').addEventListener('click', () => {
+  setTimeout(() => {
+      /*       document.querySelector('#menu-btn').addEventListener('click', () => {
         document.querySelector('sidebar-menu').toggleSidebar();
         console.log("toggleSidebar", document.querySelector('sidebar-menu'));
     }); */
@@ -1166,7 +1100,6 @@ function uploadServerIcon() {
                 console.log("click", item);
                 const page = item.getAttribute("data-page");
                 KubekUI.changeItemByPage(page);
-                KubekPageManager.gotoPage(page);
             });
         });
 
@@ -1175,14 +1108,11 @@ function uploadServerIcon() {
           const detail = event.detail;
           console.log('Changing to page:', detail.page);
           KubekUI.changeItemByPage(detail.page);
-          KubekPageManager.gotoPage(detail.page);
         });
         setTimeout(() => {
           if (window.location.search.includes("act")) {
-            sidebar.setActiveElement(window.location.search.split("act=")[1]);
           } else 
           if (window.localStorage.selectedServer) {
-            sidebar.setActiveElement(window.localStorage.selectedServer);
           }
         }, 555);
         sidebar.addEventListener('new-server', () => {
@@ -1201,9 +1131,7 @@ function uploadServerIcon() {
           console.log('Changing to server:', event.detail);
           window.localStorage.selectedServer = event.detail.server;
           if (window.location.search.includes("newServer")) {
-            KubekPageManager.gotoPage("console");
           } else {
-            window.location.reload();
           }
         });
     }, 555);
@@ -1250,3 +1178,5 @@ KubekConsoleUI = class {
 
 
 </script>
+<script src="pages/fileManager.js"></script>
+<script src="pages/serverSettings.js"></script>

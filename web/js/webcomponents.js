@@ -3318,8 +3318,195 @@ class SidebarComponent extends HTMLElement {
     container.innerHTML = this.createServerList();
   }
 }
+class CreateServer extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.serverlist = [];
+  }
 
-customElements.define('sidebar-menu', SidebarComponent);
+  getStyles() {
+    return `
+      <style>
+        :host {
+          display: block;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+          --primary-color: #5865F2;
+          --active-bg: #5865F2;
+          --hover-bg: rgba(88, 101, 242, 0.1);
+          --text-color: #2e3338;
+        }
+
+        #servers-list-sidebar {
+          max-height: 40vh;
+          overflow-y: auto;
+          padding: 0.5rem;
+          scrollbar-width: thin;
+          scrollbar-color: var(--primary-color) transparent;
+        }
+
+        #servers-list-sidebar::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        #servers-list-sidebar::-webkit-scrollbar-thumb {
+          background-color: var(--primary-color);
+          border-radius: 3px;
+        }
+
+        .sidebar-item, .server-item {
+          display: flex;
+          align-items: center;
+          padding: 0.5rem;
+          margin-bottom: 0.5rem;
+          border-radius: 8px;
+          color: var(--text-color);
+          transition: all 0.2s ease;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        .sidebar-item:hover:not(.selected),
+        .server-item:hover:not(.selected) {
+          background: var(--hover-bg);
+        }
+
+        .selected, .active {
+          background: var(--active-bg) !important;
+          color: white !important;
+        }
+
+        .icon-circle-bg {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--primary-color);
+          margin-right: 1rem;
+          flex-shrink: 0;
+          transition: background-color 0.2s ease;
+        }
+
+        .icon-circle-bg img {
+          width: 20px;
+          height: 20px;
+          object-fit: contain;
+          filter: brightness(0) invert(1);
+        }
+
+        .sidebar-item span.material-symbols-rounded {
+          color: white;
+          font-size: 1.25rem;
+        }
+
+        button.dark-btn {
+          background: none;
+          border: none;
+          color: inherit;
+          cursor: pointer;
+          padding: 0.5rem;
+        }
+
+        .server-item span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        #new-server-btn {
+          margin-bottom: 1rem;
+        }
+      </style>
+    `;
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = `
+      ${this.getStyles()}
+      <div class="sidebar-box" id="servers-list-sidebar">
+        ${this.createServerList()}
+      </div>`;
+  }
+
+  createServerList() {
+    return `
+      <div class="sidebar-item" id="new-server-btn">
+        <div class="icon-circle-bg">
+          <span class="material-symbols-rounded">add</span>
+        </div>
+        <span>Create server</span>
+      </div>
+      ${this.serverlist.map(server => this.createServerItem(server)).join('')}
+    `;
+  }
+
+  createServerItem(server) {
+    return `
+      <div class="server-item" data-server="${server.title}">
+        <div class="icon-circle-bg">
+          <img src="${server.icon}" alt="${server.title}">
+        </div>
+        <span>${server.title}</span>
+      </div>
+    `;
+  }
+
+  setupEventListeners() {
+    this.shadowRoot.addEventListener('click', e => {
+      const item = e.target.closest('.sidebar-item, .server-item');
+      if (!item) return;
+
+      // Remove previous selections
+      this.shadowRoot.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+
+      if (item.id === 'new-server-btn') {
+        this.dispatchNewServerEvent();
+        return;
+      }
+
+      if (item.classList.contains('server-item')) {
+        item.classList.add('selected');
+        this.handleServerItemClick(item);
+      }
+    });
+  }
+  setServersList(servers) {
+    this.serverlist = servers;
+    this.loadServersList();
+  }
+  handleServerItemClick(item) {
+    const server = item.dataset.server;
+    if (server) {
+      this.dispatchEvent(new CustomEvent('server-change', {
+        detail: { server },
+        bubbles: true,
+        composed: true
+      }));
+    }
+  }
+
+  dispatchNewServerEvent() {
+    this.dispatchEvent(new CustomEvent('new-server', {
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  loadServersList() {
+    const container = this.shadowRoot.getElementById('servers-list-sidebar');
+    container.innerHTML = this.createServerList();
+  }
+}
+
+customElements.define('server-menu', CreateServer);
+
 class GridSelector extends HTMLElement {
   constructor() {
       super();
@@ -3341,7 +3528,17 @@ class GridSelector extends HTMLElement {
           this.render();
       }
   }
-
+  setActiveElement(activeElement) {
+    // Desmarcar todos los elementos activos
+    this.shadowRoot.querySelectorAll('.sidebar-item.active, .server-item.active').forEach(item => {
+      item.classList.remove('active');
+    });
+    if (!activeElement) return;
+  }
+  setServersList(servers) {
+    this.serverlist = servers;
+    this.loadServersList();
+  }
   get data() {
       try {
           return JSON.parse(this.getAttribute('data') || '[]');

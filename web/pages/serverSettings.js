@@ -13,6 +13,7 @@ class KubekServerSettingsUI {
      * Fetches settings like restart behavior, stop command, and max restart attempts
      */
     static loadSettings = () => {
+        let selectedServer = window.localStorage.selectedServer;
         KubekRequests.get(`/servers/${selectedServer}/info`, (serverSettings) => {
             loadedSettings = serverSettings;
             
@@ -30,6 +31,8 @@ class KubekServerSettingsUI {
      * Loads the server's start script and updates the UI
      */
     static loadStartScript = () => {
+      let selectedServer = window.localStorage.selectedServer;
+
         KubekRequests.get(`/servers/${selectedServer}/startScript`, (data) => {
             console.log("Loading start script:", data);
             document.querySelector('#start-script').setInputValues(data.startScript);
@@ -78,13 +81,50 @@ class KubekServerSettingsUI {
 }
 
 // Event listener for restart-on-error toggle
-const restartOnErrorSwitch = document.querySelector('#restart-on-error');
-restartOnErrorSwitch.addEventListener('input-change', (e) => {
-    console.log("Restart on error setting changed:", e.detail);
-    const restartAttemptsRow = document.querySelector('#restart-attempts-tr');
-    restartAttemptsRow.classList.toggle('hidden', !e.detail.value);
+document.addEventListener('DOMContentLoaded', () => {
+  const restartOnErrorSwitch = document.querySelector('#restart-on-error');
+  restartOnErrorSwitch.addEventListener('input-change', (e) => {
+      console.log("Restart on error setting changed:", e.detail);
+      const restartAttemptsRow = document.querySelector('#restart-attempts-tr');
+      restartAttemptsRow.classList.toggle('hidden', !e.detail.value);
+  });
+    const deleteServerDialog = document.querySelector('#deletedialog');
+    const deleteServerBtn = document.querySelector('#deleteServerBtn');
+  
+    deleteServerBtn.addEventListener('click', ()=>{
+      deleteServerDialog.show();
+    });
+    translatedialog();
+    async function translatedialog(){
+      const translations = await getTranslatestore(localStorage.getItem("userlang"));
+      console.log("translations", translations["serverSettings"]);
+      const dialogcontent = document.querySelector('#deletedialog_content');
+      dialogcontent._title = localStorage.getItem("selectedServer");
+      dialogcontent._description = translations["serverSettings"].deleteServer;
+      dialogcontent.options = [
+        {
+          label: translations.commons.delete,
+          class: "delete-btn",
+          callback: () => {
+            deleteServerDialog.hide();
+            KubekRequests.delete("/servers/" + selectedServer, () => {});
+          }
+        },
+        {
+          label: translations.commons.cancel,
+          class: "cancel-btn",
+          callback: () => {
+            deleteServerDialog.hide();
+          }
+        }
+        
+      ];
+    }
+    KubekUI.setTitle("Kubek | {{sections.serverSettings}}");
+    KubekServerSettingsUI.loadSettings();
+    KubekServerSettingsUI.loadStartScript();
+    
 });
-
 /**
  * Sets values for all custom inputs based on a data object
  * @param {Object} dataObject - Object containing input values keyed by input id/name
@@ -118,13 +158,7 @@ function getAllInputValues() {
     return allData;
 }
 
-// Initialize the page
-(() => {
-    KubekUI.setTitle("Kubek | {{sections.serverSettings}}");
-    KubekServerSettingsUI.loadSettings();
-    KubekServerSettingsUI.loadStartScript();
-    
-})();
+
 async function getelementStore(element) {
     try {
       const result = await localStorage.getItem(element);
@@ -154,34 +188,5 @@ async function getelementStore(element) {
     }
     return objfind;
   }
-  var deleteServerDialog = document.querySelector('#deletedialog');
-  var deleteServerBtn = document.querySelector('#deleteServerBtn');
 
-  deleteServerBtn.addEventListener('click', ()=>deleteServerDialog.show());
-  async function translatedialog(){
-    const translations = await getTranslatestore(localStorage.getItem("userlang"));
-    console.log("translations", translations["serverSettings"]);
-    const dialogcontent = document.querySelector('#deletedialog_content');
-    dialogcontent._title = localStorage.getItem("selectedServer");
-    dialogcontent._description = translations["serverSettings"].deleteServer;
-    dialogcontent.options = [
-      {
-        label: translations.commons.delete,
-        class: "delete-btn",
-        callback: () => {
-          deleteServerDialog.hide();
-          KubekRequests.delete("/servers/" + selectedServer, () => {});
-        }
-      },
-      {
-        label: translations.commons.cancel,
-        class: "cancel-btn",
-        callback: () => {
-          deleteServerDialog.hide();
-        }
-      }
-      
-    ];
-  }
-  translatedialog();
-  console.log("translatedialog", translatedialog);
+

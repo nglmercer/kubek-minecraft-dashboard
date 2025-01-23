@@ -693,7 +693,8 @@ class KubekUI {
                 if (!servers) return;
                 console.log("servers getServersList", servers);
                 servers.forEach(serverItem => {
-                    const sidebar = document.querySelector('sidebar-menu');
+                    const sidebar = document.querySelector('server-menu');
+                    console.log("sidebar", sidebar);
                     const parsedserver = {
                         title: serverItem,
                         icon: `/api/servers/${serverItem}/icon`
@@ -852,3 +853,4 @@ KubekRefresher.addRefreshServerLogInterval();
 KubekRefresher.addRefreshServerHeaderInterval();
 KubekRefresher.addRefreshUsageInterval();
 KubekRefresher.addRefreshTasksInterval();
+KubekUI.loadServersList();
