@@ -11,6 +11,7 @@ const ITEM_TYPES = {
   PLUGINS: 'plugins',
   MODS: 'mods'
 };
+selectedServer = window.localStorage.selectedServer;
 
 class KubekPluginsUI {
   /**

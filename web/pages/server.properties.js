@@ -1,7 +1,7 @@
 KubekUI.setTitle("Kubek | Server.properties");
 
 var serverPropertiesElement = document.querySelector('server-properties');
-serverPropertiesElement.setAttribute('server-id', selectedServer);
+serverPropertiesElement.setAttribute('server-id', window.localStorage.selectedServer);
 serverPropertiesElement.addEventListener('save-success', (e) => {
     // Show success message
     //KubekAlerts.addAlert("Save successful", "check", "", 5000);
