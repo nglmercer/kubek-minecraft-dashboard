@@ -71,8 +71,6 @@ export const installJavaTermux = async (version) => {
 // Verificar si una versión específica de Java está instalada en Termux
 export const checkJavaVersionTermux = (version) => {
     try {
-        // Update package database first
-        execSync('pkg update -y');
         const output = execSync('dpkg -l | grep openjdk').toString();
         return output.includes(`openjdk-${version}`);
     } catch (error) {
