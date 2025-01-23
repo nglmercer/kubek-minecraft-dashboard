@@ -159,6 +159,186 @@ class DebuggerGroupManager {
     this.groups.forEach(group => group.toggle(enable));
   }
 }
+
+const TASK_ITEM_PLACEHOLDER = "<div class='alert' data-id='$0'><div class='$1'>$2</div><div class='content-2'><span class='caption'>$3</span><span class='description'>$4</span></div></div>";
+
+let isConnectionLost = false;
+class KubekAlerts {
+  // Функция для добавления нового алёрта
+  static addAlert(text, icon = "info", description = "", duration = 5000, iconClasses = "", callback = () => {
+  }) {
+      let alertsPoolElement = $("#alerts-pool");
+      let newID = this.generateAlertID();
+      let alertCode = "<div id='alert-" + newID + "' class='alert animate__animate animate__fadeIn animate__faster'>";
+      if (iconClasses !== "") {
+          alertCode = alertCode + "<div class='icon-bg " + iconClasses + "'><span class='material-symbols-rounded'>" + icon + "</span></div>";
+      } else {
+          alertCode = alertCode + "<div class='icon-bg'><span class='material-symbols-rounded'>" + icon + "</span></div>";
+      }
+      if (description !== "") {
+          alertCode = alertCode + "<div class='content-2'><div class='caption'>" + text + "</div><div class='description'>" + description + "</div></div>";
+      } else {
+          alertCode = alertCode + "<div class='caption'>" + text + "</div>";
+      }
+      alertCode = alertCode + "</div>";
+      alertsPoolElement.append(alertCode);
+      $("#alert-" + newID).on("click", function () {
+          $(this).remove();
+          callback();
+      });
+      if (duration > 0) {
+          $("#alert-" + newID)
+              .delay(duration)
+              .queue(function () {
+                  let rid = "#" + $(this)[0].id;
+                  animateCSSJ(rid, "fadeOut", false).then(() => {
+                      $(this).remove();
+                  });
+              });
+      }
+  }
+
+  // Получить ID для нового alert`а
+  static generateAlertID() {
+      return $("#alerts-pool .alert").length;
+  }
+
+  // Удалить все алёрты
+  static removeAllAlerts() {
+      $("#alerts-pool").html("");
+  }
+}
+class KubekTasksUI {
+    static addTask(id, icon, title, description, append = true, iconType = "symbol", iconBgClasses = "icon-bg colored") {
+        let iconPrepared = "";
+        if (iconType === "symbol") {
+            iconPrepared = "<span class='material-symbols-rounded'>" + icon + "</span>";
+        } else if (iconType === "image") {
+            iconPrepared = "<img src='" + icon + "' style='width: 24px; height: 24px;'/>";
+        }
+        let taskHTML = TASK_ITEM_PLACEHOLDER.replace(/\$0/g, id).replace(/\$1/g, iconBgClasses).replace(/\$2/g, iconPrepared).replace(/\$3/g, title).replace(/\$4/g, description);
+        let tasksPool = document.querySelector("#tasks-pool");
+        if (append) {
+            tasksPool.insertAdjacentHTML('beforeend', taskHTML);
+        } else {
+            tasksPool.insertAdjacentHTML('afterbegin', taskHTML);
+        }
+    }
+
+    static removeTaskByID(id) {
+        document.querySelectorAll("#tasks-pool .alert").forEach(element => {
+            if (element.dataset.id === id) {
+                element.remove();
+            }
+        });
+    }
+
+    static removeAllTasks() {
+        document.querySelector("#tasks-pool").innerHTML = "";
+    }
+
+    static refreshTasksList() {
+        fetch(KubekPredefined.API_ENDPOINT + "/tasks")
+            .then(response => response.json())
+            .then(tasks => {
+                if (isConnectionLost) {
+                    KubekUI.connectionRestored();
+                }
+                isConnectionLost = false;
+                this.removeAllTasks();
+                for (const [id, task] of Object.entries(tasks)) {
+                    let icon = "";
+                    let title = "";
+                    let description = "";
+                    let iconBg = "icon-bg colored";
+                    // Если идёт процесс создания сервера
+                    if (task.type === KubekPredefined.TASKS_TYPES.CREATING && typeof task.serverName !== "undefined") {
+                        icon = "deployed_code_history";
+                        iconBg = "icon-bg";
+                        title = "{{tasksTypes.creating}} " + task.serverName;
+                        // Куча говнокода, уж простите меня
+                        switch (task.currentStep) {
+                            case KubekPredefined.SERVER_CREATION_STEPS.CHECKING_JAVA:
+                                description = "{{serverCreationSteps.checkingJava}}";
+                                break;
+                            case KubekPredefined.SERVER_CREATION_STEPS.CREATING_BAT:
+                                description = "{{serverCreationSteps.creatingBat}}";
+                                break;
+                            case KubekPredefined.SERVER_CREATION_STEPS.COMPLETED:
+                                description = "{{serverCreationSteps.completed}}";
+                                icon = "check_circle";
+                                iconBg = "bg-success icon-bg";
+                                KubekNotifyModal.create(task.serverName, "{{newServerWizard.creationCompleted}}", "{{commons.goto}}", "check", () => {
+                                    window.localStorage.selectedServer = task.serverName;
+                                    window.location = "/?act=console";
+                                }, KubekPredefined.MODAL_CANCEL_BTN);
+                                break;
+                            case KubekPredefined.SERVER_CREATION_STEPS.COMPLETION:
+                                description = "{{serverCreationSteps.completion}}";
+                                break;
+                            case KubekPredefined.SERVER_CREATION_STEPS.FAILED:
+                                icon = "deployed_code_alert";
+                                description = "{{serverCreationSteps.failed}}";
+                                iconBg = "bg-error icon-bg";
+                                break;
+                            case KubekPredefined.SERVER_CREATION_STEPS.DOWNLOADING_CORE:
+                                description = "{{serverCreationSteps.downloadingCore}}";
+                                break;
+                            case KubekPredefined.SERVER_CREATION_STEPS.DOWNLOADING_JAVA:
+                                description = "{{serverCreationSteps.downloadingJava}}";
+                                break;
+                            case KubekPredefined.SERVER_CREATION_STEPS.SEARCHING_CORE:
+                                description = "{{serverCreationSteps.searchingCore}}";
+                                break;
+                            case KubekPredefined.SERVER_CREATION_STEPS.UNPACKING_JAVA:
+                                description = "{{serverCreationSteps.unpackingJava}}";
+                                break;
+                        }
+                    } else if (task.type === KubekPredefined.TASKS_TYPES.DOWNLOADING) {
+                        icon = "deployed_code_update";
+                        title = "{{tasksTypes.downloading}} " + task.filename;
+                        description = "<div style='display: flex; margin: 4px 0; align-items: center'><div style='margin: 2px 1px; height: 4px; width: 100%; background: var(--bg-dark-accent-light)'><div style='width: " + task.progress + "%; height: 100%; background: var(--bg-primary-500)'></div></div><span style='margin-left: 4px; font-size: 12pt;'>" + task.progress + "%</span></div>";
+                        iconBg = "bg-warning icon-bg";
+                    } else if (task.type === KubekPredefined.TASKS_TYPES.INSTALLING) {
+                        icon = "install_desktop";
+                        title = "{{tasksTypes.installing}}";
+                        description = task.description;
+                    } else if (task.type === KubekPredefined.TASKS_TYPES.UPDATING) {
+                        icon = "update";
+                        title = "{{tasksTypes.updating}}";
+                        description = task.description;
+                    } else if (task.type === KubekPredefined.TASKS_TYPES.RESTARTING) {
+                        icon = "restart_alt";
+                        title = "{{tasksTypes.restarting}}";
+                        description = task.description;
+                    } else if (task.type === KubekPredefined.TASKS_TYPES.UNPACKING) {
+                        icon = "archive";
+                        title = "{{tasksTypes.unpacking}}";
+                        description = task.description;
+                    } else if (task.type === KubekPredefined.TASKS_TYPES.ZIPPING) {
+                        icon = "archive";
+                        title = "{{tasksTypes.zipping}}";
+                        description = task.description;
+                    } else if (task.type === KubekPredefined.TASKS_TYPES.DELETION) {
+                        icon = "delete";
+                        title = "{{tasksTypes.deletion}}";
+                        description = task.server;
+                        if(task.status === KubekPredefined.SERVER_CREATION_STEPS.COMPLETED){
+                            window.location = "/?act=console";
+                        }
+                    }
+                    this.addTask(id, icon, title, description, true, "symbol", iconBg);
+                }
+            })
+            .catch(() => {
+                if (!isConnectionLost) {
+                    KubekUI.connectionLost();
+                }
+                isConnectionLost = true;
+            });
+    }
+}
+
 class KubekUtils {
   // Convertir tamaño de archivo a un formato legible por humanos
   static humanizeFileSize(size) {
@@ -353,6 +533,91 @@ if (window.localStorage.selectedServer) {
 // init logs
 var uiDebugger = DebuggerGroupManager.create('UI');   
  uiDebugger.registerCallSite('kukeb-ui.js', 0).stack
+ class KubekServerHeaderUI {
+  /**
+   * Refreshes the server header information
+   * @param {Function} callback - Callback function to execute after refresh
+   */
+  static refreshServerHeader(callback) {
+      this.loadServerByName(selectedServer, callback);
+  }
+
+  /**
+   * Loads server information by server name and updates the UI
+   * @param {string} server - Name of the server to load
+   * @param {Function} callback - Callback function to execute after loading
+   */
+  static loadServerByName(server, callback = () => {}) {
+      KubekServers.getServerInfo(server, (data) => {
+          if (data.status !== false) {
+              // Update server title
+              const captionElement = document.querySelector('.content-header > .caption');
+              if (captionElement) {
+                  captionElement.textContent = server;
+              }
+
+              // Update server status
+              this.setServerStatus(data.status);
+
+              // Update server icon
+              const iconElement = document.querySelector('.content-header .icon-bg img');
+              if (iconElement) {
+                  iconElement.src = `/api/servers/${server}/icon?${Date.now()}`;
+              }
+
+              callback(true);
+          } else {
+              callback(false);
+          }
+      });
+  }
+
+  /**
+   * Updates the server status in the header and shows/hides relevant buttons
+   * @param {string} status - The new server status
+   * @returns {boolean} - Success status of the update
+   */
+  static setServerStatus(status) {
+      const statusElement = document.querySelector('status-element');
+      
+      if (!KubekPredefined.SERVER_STATUSES_TRANSLATE[status]) {
+          return false;
+      }
+
+      currentServerStatus = status;
+      WebDebugger.log("status", status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+      WebDebugger.toggleLogs(false);
+      // Hide all conditional elements
+      const headerElements = document.querySelectorAll('.content-header .hide-on-change');
+      headerElements.forEach(element => element.style.display = 'none');
+      
+      const moreButton = document.querySelector('.content-header #server-more-btn');
+      moreButton.style.display = 'none';
+
+      // Show relevant buttons based on status
+      switch (status) {
+          case KubekPredefined.SERVER_STATUSES.STARTING:
+          case KubekPredefined.SERVER_STATUSES.STOPPING:
+              statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+              moreButton.style.display = 'block';
+              break;
+
+          case KubekPredefined.SERVER_STATUSES.RUNNING:
+              statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+              document.querySelector('.content-header #server-restart-btn').style.display = 'block';
+              document.querySelector('.content-header #server-stop-btn').style.display = 'flex';
+              moreButton.style.display = 'block';
+              break;
+
+          case KubekPredefined.SERVER_STATUSES.STOPPED:
+              document.querySelector('.content-header #server-start-btn').style.display = 'flex';
+              statusElement.updateStatus(status, KubekPredefined.SERVER_STATUSES_TRANSLATE[status]);
+              break;
+      }
+
+      return true;
+  }
+}
 class KubekUI {
     // Cargar sección en bloque - Reemplazamos $.get por fetch
     static loadSection = (name, container = "body", cb = () => {}) => {
@@ -366,8 +631,6 @@ class KubekUI {
             .then(code => {
                 console.log("Loading section:", name, container);
                 //$(container).append(code);
-                document.querySelector(container).insertAdjacentHTML('beforeend', code);
-
                 //container.appendChild(code);
                 //document.querySelector(container).appendChild(code);
                 cb();
@@ -378,20 +641,11 @@ class KubekUI {
     }
 
     static showPreloader() {
-        const preloader = document.querySelector("body #main-preloader");
-        if (preloader) {
-            preloader.style.display = "block";
-            animateCSSJ("body #main-preloader", "fadeIn");
-        }
+
     }
 
     static hidePreloader() {
-        const preloader = document.querySelector("body #main-preloader");
-        if (preloader) {
-            animateCSSJ("body #main-preloader", "fadeOut").then(() => {
-                preloader.style.display = "none";
-            });
-        }
+
     }
 
     static setActiveItemByPage(page) {
@@ -422,7 +676,6 @@ class KubekUI {
                     KubekServers.getServersList((list) => {
                         window.localStorage.selectedServer = list[0];
                         uiDebugger.log('loadSelectedServer, getServersList',selectedServer, list);
-                        window.location.reload();
                     });
                 }
             });
@@ -430,7 +683,6 @@ class KubekUI {
             KubekServers.getServersList((list) => {
                 uiDebugger.log('loadSelectedServer, getServersList',selectedServer, list);
                 window.localStorage.selectedServer = list[0];
-                window.location.reload();
             });
         }
     }
@@ -476,7 +728,7 @@ class KubekUI {
     static connectionRestored() {
         KubekAlerts.addAlert("{{commons.connectionRestored}}", "check", moment().format("DD.MM / HH:MM:SS"), 3000);
         setTimeout(() => {
-            location.reload();
+          //console.log("connectionRestored");
         }, 1000);
     }
 
@@ -533,3 +785,70 @@ const animateCSSJ = (element, animation, fast = true, prefix = "animate__") => {
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
     });
 };
+let refreshIntervals = {};
+let isItFirstLogRefresh = false;
+let previousConsoleUpdateLength = 0;
+let timeStampRegexp = /\[[0-9]{2}\:[0-9]{2}\:[0-9]{2}\]/gm;
+
+class KubekRefresher {
+    // Добавить рефреш-интервал
+    static addRefreshInterval = (interval, handler, name) => {
+        refreshIntervals[name] = setInterval(handler, interval);
+    }
+
+    // Удалить рефреш-интервал
+    static removeRefreshInterval = (name) => {
+        clearInterval(refreshIntervals[name]);
+    }
+
+    // Добавить интервал обновления server header (каждые 2 секунды)
+    static addRefreshServerHeaderInterval = () => {
+        this.addRefreshInterval(1500, () => {
+            KubekServerHeaderUI.refreshServerHeader(() => {
+            });
+        }, "serverHeader");
+    };
+
+    // Добавить интервал обновления server log (каждые 650 мсек)
+    static addRefreshServerLogInterval = () => {
+        this.addRefreshInterval(650, () => {
+            this.refreshConsoleLog();
+        }, "serverConsole");
+    };
+
+    // Добавить интервал обновления использования рес-ов (каждые 4 сек)
+    static addRefreshUsageInterval = () => {
+        this.addRefreshInterval(5000, () => {
+            if (typeof KubekConsoleUI !== "undefined") {
+                KubekHardware.getUsage((usage) => {
+                    if (!usage) return;
+                    KubekConsoleUI.refreshUsageItems(usage.cpu, usage.ram.percent, usage.ram);
+                });
+            }
+        }, "usage");
+    }
+
+    // Обновить текст в консоли
+    static refreshConsoleLog = () => {
+        let consoleTextElem = document.querySelector('game-console');
+        if (consoleTextElem) {
+            //console.log("consoleTextElem", consoleTextElem, typeof consoleTextElem);
+            KubekServers.getServerLog(selectedServer, (data) => {
+                if (!data) return;
+                //console.log("getServerLog", selectedServer, {data});
+                consoleTextElem.refreshConsoleLog(data.serverLog);
+            });
+        }
+    }
+
+    // Интервал обновления списка задач
+    static addRefreshTasksInterval = () => {
+        this.addRefreshInterval(500, () => {
+            KubekTasksUI.refreshTasksList();
+        }, "tasksList");
+    }
+}
+KubekRefresher.addRefreshServerLogInterval();
+KubekRefresher.addRefreshServerHeaderInterval();
+KubekRefresher.addRefreshUsageInterval();
+KubekRefresher.addRefreshTasksInterval();

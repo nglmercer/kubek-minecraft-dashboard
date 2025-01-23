@@ -31,7 +31,7 @@ class KubekPageManager {
                 KubekPageManager.setPageURL(page);
                 KubekUI.setActiveItemByPage(page);
 
-                setTimeout(() => {
+/*                 setTimeout(() => {
                     // Dynamically load page script
                     if (typeof loadedScript !== "undefined") {
                         document.head.removeChild(loadedScript);
@@ -44,7 +44,7 @@ class KubekPageManager {
                     contentPlace.insertAdjacentHTML('beforeend', result);
                     const content_preloader = document.getElementById('content-preloader');
                     if (content_preloader) content_preloader.remove();
-                }, 100);
+                }, 100); */
             })
             .catch(error => {
                 console.error(
