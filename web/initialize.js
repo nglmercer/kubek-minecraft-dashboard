@@ -22,3 +22,15 @@ async function initConsole() {
 
 }
 initConsole();
+
+
+document.addEventListener('section-changed', (e) => {
+    const page = e.detail;
+    const currentUrl = new URL(window.location.href);
+
+    // Actualiza el parámetro `act` en la URL, o lo agrega si no existe
+    currentUrl.searchParams.set('act', page);
+
+    // Cambia la ubicación de la ventana sin acumular los parámetros
+    window.location.href = currentUrl.toString();
+});

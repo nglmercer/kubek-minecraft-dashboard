@@ -1,10 +1,10 @@
-// init logs
+/* // init logs
 var uiDebugger = DebuggerGroupManager.create('UI');   
  uiDebugger.registerCallSite('kukeb-ui.js', 0).stack
 class KubekUI {
     // Cargar sección en bloque - Reemplazamos $.get por fetch
     static loadSection = (name, container = "body", cb = () => {}) => {
-        fetch(`/sections/${name}.html`)
+     fetch(`/sections/${name}.html`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -22,7 +22,7 @@ class KubekUI {
             })
             .catch(error => {
                 console.error('Error loading section:', error);
-            });
+            }); 
     }
 
     static showPreloader() {
@@ -166,5 +166,5 @@ const animateCSSJ = (element, animation, fast = true, prefix = "animate__") => {
         }
 
         node.addEventListener("animationend", handleAnimationEnd, { once: true });
-    });
-};
+    }); 
+}; */

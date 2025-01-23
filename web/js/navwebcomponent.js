@@ -128,7 +128,7 @@ const STYLES = `
 }
 
 /* Media query for larger screens (sm and up) */
-@media (min-width: 960px) {
+@media (min-width: 1280px) {
     .nav-button {
         padding: 0.5rem 0.75rem;
     }
@@ -231,9 +231,8 @@ clipboard: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="current
   </path></svg>`
 }
 function returniconfont(icon, page, label) {
-  return `        <div class="sidebar-item" data-page="${page}">
+  return `        <div class="sidebar-item" data-page="${page}" data-label="${label}">
             <span class="material-symbols-rounded">${icon}</span>
-            <span>${label}</span>
         </div>
         `;
 }
@@ -250,31 +249,38 @@ class AppConfig {
   static PAGE_CONFIG = {
     [this.PAGES.tab1]: {
         label: '{{sections.console}}', 
-        icon: returniconfont("terminal", "console", '')
+        icon: returniconfont("terminal", "console", 'console'),
+        section: 'console'
     },
     [this.PAGES.tab2]: {
         label: '{{sections.fileManager}}',
-        icon: returniconfont("folder", "fileManager", '')
+        icon: returniconfont("folder", "fileManager", 'fileManager'),
+        section: 'fileManager'
     },
     [this.PAGES.tab3]: {
         label: '{{sections.plugins}}',
-        icon: returniconfont("extension", "plugins", '')
+        icon: returniconfont("extension", "plugins", 'plugins'),
+        section: 'plugins'
     },
     [this.PAGES.tab4]: {
         label: '{{sections.serverSettings}}',
-        icon: returniconfont("tune", "serverSettings", '')
+        icon: returniconfont("tune", "serverSettings", 'serverSettings'),
+        section: 'serverSettings'
     },
     [this.PAGES.tab5]: {
         label: 'server.properties',
-        icon: returniconfont("settings_ethernet", "server.properties", '')
+        icon: returniconfont("settings_ethernet", "server.properties", 'server.properties'),
+        section: 'server.properties'
     },
     [this.PAGES.tab6]: {
-        label: '{{sections.kubekSettings}}',
-        icon: returniconfont("settings", "kubekSettings", '')
+        label: '{{sections.kubekSettings}}',  
+        icon: returniconfont("settings", "kubekSettings", 'kubekSettings'),
+        section: 'kubekSettings'
     },
     [this.PAGES.tab7]: {
         label: '{{sections.systemMonitor}}',
-        icon: returniconfont("area_chart", "systemMonitor", '')
+        icon: returniconfont("area_chart", "systemMonitor", 'systemMonitor'),
+        section: 'systemMonitor'
     },
   }
   static getslotcontent(tabname) {
@@ -306,7 +312,7 @@ class AppConfig {
     const pageConfig = this.PAGE_CONFIG[page];
     return `
       <a href="#" class="nav-link flex items-center px-6 py-2 hover:bg-gray-700 ${activePage === page ? 'active' : ''}" 
-         data-page="${page}">
+         data-page="${page}" data-label="${pageConfig.section}">
         ${pageConfig.icon}
         ${pageConfig.label}
       </a>
@@ -314,7 +320,15 @@ class AppConfig {
   }
   static setActivePage(page) {
     localStorage.setItem('activePage', page);
-    document.dispatchEvent(new CustomEvent('page-changed', { detail: page }));
+    document.dispatchEvent(new CustomEvent('page-changed', 
+      { 
+        detail: page
+
+       }));
+    document.dispatchEvent(new CustomEvent('section-changed',
+      {
+        detail: AppConfig.PAGE_CONFIG[page].section
+      }));
   } 
 
   static getActivePage() {
@@ -470,7 +484,7 @@ class NavBar extends HTMLElement {
                   <div class="ml-6 flex space-x-2">
                     ${pages.map((page, index) => `
                       <button class="nav-button px-3 py-2 transparent border-0 rounded text-gray-300 hover:text-white ${activePage === page ? 'active' : ''}" 
-                        data-page="${page}">
+                        data-page="${page}" data-label="${AppConfig.PAGE_CONFIG[page].section}">
                         ${AppConfig.getButtonContent(page, index)}
                       </button>
                     `).join('')}
@@ -510,7 +524,6 @@ class MainContent extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         main {
-          padding-top: 4rem;
           min-height: 100vh;
           background-color: rgb(24, 24, 27);
           color: white;

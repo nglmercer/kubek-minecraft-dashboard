@@ -1,7 +1,5 @@
 WebDebugger.registerCallSite('kubekSereverHeaderui.js', 1).stack
 // Current server status, initialized as stopped
-let currentServerStatus = KubekPredefined.SERVER_STATUSES.STOPPED;
-
 /**
  * Class responsible for managing the server header UI components
  * and server status updates

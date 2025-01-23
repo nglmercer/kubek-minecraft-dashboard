@@ -1717,7 +1717,6 @@ class CustomDialog extends HTMLElement {
             getElement('cpu-speed').textContent = `${data.cpu.speed} MHz`;
             const disksTable = getElement('disks-table');
             data.disks.forEach(disk => {
-              console.log("disk", disk);
               let letter, total, used, free, percent;
 
               if (data.platform.name === "Linux") {
