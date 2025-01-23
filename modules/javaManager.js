@@ -116,7 +116,6 @@ export const getDownloadableJavaVersions = (cb) => {
         }
         cb(false);
     });
-};
 
 // Obtener versiones locales de Java
 export const getLocalJavaVersions = () => {
