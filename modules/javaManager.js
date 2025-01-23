@@ -84,18 +84,27 @@ export const checkJavaVersionTermux = (version) => {
 export const getDownloadableJavaVersions = (cb) => {
     if (isTermux()) {
         try {
-            // En Termux, buscamos las versiones disponibles en pkg
             const output = execSync('pkg search "^openjdk-[0-9]+"').toString();
-            const versions = output.match(/openjdk-(\d+)/g)
+            const matches = output.match(/openjdk-(\d+)/g) || [];
+            const versions = matches
                 .map(v => v.replace('openjdk-', ''))
-                .filter(v => parseInt(v) >= 8 && parseInt(v) <= 21);
-            cb(versions);
+                .filter(v => {
+                    const num = parseInt(v);
+                    return !isNaN(num) && num >= 8 && num <= 21;
+                })
+                .sort((a, b) => b - a); // Ordenar de mayor a menor
+            cb([...new Set(versions)]); // Eliminar duplicados
         } catch (error) {
-            console.error('Error obteniendo versiones disponibles:', error);
-            cb(false);
+            console.error('Error obteniendo versiones:', error);
+            cb([]); // Asegurar retorno de array vacío
         }
         return;
     }
+    // Resto del código para otras plataformas...
+    COMMONS.getDataByURL(PREDEFINED.JAVA_LIST_URL, (data) => {
+        cb(data ? data.available_releases.map(String) : []);
+    });
+};
 
     // Para otras plataformas
     COMMONS.getDataByURL(PREDEFINED.JAVA_LIST_URL, (data) => {
