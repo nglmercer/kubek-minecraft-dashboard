@@ -144,8 +144,3 @@ function initializeServerDropdown() {
         }
     );
 }
-
-// Initialize dropdown after DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initializeServerDropdown, 500);
-});

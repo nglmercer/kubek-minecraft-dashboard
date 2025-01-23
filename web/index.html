@@ -127,10 +127,54 @@
                 } else if (action === 'restart-server') {
                     KubekServers.restartServer(window.localStorage.selectedServer);
                 } else if (action === "more-server-actions") {
-                    
+                    showServerPopup(e);
                 }
 
             });
+            let initpopup = false;
+            function showServerPopup(e) {
+                const popupElement = document.querySelector('#server-popup');
+                const buttonElement = e.target;
+
+                popupElement.showAtElement(buttonElement);
+                if (!initpopup) initPoup(popupElement);
+                initpopup = true;
+            }
+            function initPoup(popupElement) {
+                const hoverStyles = `
+                    <style>
+                        .dropdown-item {
+                            background: var(--bg-dark-accent);
+                            border-radius: 8px;
+                            padding: 4px 8px;
+                            display: flex;
+                            flex-direction: row;
+                            align-items: center;
+                            cursor: pointer;
+                            height: 48px;
+                            font-size: 12pt;
+                            width: 100%;
+                        }
+                        .dropdown-item:hover {
+                            background: #2e3e53;
+                        }
+                    </style>
+                `;
+
+                // Add force quit button to popup
+                popupElement.addOption(
+                    `${hoverStyles}<div class="dropdown-item">
+                        <span class="material-symbols-rounded">dangerous</span>
+                        <span class="default-font">Force Quit</span>
+                    </div>`,
+                    () => {
+                        popupElement.hide();
+                        if (currentServerStatus !== KubekPredefined.SERVER_STATUSES.STOPPED) {
+                            KubekRequests.get(`/servers/${selectedServer}/kill`);
+                        }
+                    }
+                );
+            }
         </script>
     </div>
 </div>
