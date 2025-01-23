@@ -75,15 +75,15 @@ class KubekFileManagerUI {
             if (!e.detail.item) { this.upperDir(); return; }
                 const { path, name, type } = e.detail.item;
                 explorer.setAttribute('current-path', currentPath);
-                console.log("verify", editableExtensions.includes(KubekUtils.pathExt(name)));
+                console.log("verify", editableExtensions.includes(KubekUtils.pathExt(name)),"e",e.detail);
+                const verifycurrentpath = currentPath.endsWith("/") ? currentPath : currentPath + "/";
                 if (type === 'directory') {
-                    const verifycurrentpath = currentPath.endsWith("/") ? currentPath : currentPath + "/";
                     currentPath = verifycurrentpath + name;
 
                     KubekFileManagerUI.refreshDir();
                 } else if (type === 'file' && 
                          editableExtensions.includes(KubekUtils.pathExt(name))) {
-                    KubekFileManagerUI.editFile(currentPath + name);
+                            KubekFileManagerUI.editFile(verifycurrentpath + name);
                 }
         });
 
