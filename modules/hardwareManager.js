@@ -1,29 +1,32 @@
-import os from "os";
-import nodeDiskInfo from "node-disk-info";
-import osutils from "os-utils";
-// Получить информацию об использовании ЦПУ и ОЗУ
+import os from 'os';
+import si from 'systeminformation';
+
+// Obtener uso de recursos (CPU y RAM)
 export const getResourcesUsage = (cb) => {
-    osutils.cpuUsage(function (cpuValue) {
-        cb({
-            cpu: Math.round(cpuValue * 100),
-            ram: {
-                total: os.totalmem(),
-                free: os.freemem(),
-                used: os.totalmem() - os.freemem(),
-                percent: 100 - Math.round((os.freemem() / os.totalmem()) * 100)
-            }
+    Promise.all([si.currentLoad(), si.mem()])
+        .then(([cpuLoad, memInfo]) => {
+            cb({
+                cpu: Math.round(cpuLoad.currentLoad),
+                ram: {
+                    total: memInfo.total,
+                    free: memInfo.free,
+                    used: memInfo.used,
+                    percent: Math.round((memInfo.used / memInfo.total) * 100)
+                }
+            });
+        })
+        .catch(error => {
+            console.error(error);
+            cb({ error: "Error al obtener uso de recursos" });
         });
-    });
 };
 
-// Получить суммарную информацию о системе и железе
+// Obtener información del hardware y sistema
 export const getHardwareInfo = (cb) => {
-    nodeDiskInfo
-        .getDiskInfo()
-        .then((disks) => {
-            let cpuItem = os.cpus()[0];
+    Promise.all([si.fsSize(), si.cpu(), si.time()])
+        .then(([disks, cpuInfo, timeInfo]) => {
             cb({
-                uptime: Math.round(process.uptime()),
+                uptime: Math.round(timeInfo.uptime),
                 platform: {
                     name: os.type(),
                     release: os.release(),
@@ -32,19 +35,27 @@ export const getHardwareInfo = (cb) => {
                 },
                 totalmem: Math.round(os.totalmem() / 1024 / 1024),
                 cpu: {
-                    model: cpuItem.model,
-                    speed: cpuItem.speed,
-                    cores: os.cpus().length,
+                    model: cpuInfo.brand,
+                    speed: cpuInfo.speed,
+                    cores: cpuInfo.physicalCores
                 },
                 enviroment: process.env,
-                disks: disks,
-                networkInterfaces: os.networkInterfaces(),
-            })
+                disks: disks.map(disk => ({
+                    filesystem: disk.fs,
+                    total: disk.size,
+                    used: disk.used,
+                    available: disk.available,
+                    use: disk.use,
+                    mount: disk.mount
+                })),
+                networkInterfaces: os.networkInterfaces()
+            });
         })
-        .catch((reason) => {
-            console.error(reason);
+        .catch(error => {
+            console.error(error);
+            cb({ error: "Error al obtener información del hardware" });
         });
-}
+};
 /*
 import { execSync } from 'child_process';
 import os from 'os';

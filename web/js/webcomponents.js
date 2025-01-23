@@ -1711,23 +1711,34 @@ class CustomDialog extends HTMLElement {
             // Procesar discos
             const disksTable = getElement('disks-table');
             data.disks.forEach(disk => {
-                let { _mounted: letter, _blocks: total, _used: used, 
-                      _available: free, _capacity: percent } = disk;
-    
-                if (data.platform.name === "Linux") {
-                    total *= 1024;
-                    used *= 1024;
-                    free *= 1024;
-                }
-    
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <th>${letter}</th>
-                    <td>${KubekUtils.humanizeFileSize(used)}</td>
-                    <td>${KubekUtils.humanizeFileSize(free)}</td>
-                    <td>${KubekUtils.humanizeFileSize(total)}</td>
-                    <td>${percent}</td>
-                `;
+              console.log("disk", disk);
+              let letter, total, used, free, percent;
+
+              if (data.platform.name === "Linux") {
+                  // Formato para Linux
+                  letter = disk._mounted;
+                  total = disk._blocks * 1024; // Convertir a bytes
+                  used = disk._used * 1024;    // Convertir a bytes
+                  free = disk._available * 1024; // Convertir a bytes
+                  percent = disk._capacity;
+              } else {
+                  // Formato para Windows
+                  letter = disk.mount;
+                  total = disk.total;
+                  used = disk.used;
+                  free = disk.available;
+                  percent = disk.use;
+              }
+          
+              // Crear fila de la tabla
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                  <th>${letter}</th>
+                  <td>${KubekUtils.humanizeFileSize(used)}</td>
+                  <td>${KubekUtils.humanizeFileSize(free)}</td>
+                  <td>${KubekUtils.humanizeFileSize(total)}</td>
+                  <td>${percent}%</td>
+              `;
                 disksTable.appendChild(row);
             });
     

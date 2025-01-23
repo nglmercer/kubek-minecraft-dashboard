@@ -71,7 +71,7 @@ class KubekFileManagerUI {
         const explorer = document.querySelector('file-explorer');
         explorer.addEventListener('item-dblclick', (e) => {
             explorer.setAttribute('current-path', currentPath);
-            console.log('Double click en:', e.detail.item);
+            console.log('Double click en:', e.detail);
             if (!e.detail.item) { this.upperDir(); return; }
                 const { path, name, type } = e.detail.item;
                 explorer.setAttribute('current-path', currentPath);
