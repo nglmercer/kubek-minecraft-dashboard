@@ -128,7 +128,7 @@ const STYLES = `
 }
 
 /* Media query for larger screens (sm and up) */
-@media (min-width: 640px) {
+@media (min-width: 960px) {
     .nav-button {
         padding: 0.5rem 0.75rem;
     }
@@ -245,6 +245,7 @@ class AppConfig {
     tab4: '4',
     tab5: '5',
     tab6: '6',
+    tab7: '7',
   };
   static PAGE_CONFIG = {
     [this.PAGES.tab1]: {
@@ -264,10 +265,14 @@ class AppConfig {
         icon: returniconfont("tune", "serverSettings", '')
     },
     [this.PAGES.tab5]: {
+        label: 'server.properties',
+        icon: returniconfont("settings_ethernet", "server.properties", '')
+    },
+    [this.PAGES.tab6]: {
         label: '{{sections.kubekSettings}}',
         icon: returniconfont("settings", "kubekSettings", '')
     },
-    [this.PAGES.tab6]: {
+    [this.PAGES.tab7]: {
         label: '{{sections.systemMonitor}}',
         icon: returniconfont("area_chart", "systemMonitor", '')
     },
@@ -281,7 +286,8 @@ class AppConfig {
     3: `<slot name="3-content">${this.getslotcontent(this.PAGES.tab3)}</slot>`,
     4: `<slot name="4-content">${this.getslotcontent(this.PAGES.tab4)}</slot>`,
     5: `<slot name="5-content">${this.getslotcontent(this.PAGES.tab5)}</slot>`,
-    6: `<slot name="6-content">${this.getslotcontent(this.PAGES.tab6)}</slot>`
+    6: `<slot name="6-content">${this.getslotcontent(this.PAGES.tab6)}</slot>`,
+    7: `<slot name="7-content">${this.getslotcontent(this.PAGES.tab7)}</slot>`
   };
   static getSvgIcon(page) {
     return this.PAGE_CONFIG[page]?.icon || '';
@@ -330,7 +336,6 @@ class SideBar extends HTMLElement {
   }
 
   setupEventListeners() {
-    let toggleTimeout;
     const toggleButton = document.querySelector('[data-toggle-sidebar]');
 
     document.addEventListener('toggle-sidebar', (e) => {
@@ -345,7 +350,6 @@ class SideBar extends HTMLElement {
             
             if (this.isOpen && !sidebar.contains(e.target) && e.target !== toggleButton) {
               this.updateVisibility();
-              console.log("toggleTimeout", toggleTimeout);
               document.removeEventListener('click', outsideClickHandler);
             }
           };

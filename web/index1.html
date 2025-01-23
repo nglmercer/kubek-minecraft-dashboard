@@ -28,7 +28,6 @@
     <!-- Scripts -->
      <script src="js/utils.js"></script>
      <script src="js/webcomponents.js"></script>
-     <script src="js/navwebcomponent.js"></script>
     <script src="js/jquery-3.7.0.min.js"></script>
     <script src="js/moment.min.js"></script>
     <script src="js/base64.min.js"></script>
@@ -38,7 +37,23 @@
 
     <!-- Classes -->
     <script src="js/classes/KubekPredefined.js"></script>
+    <script src="js/classes/KubekUI.js"></script>
+    <script src="js/classes/KubekPageManager.js"></script>
+    <script src="js/classes/KubekDropdowns.js"></script>
+    <script src="js/classes/KubekServers.js"></script>
+    <script src="js/classes/KubekServerHeaderUI.js"></script>
     <script src="js/classes/KubekRequests.js"></script>
+    <script src="js/classes/KubekRefresher.js"></script>
+    <script src="js/classes/KubekAlerts.js"></script>
+    <script src="js/classes/KubekPlugins.js"></script>
+    <script src="js/classes/KubekFileManager.js"></script>
+    <script src="js/classes/KubekUtils.js"></script>
+    <script src="js/classes/KubekHardware.js"></script>
+    <script src="js/classes/KubekCircleProgress.js"></script>
+    <script src="js/classes/KubekCoresManager.js"></script>
+    <script src="js/classes/KubekJavaManager.js"></script>
+    <script src="js/classes/KubekTasksUI.js"></script>
+    <script src="js/classes/KubekNotifyModal.js"></script>
     <script src="/sections/sidebar.js"></script>
 
 </head>
@@ -58,27 +73,24 @@
     </dialog-container>
     <sidebar-menu style="font-family: material-symbols-outlined"></sidebar-menu>
 
-    <nav-bar>
-        <div slot="navbar-content" class="flex">
-          <div>
-            <button type="button" role="button" aria-label="reload window" id="reloadwindow" class="open-modal-btn" onclick="window.location.reload()">⟳
-            </button>
-          </div>
-        </div>
-      </nav-bar>
-      <side-bar>
-        <div slot="sidebar-content">
-          <login-button platform="tiktok"></login-button>
-          <login-button platform="twitch"></login-button>
-          <login-button platform="kick"></login-button>
-          <h2><translate-text key="selectlang"></translate-text></h2>
-          <language-selector id="selector2"></language-selector>
-          
-        </div>
-      </side-bar>
-      <main-content>
-        
-      </main-content>
+<div class="main-layout">
+    <div id="content-place" class="content"></div>
+</div>
+
+<div class="preloader" id="main-preloader">
+    <div class="lds-ellipsis">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</div>
+
+<div class="blurScreen" style="display: none"></div>
+
+<div class="uiPool bottom left" id="alerts-pool"></div>
+<div class="uiPool bottom right" id="tasks-pool"></div>
+
 </body>
 <script>
     const Eula_dialog = document.querySelector("#Eula_dialog");
@@ -118,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
-/*     setTimeout(() => {
+    setTimeout(() => {
         console.log("servers","loadServersList");
         KubekUI.loadServersList();
     }, 1000);
@@ -170,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // TODO
             });
         });
-    }); */
+    });
 
     KubekRequests.get("/kubek/rawlanguages", (langs) => {
         localStorage.setItem("rawlanguages", JSON.stringify(langs));
@@ -211,7 +223,6 @@ function uploadServerIcon() {
     html {
         padding: 0;
         margin: 0;
-        overflow: hidden;
         background: var(--bg-dark);
     }
 
@@ -248,10 +259,10 @@ function uploadServerIcon() {
   console.log("sidebar", document.querySelector('sidebar-menu'));
 
     setTimeout(() => {
-/*       document.querySelector('#menu-btn').addEventListener('click', () => {
+      document.querySelector('#menu-btn').addEventListener('click', () => {
         document.querySelector('sidebar-menu').toggleSidebar();
         console.log("toggleSidebar", document.querySelector('sidebar-menu'));
-    }); */
+    });
         const sidebarItems = document.querySelectorAll("#main-menu-sidebar .sidebar-item");
 
         sidebarItems.forEach(item => {

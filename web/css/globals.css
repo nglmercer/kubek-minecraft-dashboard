@@ -23,7 +23,10 @@
 table * {
   border: none !important;
 }
-
+body {
+  height: auto;
+  overflow-y: auto;
+}
 .superHide {
   position: absolute;
   left: -2582px;
