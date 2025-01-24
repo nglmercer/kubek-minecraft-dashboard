@@ -45,7 +45,7 @@ router.get("/version", function (req, res) {
 
 // Endpoint для получения настроек Kubek
 router.get("/settings", function (req, res) {
-    console.log("settings /kubek/settings",mainConfig); 
+    //console.log("settings /kubek/settings",mainConfig); 
     res.send(mainConfig);
 });
 

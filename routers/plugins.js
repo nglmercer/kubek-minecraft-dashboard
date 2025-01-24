@@ -14,11 +14,13 @@ router.get("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
                 return res.send([]);
             }
             let resultArray = [];
-            result.forEach((item) => {
-                if (item.type === "file") {
-                    resultArray.push(item.name);
-                }
-            });
+            if (result && result.length >= 1){
+                result.forEach((item) => {
+                    if (item.type === "file") {
+                        resultArray.push(item.name);
+                    }
+                });
+            }
             res.send(resultArray);
         });
     } else {

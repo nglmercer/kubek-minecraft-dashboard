@@ -8,56 +8,42 @@ import * as SECURITY from './security.js';
  */
 
 let fileWrites = {}; // Stores ongoing chunked write operations
-export const scanDirectory = (server, directory, cb) => {
-    let relDirectoryPath = "./servers/" + server + directory;
-
-    if (!verifyPathForTraversal(relDirectoryPath)) {
-        cb(false);
-        return;
+// modules/fileManager.js
+export const scanDirectory = (server, path, callback) => {
+    try {
+      const fullPath = constructFilePath(server, path);
+      const files = fs.readdirSync(fullPath, { withFileTypes: true });
+      const result = files.map(dirent => ({
+        name: dirent.name,
+        type: dirent.isDirectory() ? "directory" : "file"
+      }));
+      
+      if (callback) callback(result);
+      return result;
+    } catch (error) {
+      if (callback) callback(false);
+      return false;
     }
-
-    if ( fs.existsSync(relDirectoryPath) &&   fs.lstatSync(relDirectoryPath).isDirectory()) {
-        fs.readdir(relDirectoryPath, function (err, readResult) {
-            if (err) throw err;
-            if (typeof readResult !== "undefined") {
-                let filesResult = [];
-                readResult.forEach((element) => {
-                    let filePath = relDirectoryPath + "/" + element;
-                    let fileStats = fs.lstatSync(filePath);
-                    let fileItem = {
-                        name: element,
-                        path: filePath,
-                        type: fileStats.isDirectory() ? "directory" : "file",
-                        size: fileStats.size,
-                        modify: fileStats.mtime,
-                    };
-                    filesResult.push(fileItem);
-                });
-                cb(filesResult);
-                return;
-            }
-            cb(false);
-        });
-    } else {
-        cb(false);
-    }
-};
-
-export const readFile = (server, path, cb) => {
+  };
+  
+export const newReadFile = (server,path) => {
     let filePath = constructFilePath(server, path);
-
-    if (!verifyPathForTraversal(filePath)) {
-        cb(false);
-        return;
-    }
-
+    if (!verifyPathForTraversal(filePath)) return false;
     if (fs.existsSync(filePath) && !fs.lstatSync(filePath).isDirectory()) {
         fs.readFile(filePath, (err, data) => {
             if (err) throw err;
-            cb(data);
+            return data;
         });
     } else {
-        cb(false);
+        return false
+    }
+} 
+export const readFile = (server, path, cb) => {
+    let result = newReadFile(server,path)
+    if (cb){
+        cb(result)
+    }else{
+        return result
     }
 };
 

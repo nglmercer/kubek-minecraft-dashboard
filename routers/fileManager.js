@@ -23,6 +23,7 @@ router.get("/get", WEBSERVER.serversRouterMiddleware, function (req, res) {
             }
             // Если путь оказался папкой
             FILE_MANAGER.scanDirectory(q.server, q.path, (dirRdResult) => {
+                console.log(q.server,q.path,dirRdResult)
                 res.send(dirRdResult);
             });
         });
