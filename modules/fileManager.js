@@ -1,21 +1,22 @@
 import fs from "fs";
-let fileWrites = {};
 import { Base64 } from "js-base64";
 import * as SECURITY from './security.js';
+/**
+ * @namespace FileOperations
+ * @description Provides secure file system operations for server management with path validation and chunked file writing capabilities.
+ * Includes protection against directory traversal attacks.
+ */
 
+let fileWrites = {}; // Stores ongoing chunked write operations
 export const scanDirectory = (server, directory, cb) => {
     let relDirectoryPath = "./servers/" + server + directory;
 
     if (!verifyPathForTraversal(relDirectoryPath)) {
-        // Если найден path traversal, то ничего не делаем
         cb(false);
         return;
     }
 
-    if (
-        fs.existsSync(relDirectoryPath) &&
-        fs.lstatSync(relDirectoryPath).isDirectory()
-    ) {
+    if ( fs.existsSync(relDirectoryPath) &&   fs.lstatSync(relDirectoryPath).isDirectory()) {
         fs.readdir(relDirectoryPath, function (err, readResult) {
             if (err) throw err;
             if (typeof readResult !== "undefined") {
@@ -46,7 +47,6 @@ export const readFile = (server, path, cb) => {
     let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
-        // Если найден path traversal, то ничего не делаем
         cb(false);
         return;
     }
@@ -65,7 +65,6 @@ export const writeFile = (server, path, data) => {
     let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
-        // Если найден path traversal, то ничего не делаем
         return false;
     }
 
@@ -77,7 +76,6 @@ export const deleteFile = (server, path) => {
     let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
-        // Если найден path traversal, то ничего не делаем
         return false;
     }
 
@@ -92,7 +90,6 @@ export const deleteEmptyDirectory = (server, path) => {
     let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
-        // Если найден path traversal, то ничего не делаем
         return false;
     }
 
@@ -108,7 +105,6 @@ export const renameFile = (server, path, newName) => {
     let newPath = filePath.split("/").slice(0, -1).join("/") + "/";
 
     if (!verifyPathForTraversal(filePath) || !verifyPathForTraversal(newPath)) {
-        // Если найден path traversal, то ничего не делаем
         return false;
     }
 
@@ -123,7 +119,6 @@ export const newDirectory = (server, path, name) => {
     let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
-        // Если найден path traversal, то ничего не делаем
         return false;
     }
 
@@ -143,13 +138,10 @@ export const verifyPathForTraversal = (path) => {
         path.match(/\.\./gim) == null;
 };
 
-/* ЗАПИСЬ ФАЙЛОВ ПО ЧАНКАМ */
-// Начать запись
 export const startChunkyFileWrite = (server, path) => {
     let filePath = constructFilePath(server, path);
 
     if (!verifyPathForTraversal(filePath)) {
-        // Если найден path traversal, то ничего не делаем
         return false;
     }
 

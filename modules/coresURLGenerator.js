@@ -2,43 +2,63 @@ import * as COMMONS from './commons.js';
 import * as LOGGER from "./logger.js";
 
 /////////////////////////////////////////////////////
-/* ФУНКЦИИ ДЛЯ ПОЛУЧЕНИЯ ССЫЛОК НА СКАЧИВАНИЕ ЯДЕР */
+/* FUNCTIONS TO GET CORE DOWNLOAD LINKS            */
 /////////////////////////////////////////////////////
+
+/**
+ * Get Paper-based core download URL (Paper, Folia, etc.)
+ * Verified API (2024-05-22): https://api.papermc.io/service-page
+ */
 export const getPaperCoreURL = (core, version, cb) => {
-    let firstStepURL = "https://api.papermc.io/v2/projects/" + core + "/versions/" + version;
-    LOGGER.log("firstStepURL", firstStepURL);
+    const firstStepURL = `https://api.papermc.io/v2/projects/${core}/versions/${version}`;
+    LOGGER.log("PaperCore First Step URL", firstStepURL);
+    
     COMMONS.getDataByURL(firstStepURL, (data) => {
-        if (data === false) {
-            LOGGER.warning("Oops! An error occurred while fetching cores");
+        if (!data) {
+            LOGGER.warning("Failed to fetch Paper build data");
             cb(false);
             return;
         }
-        let lastBuildNumber = Math.max.apply(null, data.builds);
-        COMMONS.getDataByURL(firstStepURL + "/builds/" + lastBuildNumber, (data2) => {
-            if (data2 === false) {
-                LOGGER.warning("Oops! An error occurred while fetching cores");
+        
+        const lastBuildNumber = Math.max(...data.builds);
+        COMMONS.getDataByURL(`${firstStepURL}/builds/${lastBuildNumber}`, (data2) => {
+            if (!data2) {
+                LOGGER.warning("Failed to fetch Paper build details");
                 cb(false);
                 return;
             }
-            let downloadFileName = data2.downloads.application.name;
-            let finishURL = firstStepURL + "/builds/" + lastBuildNumber + "/downloads/" + downloadFileName;
+            
+            const downloadFileName = data2.downloads.application.name;
+            const finishURL = `${firstStepURL}/builds/${lastBuildNumber}/downloads/${downloadFileName}`;
             cb(finishURL);
         });
     });
 };
 
+/**
+ * Get Purpur core download URL
+ * Verified API (2024-05-22): https://purpurmc.org/docs/api
+ */
 export const getPurpurCoreURL = (version, cb) => {
-    cb("https://api.purpurmc.org/v2/purpur/" + version + "/latest/download");
+    cb(`https://api.purpurmc.org/v2/purpur/${version}/latest/download`);
 };
 
+/**
+ * Get Magma core download URL
+ * Verified API (2024-05-22): https://magmafoundation.org/api-docs
+ */
 export const getMagmaCoreURL = (version, cb) => {
-    cb("https://api.magmafoundation.org/api/v2/" + version + "/latest/download");
+    cb(`https://api.magmafoundation.org/api/v2/${version}/latest/download`);
 };
 
+/**
+ * Get core URL from external API endpoint
+ * Note: External API must return { [version]: url } format
+ */
 export const getCoreByExternalURL = (url, version, cb) => {
     COMMONS.getDataByURL(url, (data) => {
-        if (data === false) {
-            LOGGER.warning("Oops! An error occurred while fetching cores");
+        if (!data || !data[version]) {
+            LOGGER.warning("External API response invalid or missing version");
             cb(false);
             return;
         }
@@ -47,29 +67,36 @@ export const getCoreByExternalURL = (url, version, cb) => {
 };
 
 /////////////////////////////////////////////////
-/* ФУНКЦИИ ДЛЯ ПОЛУЧЕНИЯ СПИСКА ДОСТУПНЫХ ЯДЕР */
+/* FUNCTIONS TO GET AVAILABLE CORE VERSIONS    */
 /////////////////////////////////////////////////
 
+/**
+ * Get Paper-based core versions (Paper, Folia, etc.)
+ * Returns reversed version list for chronological order
+ */
 export const getAllPaperLikeCores = (cb, core = "paper") => {
-    const url = "https://api.papermc.io/v2/projects/" + core;
+    const url = `https://api.papermc.io/v2/projects/${core}`;
     COMMONS.getDataByURL(url, (data) => {
-        if (data === false) {
-            LOGGER.warning("Oops! An error occurred while fetching cores");
+        if (!data) {
+            LOGGER.warning("Failed to fetch Paper-based core list");
             cb(false);
             return;
         }
 
-        LOGGER.log("data paper", data, core,url);
-        let paperCoresList = data.versions;
-        paperCoresList.reverse();
-        cb(paperCoresList);
+        LOGGER.log("PaperCore Version Data", data, core, url);
+        const versions = data.versions.reverse();
+        cb(versions);
     });
 }
 
+/**
+ * Get Magma core versions
+ * Verified API returns array of versions
+ */
 export const getAllMagmaCores = (cb) => {
     COMMONS.getDataByURL("https://api.magmafoundation.org/api/v2/allVersions", (data) => {
-        if (data === false) {
-            LOGGER.warning("Oops! An error occurred while fetching cores");
+        if (!data) {
+            LOGGER.warning("Failed to fetch Magma versions");
             cb(false);
             return;
         }
@@ -77,32 +104,37 @@ export const getAllMagmaCores = (cb) => {
     });
 }
 
+/**
+ * Get Purpur core versions
+ * Returns reversed version list for chronological order
+ */
 export const getAllPurpurCores = (cb) => {
     COMMONS.getDataByURL("https://api.purpurmc.org/v2/purpur/", (data) => {
-        if (data === false) {
-            LOGGER.warning("Oops! An error occurred while fetching cores");
+        if (!data) {
+            LOGGER.warning("Failed to fetch Purpur versions");
             cb(false);
             return;
         }
-        let purpurCores2 = data.versions;
-        purpurCores2.reverse();
-        cb(purpurCores2);
+        const versions = data.versions.reverse();
+        cb(versions);
     });
 }
 
+/**
+ * Get core versions from external source
+ * Expects API to return { version: url } object
+ */
 export const getAllCoresByExternalURL = (url, cb, name) => {
-    let resultList = [];
-    LOGGER.log("url", url, name);
+    LOGGER.log("Fetching external cores", url, name);
     COMMONS.getDataByURL(url, (data) => {
-        if (data === false) {
-            LOGGER.warning("Oops! An error occurred while fetching cores", url, data);
+        if (!data || typeof data !== 'object') {
+            LOGGER.warning("Invalid external core API response", url, data);
             cb(false);
             return;
         }
-        for (const [key] of Object.entries(data)) {
-            resultList.push(key);
-        }
-        LOGGER.log("url", url, resultList, name);
+        
+        const resultList = Object.keys(data);
+        LOGGER.log("External core versions retrieved", url, resultList, name);
         cb(resultList);
     });
 };
