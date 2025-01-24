@@ -37,39 +37,7 @@ class KubekRequests {
                 cb(false, error.message, error);
             });
     };
-/*     static makeAjaxRequestA = (url, type, data = "", apiEndpoint = true, cb = () => {}) => {
-        if (apiEndpoint) {
-            url = KubekPredefined.API_ENDPOINT + url;
-        }
-    
-        const options = {
-            method: type.toString().toUpperCase(),
-            headers: {
-                'Content-Type': 'application/json' // <--- Siempre enviar como JSON
-            }
-        };
-    
-        if (data !== "") {
-            options.body = JSON.stringify(data); // <--- Serializar el objeto
-        }
-    
-        fetch(url, options)
-            .then(async (response) => {
-                if (!response.ok) {
-                    if (response.status === 403) {
-                        KubekAlerts.addAlert("{{commons.failedToRequest}}", "warning", "{{commons.maybeUDoesntHaveAccess}}", 5000);
-                    }
-                    cb(false, response.statusText, await response.text());
-                } else {
-                    const responseData = await response.json();
-                    cb(responseData);
-                }
-            })
-            .catch((error) => {
-                cb(false, error.message, error);
-            });
-    }; */
-    // Función para cada tipo de solicitud
+
     static get = (url, cb, apiEndpoint = true) => {
         this.makeAjaxRequest(url, "GET", "", apiEndpoint, cb);
     };
@@ -136,6 +104,7 @@ class KubekFileManager extends KubekBase {
     // Получить содержимое папки
     static readDirectory(path, cb) {
         this.get("/fileManager/get?server=" + KubekRequests.selectedServer + "&path=" + path, cb);
+        // getvalue return
     }
 
     // Переименовать файл
@@ -289,4 +258,105 @@ class KubekServers extends KubekBase {
             this.get("/servers/" + server + "/stop");
         }
     };
+}
+class awaitRequests {
+    static selectedServer = window.localStorage.selectedServer;
+
+    // Realizar una solicitud AJAX y retornar una Promesa
+    static makeAjaxRequest = async (url, type, data = "", apiEndpoint = true) => {
+        if (apiEndpoint) {
+            url = KubekPredefined.API_ENDPOINT + url;
+        }
+
+        const options = {
+            method: type.toUpperCase(),
+            headers: {}
+        };
+
+        if (data !== "") {
+            if (data instanceof FormData) {
+                options.body = data;
+            } else {
+                options.body = JSON.stringify(data);
+                options.headers['Content-Type'] = 'application/json';
+            }
+        }
+
+        try {
+            const response = await fetch(url, options);
+            
+            if (!response.ok) {
+                if (response.status === 403) {
+                    KubekAlerts.addAlert(
+                        "{{commons.failedToRequest}}",
+                        "warning",
+                        "{{commons.maybeUDoesntHaveAccess}}",
+                        5000
+                    );
+                }
+                
+                const errorText = await response.text();
+                const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+                error.status = response.status;
+                error.statusText = response.statusText;
+                error.body = errorText;
+                throw error;
+            }
+            
+            return await response.json();
+            
+        } catch (error) {
+            throw error; // Propagamos el error para manejo externo
+        }
+    };
+
+    static get = (url, apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "GET", "", apiEndpoint);
+    };
+
+    static post = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "POST", data, apiEndpoint);
+    };
+
+    static put = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "PUT", data, apiEndpoint);
+    };
+
+    static delete = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "DELETE", data, apiEndpoint);
+    };
+
+    static head = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "HEAD", data, apiEndpoint);
+    };
+
+    static options = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "OPTIONS", data, apiEndpoint);
+    };
+}
+
+class awaitBase {
+    static get(url, apiEndpoint = true) {
+        return awaitRequests.get(url, apiEndpoint);
+    }
+
+    static post(url, data = "", apiEndpoint = true) {
+        return awaitRequests.post(url, data, apiEndpoint);
+    }
+
+    static put(url, data = "", apiEndpoint = true) {
+        return awaitRequests.put(url, data, apiEndpoint);
+    }
+
+    static delete(url, data = "", apiEndpoint = true) {
+        return awaitRequests.delete(url, data, apiEndpoint);
+    }
+
+    static head(url, data = "", apiEndpoint = true) {
+        return awaitRequests.head(url, data, apiEndpoint);
+    }
+
+    static options(url, data = "", apiEndpoint = true) {
+        return awaitRequests.options(url, data, apiEndpoint);
+    }
 }

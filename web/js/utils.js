@@ -1261,6 +1261,7 @@ class KubekFileManagerUI {
             console.log("currentPath", currentPath, "data", data);
             const explorer = document.querySelector('file-explorer');
             explorer.data = data;
+            
             document.getElementById('path-display').textContent = `Current Path: ${currentPath}`;
             // Bind breadcrumb events
             this.bindBreadcrumbClicks();
