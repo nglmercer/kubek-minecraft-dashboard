@@ -4,7 +4,17 @@ import * as COMMONS from "./commons.js";
 import * as SECURITY from "./security.js";
 import * as FILE_MANAGER from "./fileManager.js";
 import * as MULTILANG from "./multiLanguage.js";
-import fs from "fs";
+import os from 'os';
+import fs from 'fs';
+
+// Añade esto al inicio de tu código
+const tempDir = path.join(os.tmpdir(), 'TEMPDIR');
+
+// Verificar y crear el directorio temporal si no existe
+if (!fs.existsSync(tempDir)) {
+    console.log("create tempdir",tempDir)
+  fs.mkdirSync(tempDir, { recursive: true });
+}
 import express from 'express';
 import cookieParser from "cookie-parser";
 import fileUpload from "express-fileupload";
@@ -38,7 +48,7 @@ webServer.use(express.urlencoded({ extended: true }));
 webServer.use(
     fileUpload({
         useTempFiles: true,
-        tempFileDir: "/tmp/",
+        tempFileDir: tempDir,
     })
 );
 
