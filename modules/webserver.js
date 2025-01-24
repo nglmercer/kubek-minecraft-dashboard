@@ -1,3 +1,11 @@
+/**
+ * Web Server Configuration Module
+ * 
+ * This module handles the setup and configuration of the Express web server,
+ * including middleware, routing, authentication, and static file handling.
+ * It also manages security checks and server-side utilities.
+ */
+
 import * as LOGGER from "./logger.js";
 import * as PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
@@ -6,26 +14,16 @@ import * as FILE_MANAGER from "./fileManager.js";
 import * as MULTILANG from "./multiLanguage.js";
 import os from 'os';
 import fs from 'fs';
-
-// Añade esto al inicio de tu código
-const tempDir = path.join(os.tmpdir(), 'TEMPDIR');
-
-// Verificar y crear el directorio temporal si no existe
-if (!fs.existsSync(tempDir)) {
-    console.log("create tempdir",tempDir)
-  fs.mkdirSync(tempDir, { recursive: true });
-}
 import express from 'express';
 import cookieParser from "cookie-parser";
 import fileUpload from "express-fileupload";
 import colors from "colors";
 import mime from "mime";
 import path from 'path';
-
 import { isInSubnet } from "is-in-subnet";
 import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
+// Import routers
 import * as permissionsMiddleware from "./permissionsMiddleware.js";
 import * as coresRouter from "./../routers/cores.js";
 import * as tasksRouter from "./../routers/tasks.js";
@@ -38,10 +36,25 @@ import * as authRouter from "./../routers/auth.js";
 import * as accountsRouter from "./../routers/accounts.js";
 import * as kubekRouter from "./../routers/kubek.js";
 import * as updatesRouter from "./../routers/updates.js";
-//t tasksRouter = require("./../routers/tasks.js");
 
+// Get directory paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure temporary directory
+const tempDir = path.join(os.tmpdir(), 'TEMPDIR');
+
+// Create temporary directory if it doesn't exist
+if (!fs.existsSync(tempDir)) {
+    console.log("Creating temporary directory:", tempDir);
+    fs.mkdirSync(tempDir, { recursive: true });
+}
+
+// Initialize Express server
 let webServer = express();
 globalThis.webPagesPermissions = {};
+
+// Configure server middleware
 webServer.use(cookieParser());
 webServer.use(express.json());
 webServer.use(express.urlencoded({ extended: true }));
@@ -52,40 +65,56 @@ webServer.use(
     })
 );
 
-// Получаем порт веб-сервера из конфига
+// Get web server port from configuration
 let webPort = globalThis.mainConfig?.webserverPort;
+
+/**
+ * Logs web requests with client information
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {string|null} username - Authenticated username or null
+ */
 export const logWebRequest = (req, res, username = null) => {
     let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
     ip = ip.replace("::ffff:", "").replace("::1", "127.0.0.1");
     let additionalInfo2 = "";
+    
     if (username !== null) {
-        additionalInfo2 = "[" + colors.cyan(username) + "]"
+        additionalInfo2 = "[" + colors.cyan(username) + "]";
     }
-    LOGGER.log("[" + colors.yellow(ip) + "]", additionalInfo2, colors.green(req.method) + " - " + req.originalUrl);
+    
+    LOGGER.log(
+        "[" + colors.yellow(ip) + "]",
+        additionalInfo2,
+        colors.green(req.method) + " - " + req.originalUrl
+    );
 };
 
-// Middleware для всех роутеров
+/**
+ * Authentication and logging middleware for all routes
+ * Handles request validation, IP filtering, and user authentication
+ */
 export const authLoggingMiddleware = (req, res, next) => {
     let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
     ip = ip.replace("::ffff:", "").replace("::1", "127.0.0.1");
 
-    // Проверяем существование куков у пользователя на предмет логина
+    // Check for user authentication cookies
     let username = null;
     if (SECURITY.isUserHasCookies(req) && mainConfig.authorization === true) {
         username = req.cookies["kbk__login"];
     }
 
-    // Показываем запрос в логах
+    // Log request if not in excluded URLs
     if (!COMMONS.testForRegexArray(req.path, PREDEFINED.NO_LOG_URLS)) {
         logWebRequest(req, res, username);
     }
 
-    // Добавляем проверку на вхождение IP в range (при включенной функции)
+    // IP whitelist validation
     if (mainConfig.allowOnlyIPsList === true && !isInSubnet(ip, mainConfig.IPsAllowed)) {
-        return; // При простом return на запрос не будет ответа, т.е. запрос просто зависнет
+        return; // Block unauthorized IPs
     }
 
-    // Проверяем включена ли авторизация и есть ли у пользователя доступ к серверу
+    // Authentication system check
     if (mainConfig.authorization === true && !COMMONS.testForRegexArray(req.originalUrl, PREDEFINED.SKIP_AUTH_URLS)) {
         if (SECURITY.isUserHasCookies(req) && SECURITY.authenticateUser(req.cookies["kbk__login"], req.cookies["kbk__hash"])) {
             return next();
@@ -96,38 +125,49 @@ export const authLoggingMiddleware = (req, res, next) => {
         return next();
     }
 
-    // Если ни один из этапов ранее не пропустил запрос дальше
+    // Fallback forbidden response
     return res.sendStatus(403);
 };
 
-// Middleware для статических страниц
+/**
+ * Middleware for serving static files with security checks
+ * Handles file translation and content-type detection
+ */
 export const staticsMiddleware = (req, res, next) => {
     let filePath = path.join(__dirname, "./../web", req.path);
     let ext = path.extname(req.path).replace(".", "").toLowerCase();
+    
+    // Default to index.html for root path
     if (req.path === "/") {
         filePath = path.join(__dirname, "./../web", "/index.html");
         ext = "html";
     }
-    if (PREDEFINED.ALLOWED_STATIC_EXTS.includes(ext) && FILE_MANAGER.verifyPathForTraversal(filePath) && fs.existsSync(filePath)) {
-        // Если все проверки пройдены - детектим и отправляем content-type
-        res.set(
-            "content-type",
-            mime.getType(filePath)
-        );
+
+    // Security and validity checks
+    if (PREDEFINED.ALLOWED_STATIC_EXTS.includes(ext) && 
+        FILE_MANAGER.verifyPathForTraversal(filePath) && 
+        fs.existsSync(filePath)) {
+        
+        // Set content type
+        res.set("content-type", mime.getType(filePath));
         let fileData = fs.readFileSync(filePath);
-        // Переводим файл, если нужно
+        
+        // Apply translation if needed
         if (PREDEFINED.TRANSLATION_STATIC_EXTS.includes(ext)) {
             fileData = MULTILANG.translateText(currentLanguage, fileData);
         }
-        // Возвращаем файл
+        
         return res.send(fileData);
     }
+    
     return next();
 };
 
-// Middleware для проверки на доступ к серверу (ставится ко всем роутерам!)
+/**
+ * Middleware for server access validation
+ * Checks user permissions for specific server operations
+ */
 export const serversRouterMiddleware = (req, res, next) => {
-    // Если авторизация отключена
     if (mainConfig.authorization === false) {
         return next();
     }
@@ -139,7 +179,6 @@ export const serversRouterMiddleware = (req, res, next) => {
         chkValue = req.query.server;
     }
 
-    // Если проверка не требуется
     if (chkValue === false) {
         return next();
     }
@@ -147,11 +186,16 @@ export const serversRouterMiddleware = (req, res, next) => {
     if (SECURITY.isUserHasCookies(req) && SECURITY.isUserHasServerAccess(req.cookies["kbk__login"], chkValue)) {
         return next();
     }
+    
     return res.sendStatus(403);
 }
 
-// Функция для загрузки всех роутеров из списка в predefined
+/**
+ * Initializes all application routers and mounts them to paths
+ * Applies core middleware and error handling
+ */
 export const loadAllDefinedRouters = () => {
+    // Initialize all router modules
     permissionsMiddleware.initializeWebServer(webServer);
     coresRouter.initializeWebServer(webServer);
     tasksRouter.initializeWebServer(webServer);
@@ -164,33 +208,25 @@ export const loadAllDefinedRouters = () => {
     accountsRouter.initializeWebServer(webServer);
     kubekRouter.initializeWebServer(webServer);
     updatesRouter.initializeWebServer(webServer);
+
+    // Apply core middleware
     webServer.use(authLoggingMiddleware);
     webServer.use(staticsMiddleware);
 
+    // Mount routers to paths
     webServer.use("/api/cores", coresRouter.router);
-
-
     webServer.use("/api/tasks", tasksRouter.router);
-
     webServer.use("/api/fileManager", fileManagerRouter.router);
-
     webServer.use("/api/servers", serversRouter.router);
-
     webServer.use("/api/mods", modsRouter.router);
-
     webServer.use("/api/plugins", pluginsRouter.router);
-
     webServer.use("/api/java", javaRouter.router);
-
     webServer.use("/api/auth", authRouter.router);
-
     webServer.use("/api/accounts", accountsRouter.router);
-
     webServer.use("/api/kubek", kubekRouter.router);
-
     webServer.use("/api/updates", updatesRouter.router);
 
-    // Хэндлер для ошибки 404
+    // 404 Error handler
     webServer.use((req, res) => {
         if (!res.headersSent) {
             let errFile = fs.readFileSync(path.join(__dirname, "./../web/404.html")).toString();
@@ -199,10 +235,16 @@ export const loadAllDefinedRouters = () => {
     });
 };
 
-// Запустить веб-сервер на выбранном порту
+/**
+ * Starts the web server on configured port
+ */
 export const startWebServer = () => {
     webServer.listen(webPort, () => {
-        LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.webserverStarted}}", colors.cyan(webPort)));
+        LOGGER.log(MULTILANG.translateText(
+            mainConfig.language,
+            "{{console.webserverStarted}}",
+            colors.cyan(webPort)
+        ));
     });
 };
 
