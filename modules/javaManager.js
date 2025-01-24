@@ -79,7 +79,7 @@ export const checkJavaVersionTermux = (version) => {
 };
 
 // Obtener versiones de Java disponibles
-export const getDownloadableJavaVersions = (cb) => {
+export function getDownloadableJavaVersions () {
     if (isTermux()) {
         try {
             const output = execSync('pkg search "^openjdk-[0-9]+"').toString();
@@ -91,16 +91,15 @@ export const getDownloadableJavaVersions = (cb) => {
                     return !isNaN(num) && num >= 8 && num <= 21;
                 })
                 .sort((a, b) => b - a); // Ordenar de mayor a menor
-            cb([...new Set(versions)]); // Eliminar duplicados
+            return([...new Set(versions)]); // Eliminar duplicados
         } catch (error) {
             console.error('Error obteniendo versiones:', error);
-            cb([]); // Asegurar retorno de array vacío
+            return([]); // Asegurar retorno de array vacío
         }
-        return;
     }
     // Resto del código para otras plataformas...
     COMMONS.getDataByURL(PREDEFINED.JAVA_LIST_URL, (data) => {
-        cb(data ? data.available_releases.map(String) : []);
+        return(data ? data.available_releases.map(String) : []);
     });
 };
 
@@ -111,10 +110,9 @@ export const getDownloadableJavaVersions = (cb) => {
             availReleases.forEach((release, i) => {
                 availReleases[i] = release.toString();
             });
-            cb(availReleases);
-            return;
+            return(availReleases);
         }
-        cb(false);
+        return([]);
     });
 
 // Obtener versiones locales de Java

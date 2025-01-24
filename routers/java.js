@@ -17,9 +17,8 @@ router.get("/kubek", function (req, res) {
 
 // Endpoint списка доступных для скачивания версий Java
 router.get("/online", function (req, res) {
-    JAVA_MANAGER.getDownloadableJavaVersions((result) => {
-        res.send(result);
-    });
+    const result = JAVA_MANAGER.getDownloadableJavaVersions();
+    res.send(result);
 });
 
 // Endpoint для получения общего списка Java
@@ -29,15 +28,18 @@ router.get("/all", (req, res) => {
         kubek: JAVA_MANAGER.getLocalJavaVersions(),
         online: []
     }
-
-    JAVA_MANAGER.getDownloadableJavaVersions((online) => {
-        online.forEach((onlItem) => {
-            if(!result.kubek.includes(onlItem)){
-                result.online.push(onlItem);
+    const onlineresult = JAVA_MANAGER.getDownloadableJavaVersions();
+    if (onlineresult) {
+        onlineresult.forEach((onItem)=>{
+            if(onlineresult.kubek){
+                if(!onlineresult.kubek.includes(onItem)){
+                    onlineresult.online.push(onItem)
             }
-        });
-        res.send(result);
-    });
+            }
+        })
+    }
+    console.log("alljava",result)
+    res.send(result);
 });
 
 router.get("/download/:version", async function (req, res) {
