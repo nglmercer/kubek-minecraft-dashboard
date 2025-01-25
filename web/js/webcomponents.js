@@ -2867,6 +2867,7 @@ class FileExplorer extends HTMLElement {
 
   // Utility function to normalize paths
   normalizePath(path) {
+    if(!path) return "/"
     // Remove duplicate slashes
     return path.replace(/\/+/g, '/');
   }

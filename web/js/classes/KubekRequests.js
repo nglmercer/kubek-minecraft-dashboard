@@ -360,3 +360,8 @@ class awaitBase {
         return awaitRequests.options(url, data, apiEndpoint);
     }
 }
+class awaitfilemanager extends awaitBase {
+    static readDirectory(path) {
+        return this.get("/fileManager/get?server=" + awaitRequests.selectedServer + "&path=" + path);
+    }
+}
