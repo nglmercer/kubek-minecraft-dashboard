@@ -1,0 +1,38 @@
+import express from 'express';
+import { discoveredServers } from '../modules/networkDiscovery.js';
+
+export const router = express.Router();
+let mainConfig = globalThis.mainConfig;
+router.get('/', (req, res) => {
+    res.json({
+        name: mainConfig.serverName || 'Kubek Server',
+        port: mainConfig.webserverPort,
+        version: globalThis.kubekVersion,
+        servers: mainConfig.servers
+    });
+});
+
+router.get('/list', (req, res) => {
+    const servers = Array.from(discoveredServers.values());
+    const localInfo = getCurrentServerInfo();
+    
+    // Combinar datos
+    const response = {
+        local: localInfo,
+        servers: servers
+    };
+    
+    res.json(response);
+});
+setTimeout(() => {
+    const server = Array.from(discoveredServers.values());
+
+// Mostrar la lista
+server.forEach(server => {
+    console.log(`Servidor encontrado: IP ${server.ip}, Puerto ${server.port}`);
+});
+console.log('Lista de servidores encontrados:', server);
+}, 10000);
+export function initializeWebServer(webServer) {
+    // Middleware adicional si es necesario
+}

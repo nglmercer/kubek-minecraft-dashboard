@@ -132,6 +132,7 @@ export const writeServersConfig = (data) => {
     return writeAnyConfig("./servers/servers.json", data);
 };
 globalThis.mainConfig = readMainConfig();
+let mainConfig = globalThis.mainConfig;
 globalThis.usersConfig = readUsersConfig();
 globalThis.serversConfig = readServersConfig();
 export const reloadAllConfigurations = async () => {
@@ -149,5 +150,5 @@ export const autoStartServers = () => {
         }
     }
 };
-
+export { mainConfig };
 // DEVELOPED by seeeroy

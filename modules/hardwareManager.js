@@ -48,6 +48,7 @@ export const getHardwareInfo = (cb) => {
                     use: disk.use,
                     mount: disk.mount
                 })),
+                rawdisks: disks,
                 networkInterfaces: os.networkInterfaces()
             });
         })

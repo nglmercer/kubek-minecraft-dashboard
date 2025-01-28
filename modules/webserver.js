@@ -22,7 +22,7 @@ import mime from "mime";
 import path from 'path';
 import { isInSubnet } from "is-in-subnet";
 import { fileURLToPath } from "url";
-
+import { startDiscovery } from './networkDiscovery.js';
 // Import routers
 import * as permissionsMiddleware from "./permissionsMiddleware.js";
 import * as coresRouter from "./../routers/cores.js";
@@ -36,7 +36,7 @@ import * as authRouter from "./../routers/auth.js";
 import * as accountsRouter from "./../routers/accounts.js";
 import * as kubekRouter from "./../routers/kubek.js";
 import * as updatesRouter from "./../routers/updates.js";
-
+import * as discoveryRouter from "./../routers/discovery.js";
 // Get directory paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -247,5 +247,9 @@ export const startWebServer = () => {
         ));
     });
 };
+discoveryRouter.initializeWebServer(webServer);
+webServer.use("/api/discovery", discoveryRouter.router);
 
+// Después de iniciar el servidor web
+startDiscovery();
 export { webServer };

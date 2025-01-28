@@ -1716,16 +1716,17 @@ class CustomDialog extends HTMLElement {
                 `${data.cpu.model} (${data.cpu.cores} cores)`;
             getElement('cpu-speed').textContent = `${data.cpu.speed} MHz`;
             const disksTable = getElement('disks-table');
+            console.log("disks", data.disks, data);
             data.disks.forEach(disk => {
               let letter, total, used, free, percent;
 
               if (data.platform.name === "Linux") {
-                  // Formato para Linux
-                  letter = disk._mounted;
-                  total = disk._blocks * 1024; // Convertir a bytes
-                  used = disk._used * 1024;    // Convertir a bytes
-                  free = disk._available * 1024; // Convertir a bytes
-                  percent = disk._capacity;
+                  // Usar las propiedades correctas para Linux
+                  letter = disk.mount; // Usar 'mount' en lugar de '_mounted'
+                  total = disk.total;  // Los valores ya están en bytes
+                  used = disk.used;    // No multiplicar por 1024
+                  free = disk.available;
+                  percent = disk.use;  // Usar 'use' en lugar de '_capacity'
               } else {
                   // Formato para Windows
                   letter = disk.mount;
@@ -1734,8 +1735,8 @@ class CustomDialog extends HTMLElement {
                   free = disk.available;
                   percent = disk.use;
               }
-          
-              // Crear fila de la tabla
+
+              // Crear fila de la tabla (sin cambios)
               const row = document.createElement('tr');
               row.innerHTML = `
                   <th>${letter}</th>
@@ -1744,7 +1745,7 @@ class CustomDialog extends HTMLElement {
                   <td>${KubekUtils.humanizeFileSize(total)}</td>
                   <td>${percent}%</td>
               `;
-                disksTable.appendChild(row);
+              disksTable.appendChild(row);
             });
             getElement('kubek-uptime').textContent = 
             KubekUtils.humanizeSeconds(data.uptime);
