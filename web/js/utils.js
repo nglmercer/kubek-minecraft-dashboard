@@ -209,6 +209,10 @@ class KubekTasksUI {
                     return;
                 }
                 console.log("tasks", tasks);
+                if (tasks.currentStep === "{{commons.completed}}" || tasks.currentStep === "completed") {
+                    this.removeAllTasks();
+                    return;
+                }
                 if (isConnectionLost) {
                  //   KubekUI.connectionRestored();
                 }
@@ -493,10 +497,7 @@ class KubekPredefined {
   static MODAL_CANCEL_BTN = '<button class="dark-btn" onclick="KubekNotifyModal.destroyAllModals()">{{commons.close}}</button>';
 }
 let currentServerStatus = KubekPredefined.SERVER_STATUSES.STOPPED;
-selectedServer = "";
-if (window.localStorage.selectedServer) {
-  selectedServer = window.localStorage.selectedServer;
-}
+selectedServer = window.localStorage.selectedServer || "";
 // init logs
 var uiDebugger = DebuggerGroupManager.create('UI');   
  uiDebugger.registerCallSite('kukeb-ui.js', 0).stack

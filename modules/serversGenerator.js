@@ -293,4 +293,3 @@ export const writeBedrockStartFiles = (serverName) => {
 
     return true;
 };
-//fix android platform

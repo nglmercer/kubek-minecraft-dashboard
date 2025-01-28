@@ -1108,7 +1108,7 @@ console.log("[UI] Starting Kubek UI...");
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 let act = urlParams.get("act");
-let selectedServer = "";
+let selectedServer = window.localStorage.selectedServer || "";
 let consoleRamUsageBar, consoleCpuUsageBar;
 
 document.addEventListener('DOMContentLoaded', function () { 
@@ -1131,8 +1131,12 @@ document.addEventListener('DOMContentLoaded', function () {
     KubekServers.getServersList((servers) => {
         if (!servers) return;
         console.log("servers getServersList", servers); 
-        localStorage.setItem("selectedServer", servers[0]);
-        selectedServer = servers[0];
+        if (servers.has(window.localStorage.selectedServer)) {
+            selectedServer = window.localStorage.selectedServer;
+        } else {
+            localStorage.setItem("selectedServer", servers[0]);
+            selectedServer = servers[0];
+        }
     });
     KubekRequests.get("/kubek/rawlanguages", (langs) => {
         localStorage.setItem("rawlanguages", JSON.stringify(langs));
@@ -1247,7 +1251,7 @@ KubekConsoleUI = class {
 
     const server_menu = document.querySelector('server-menu');
     server_menu.addEventListener('server-change', (e) => {
-        console.log("server-change", e);
+        console.log("server-change", e.detail);
         window.localStorage.selectedServer = event.detail.server;
 
     });
