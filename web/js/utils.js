@@ -375,7 +375,6 @@ class KubekUtils {
   }
 
   // Generar un UUID v4
-  // Generar un UUID v4 sin usar la librería crypto
   static uuidv4() {
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
           let r = Math.random() * 16 | 0; // Generar un número aleatorio entre 0 y 15
