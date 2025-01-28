@@ -68,12 +68,11 @@ class TaskManager {
         return typeof this.tasks[taskID] !== 'undefined';
     }
     removeCompletedTasks() {
-        for (const [key, value] of Object.entries(this.tasks)) {
-            if (typeof value.currentStep !== "undefined" || typeof value.status !== "undefined") {
-                if (value.currentStep === PREDEFINED.SERVER_CREATION_STEPS.COMPLETED || value.status === PREDEFINED.SERVER_CREATION_STEPS.COMPLETED) {
-                    this.tasks[key] = null;
-                    delete this.tasks[key];
-                }
+        const now = Date.now();
+        for (const [taskID, task] of Object.entries(this.tasks)) {
+            if (task.status === PREDEFINED.TASK_STATUS.COMPLETED && 
+                now - task.updatedAt > 5000) { // 5 segundos después de completar
+                delete this.tasks[taskID];
             }
         }
         return true;

@@ -103,7 +103,11 @@ export const SERVER_STATUS_CHANGE_MARKERS = {
 
 // Default kubek user password
 export const DEFAULT_KUBEK_PASSWORD = "Kubek2024";
-
+export const TASK_STATUS = {
+    IN_PROGRESS: 'in_progress',
+    COMPLETED: 'completed',
+    FAILED: 'failed'
+};
 // Predefined configurations
 export const CONFIGURATIONS = {
     MAIN: {

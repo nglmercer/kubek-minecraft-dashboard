@@ -167,7 +167,7 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
                 console.log("[DEBUG] Download path:", serverDirectoryPath + path.sep + coreFileName);
 
                 DOWNLOADS_MANAGER.addDownloadTask(coreDownloadURL, serverDirectoryPath + path.sep + coreFileName, (coreDlResult) => {
-                    console.log("[DEBUG] Download result:", coreDlResult);
+                    console.log("[DEBUG] Download result:", coreDlResult,coreDownloadURL, serverDirectoryPath + path.sep + coreFileName);
                     
                     if (coreDlResult === true) {
                         TASK_MANAGER.updateTask(creationTaskID, {

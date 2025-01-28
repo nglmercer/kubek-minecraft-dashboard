@@ -1,13 +1,100 @@
 import * as PREDEFINED from "./predefined.js";
-
 import TASK_MANAGER from "./taskManager.js";
 import * as LOGGER from "./logger.js";
 import * as MULTILANG from "./multiLanguage.js";
 import path from "path";
 import axios from "axios";
 import fs from "fs";
-import decompress from "decompress";    
+import { pipeline } from "stream/promises";
+import decompress from "decompress";
 import colors from "colors";
+
+function updateDownloadProgress(taskID, chunkLength) {
+    const task = TASK_MANAGER.getTaskData(taskID);
+    if (!task) {
+        console.error(`Task ${taskID} not found`);
+        return;
+    }
+
+    // Initialize size object if it doesn't exist
+    if (!task.size) {
+        console.error(`Size object missing for task ${taskID}, initializing...`);
+        task.size = { current: 0, total: 0 };
+    }
+
+    // Ensure size properties exist and are numbers
+    const currentSize = Number(task.size.current) || 0;
+    const totalSize = Number(task.size.total) || 0;
+
+    // Validate chunk length
+    if (typeof chunkLength !== "number" || isNaN(chunkLength) || chunkLength < 0) {
+        console.error(`Invalid chunk length for task ${taskID}: ${chunkLength}`);
+        return;
+    }
+
+    // Calculate new current size
+    const newCurrent = currentSize + chunkLength;
+
+    // Calculate progress only if we have a valid total
+    let newProgress = 0;
+    if (totalSize > 0) {
+        newProgress = Math.min(100, Math.round((newCurrent / totalSize) * 100));
+    } else {
+        // If total size is unknown, use an indeterminate progress value
+        newProgress = Math.min(99, Math.round((newCurrent / 1024 / 1024))); // Base progress on MB downloaded
+    }
+    const statsdata = {
+        progress: newProgress,
+        current: newCurrent,
+        total: totalSize,
+        chunk: chunkLength
+    }
+    // Log detailed debug information
+    //console.log(`Updating task ${taskID}:`,statsdata );
+
+    // Update task with new values
+    TASK_MANAGER.updateTask(taskID, {
+        size: { 
+            current: newCurrent,
+            total: totalSize // Preserve the original total
+        },
+        progress: newProgress
+    });
+}
+
+// Función auxiliar para crear y configurar la tarea de descarga
+function createDownloadTask(downloadURL, filePath, contentLength) {
+    // Verificar que contentLength sea un número válido
+    if (typeof contentLength !== "number" || isNaN(contentLength) || contentLength <= 0) {
+        throw new Error("Invalid contentLength: must be a positive number");
+    }
+
+    const taskData = {
+        type: PREDEFINED.TASKS_TYPES.DOWNLOADING,
+        progress: 0, // Inicializar en 0, no en null
+        size: {
+            total: contentLength,
+            current: 0
+        },
+        url: downloadURL,
+        path: filePath,
+        filename: path.basename(filePath),
+        status: PREDEFINED.TASK_STATUS.IN_PROGRESS
+    };
+
+    const taskID = TASK_MANAGER.addNewTask(taskData);
+    
+    LOGGER.log(
+        MULTILANG.translateText(
+            mainConfig.language,
+            "{{console.downloadTaskCreated}}",
+            colors.cyan(taskID),
+            colors.cyan(taskData.filename)
+        )
+    );
+
+    return taskID;
+}
 
 export async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
     try {
@@ -17,101 +104,71 @@ export async function addDownloadTask(downloadURL, filePath, cb = () => {}) {
             responseType: "stream",
             timeout: 10000,
         });
-        
-        const { data, headers } = response;
 
-        // Validar Content-Length
-        const contentLength = parseInt(headers['content-length'], 10);
-        if (isNaN(contentLength)) {
+        const contentLength = parseInt(response.headers['content-length'], 10);
+        if (isNaN(contentLength) || contentLength <= 0) {
             const error = new Error("Content-Length header missing or invalid");
-            cb(error);
+            cb(false, error);
             throw error;
         }
 
-        // Crear nueva tarea
-        let dlTaskID = TASK_MANAGER.addNewTask({
-            type: PREDEFINED.TASKS_TYPES.DOWNLOADING,
-            progress: 0,
-            size: {
-                total: contentLength,
-                current: 0
-            },
-            url: downloadURL,
-            path: filePath,
-            filename: path.basename(filePath)
+        const dlTaskID = createDownloadTask(downloadURL, filePath, contentLength);
+        const writeStream = fs.createWriteStream(filePath);
+
+        // Configurar listeners de progreso
+        response.data.on('data', (chunk) => {
+            updateDownloadProgress(dlTaskID, chunk.length);
         });
 
-        LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.downloadTaskCreated}}", colors.cyan(dlTaskID), colors.cyan(path.basename(filePath))));
+        try {
+            await pipeline(response.data, writeStream);
+            
+            // Actualización final para asegurar 100%
+            TASK_MANAGER.updateTask(dlTaskID, {
+                size: { current: contentLength },
+                progress: 100,
+                status: PREDEFINED.TASK_STATUS.COMPLETED
+            });
 
-        return new Promise((resolve, reject) => {
-            const writeStream = fs.createWriteStream(filePath);
+            console.log(`Download completed for task ${dlTaskID}`); // Depuración
 
-            // Manejar errores en el stream de datos
-            data.on('error', (error) => {
+            // Eliminar la tarea después de un breve retraso para permitir UI updates
+            setTimeout(() => {
                 TASK_MANAGER.removeTask(dlTaskID);
-                writeStream.destroy(error);
-                cb(error);
-                reject(error);
+            }, 2000);
+
+            cb(true, null);
+            return true;
+        } catch (error) {
+            console.error(`Download failed for task ${dlTaskID}:`, error.message); // Depuración
+            TASK_MANAGER.updateTask(dlTaskID, {
+                status: PREDEFINED.TASK_STATUS.FAILED,
+                error: error.message
             });
-
-            // Manejar errores en el stream de escritura
-            writeStream.on('error', (error) => {
-                TASK_MANAGER.removeTask(dlTaskID);
-                data.destroy();
-                cb(error);
-                reject(error);
-            });
-
-            // Actualizar progreso durante la descarga
-            data.on('data', (chunk) => {
-                const task = TASK_MANAGER.getTaskData(dlTaskID);
-                if (!task) return;
-
-                const newCurrent = task.size.current + chunk.length;
-                const newProgress = Math.round((newCurrent / task.size.total) * 100);
-
-                TASK_MANAGER.updateTask(dlTaskID, {
-                    size: { current: newCurrent },
-                    progress: newProgress
-                });
-            });
-
-            // Finalización exitosa de la escritura
-            writeStream.on('finish', () => {
-                TASK_MANAGER.removeTask(dlTaskID);
-                cb(true);
-                resolve(true);
-            });
-
-            data.pipe(writeStream);
-        }).catch(error => {
-            console.error("Error en la descarga:", error.message);
-            cb(error);
-        });
-
-    } catch (error) {
-        if (error.response && error.response.status === 522) {
-            console.error("Connection timed out (522):", error.message);
-            cb(new Error("Connection timed out"));
-        } else {
-            cb(error);
+            cb(false, error);
+            throw error;
         }
-        console.error("Error en la descarga:", error.message);
+    } catch (error) {
+        console.error("Error in addDownloadTask:", error.message); // Depuración
+        cb(false, error);
+        throw error;
     }
 }
 
-export const unpackArchive = (archivePath, unpackPath, cb, deleteAfterUnpack = false) => {
-    fs.mkdirSync(unpackPath, {recursive: true});
-    decompress(archivePath, unpackPath)
-        .then(function () {
-            if (deleteAfterUnpack) {
-                fs.unlinkSync(archivePath);
-            }
-            cb(true);
-        })
-        .catch(function (error) {
-            console.error(error);
-            cb(false);
-        });
-}
+export const unpackArchive = async (archivePath, unpackPath, cb, deleteAfterUnpack = false) => {
+    try {
+        fs.mkdirSync(unpackPath, { recursive: true });
+        await decompress(archivePath, unpackPath);
+        
+        if (deleteAfterUnpack) {
+            fs.unlinkSync(archivePath);
+        }
+        
+        cb(true);
+    } catch (error) {
+        console.error("Unpacking error:", error);
+        cb(false);
+    }
+};
+
 export default addDownloadTask;
