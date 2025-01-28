@@ -1,4 +1,4 @@
-import * as TASK_MANAGER from "./taskManager.js";
+import TASK_MANAGER from "./taskManager.js";
 import * as CORES_MANAGER from "./coresManager.js";
 import * as JAVA_MANAGER from "./javaManager.js";
 import * as DOWNLOADS_MANAGER from "./downloadsManager.js";
@@ -111,7 +111,12 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
 
         if (core.match(/\:\/\//gim) === null && fs.existsSync("./servers/" + serverName + path.sep + core)) {
             console.log("[DEBUG] Using local core file");
-            tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.COMPLETED;
+            const task = TASK_MANAGER.getTaskData(creationTaskID);
+            if (!task) return;
+            
+            TASK_MANAGER.updateTask(creationTaskID, {
+                currentStep: PREDEFINED.SERVER_CREATION_STEPS.COMPLETED
+            });
             
             // Добавляем новый сервер в конфиг
             serversConfig[serverName] = {
@@ -132,7 +137,9 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
             console.log("[DEBUG] Core:", core);
             console.log("[DEBUG] Core version:", coreVersion);
 
-            tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.SEARCHING_CORE;
+            TASK_MANAGER.updateTask(creationTaskID, {
+                currentStep: PREDEFINED.SERVER_CREATION_STEPS.SEARCHING_CORE
+            });
             
             CORES_MANAGER.getCoreVersionURL(core, coreVersion, (url) => {
                 console.log("[DEBUG] Retrieved core URL:", url);
@@ -140,14 +147,20 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
                 
                 if (!url) {
                     console.error("[ERROR] Core URL is undefined");
-                    tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.FAILED;
+                    TASK_MANAGER.updateTask(creationTaskID, {
+                        currentStep: PREDEFINED.SERVER_CREATION_STEPS.FAILED
+                    });
                     LOGGER.warning(MULTILANG.translateText(mainConfig.language, "{{console.coreDownloadFailed}}"));
                     cb(false);
                     return;
                 }
 
-                tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.CHECKING_JAVA;
-                tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.DOWNLOADING_CORE;
+                TASK_MANAGER.updateTask(creationTaskID, {
+                    currentStep: PREDEFINED.SERVER_CREATION_STEPS.CHECKING_JAVA
+                });
+                TASK_MANAGER.updateTask(creationTaskID, {
+                    currentStep: PREDEFINED.SERVER_CREATION_STEPS.DOWNLOADING_CORE
+                });
                 
                 console.log("[DEBUG] Starting core download:");
                 console.log("[DEBUG] Download URL:", coreDownloadURL);
@@ -157,7 +170,9 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
                     console.log("[DEBUG] Download result:", coreDlResult);
                     
                     if (coreDlResult === true) {
-                        tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.COMPLETED;
+                        TASK_MANAGER.updateTask(creationTaskID, {
+                            currentStep: PREDEFINED.SERVER_CREATION_STEPS.COMPLETED
+                        });
                         
                         // Добавляем новый сервер в конфиг
                         serversConfig[serverName] = {
@@ -174,7 +189,9 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
                         LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.serverCreatedSuccess}}", colors.cyan(serverName)));
                         cb(true);
                     } else {
-                        tasks[creationTaskID].currentStep = PREDEFINED.SERVER_CREATION_STEPS.FAILED;
+                        TASK_MANAGER.updateTask(creationTaskID, {
+                            currentStep: PREDEFINED.SERVER_CREATION_STEPS.FAILED
+                        });
                         LOGGER.warning(MULTILANG.translateText(mainConfig.language, "{{console.coreDownloadFailed}}"));
                         cb(false);
                     }

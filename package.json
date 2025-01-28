@@ -36,6 +36,7 @@
     "os-utils": "^0.0.14",
     "swagger-autogen": "^2.23.7",
     "systeminformation": "^5.25.11",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "uuid": "^11.0.5"
   }
 }
