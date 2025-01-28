@@ -427,9 +427,15 @@ document.addEventListener('download-request', (e) => {
   console.log('Descargar:', e.detail);
 });
 const modSearch = document.querySelector('mod-search');
+// get discovery/list
+async function getDiscoveryList() {
+  const response = await fetch('/api/discovery/list');
+  const data = await response.json();
+  console.log('data', data);
+  return data;
+}
 
-// Añadir mods personalizados
-
+console.log("getDiscoveryList", getDiscoveryList());
 </script>
 </body>
 </html>

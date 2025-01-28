@@ -13,12 +13,9 @@ router.get('/', (req, res) => {
 });
 
 router.get('/list', (req, res) => {
-    const servers = Array.from(discoveredServers.values());
-    const localInfo = getCurrentServerInfo();
-    
+    const servers = Array.from(discoveredServers.values());    
     // Combinar datos
     const response = {
-        local: localInfo,
         servers: servers
     };
     
