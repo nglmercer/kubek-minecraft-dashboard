@@ -22,25 +22,37 @@ router.get("/online", function (req, res) {
 });
 
 // Endpoint для получения общего списка Java
-router.get("/all", (req, res) => {
+router.get("/all", async (req, res) => {
     let result = {
         installed: STATS_COLLECTOR.getAllJavaInstalled(),
         kubek: JAVA_MANAGER.getLocalJavaVersions(),
         online: []
+    };
+
+    try {
+        const onlineresult = await JAVA_MANAGER.getDownloadableJavaVersions();
+        console.log("onlineresult", onlineresult);
+
+        if (onlineresult) {
+            // Usar un Set para evitar duplicados
+            const uniqueOnline = new Set(result.online); 
+            
+            onlineresult.forEach((onItem) => {
+                uniqueOnline.add(onItem);
+            });
+
+            // Convertir el Set de vuelta a un array
+            result.online = Array.from(uniqueOnline);
+        }
+
+        console.log("alljava", result);
+        res.send(result);
+    } catch (error) {
+        console.error("Error fetching Java versions:", error);
+        res.status(500).send({ error: "Error fetching Java versions" });
     }
-    const onlineresult = JAVA_MANAGER.getDownloadableJavaVersions();
-    if (onlineresult) {
-        onlineresult.forEach((onItem)=>{
-            if(onlineresult.kubek){
-                if(!onlineresult.kubek.includes(onItem)){
-                    onlineresult.online.push(onItem)
-            }
-            }
-        })
-    }
-    console.log("alljava",result)
-    res.send(result);
 });
+
 
 router.get("/download/:version", async function (req, res) {
     let q = req.params;

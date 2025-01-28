@@ -78,8 +78,9 @@ export const checkJavaVersionTermux = (version) => {
     }
 };
 
-// Obtener versiones de Java disponibles
-export function getDownloadableJavaVersions () {
+export async function getDownloadableJavaVersions() {
+    let availReleases = [];
+
     if (isTermux()) {
         try {
             const output = execSync('pkg search "^openjdk-[0-9]+"').toString();
@@ -91,17 +92,34 @@ export function getDownloadableJavaVersions () {
                     return !isNaN(num) && num >= 8 && num <= 21;
                 })
                 .sort((a, b) => b - a); // Ordenar de mayor a menor
-            return([...new Set(versions)]); // Eliminar duplicados
+            return [...new Set(versions)]; // Eliminar duplicados
         } catch (error) {
             console.error('Error obteniendo versiones:', error);
-            return([]); // Asegurar retorno de array vacío
+            return []; // Asegurar retorno de array vacío
         }
     }
-    // Resto del código para otras plataformas...
-    COMMONS.getDataByURL(PREDEFINED.JAVA_LIST_URL, (data) => {
-        return(data ? data.available_releases.map(String) : []);
-    });
-};
+
+    try {
+        const data = await new Promise((resolve, reject) => {
+            COMMONS.getDataByURL(PREDEFINED.JAVA_LIST_URL, (data) => {
+                if (data !== false) {
+                    resolve(data);
+                } else {
+                    reject(new Error('Error al obtener datos de la URL'));
+                }
+            });
+        });
+
+        availReleases = data.available_releases.map(release => release.toString());
+    } catch (error) {
+        console.error('Error obteniendo versiones:', error);
+        return [];
+    }
+
+    console.log("availReleases", availReleases);
+    return availReleases;
+}
+
 
     // Para otras plataformas
     COMMONS.getDataByURL(PREDEFINED.JAVA_LIST_URL, (data) => {

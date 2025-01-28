@@ -1453,8 +1453,8 @@ class CustomDialog extends HTMLElement {
             try {
                 const url = `/api/servers/${serverId}/server.properties`;
                 const response = await fetch(url);
-                const result = await response.json();
-                console.log("result", result, response);
+                const result = response.ok ? await response.json() : {};
+
                 
                 const table = this.shadowRoot.querySelector('#sp-table');
                 table.innerHTML = ''; // Clear existing content
