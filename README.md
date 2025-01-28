@@ -111,3 +111,10 @@ npm run start
 	- en proceso de implementacion de mas herramientas para la gestion como un gestor de plugins y mods
 	- puede aportar al proyecto en o darme su feedback, estare completamente abierto a cualquier tipo de contribucion
 	https://github.com/nglmercer/kubek-minecraft-dashboard
+## TASKS
+- create a and modify alerts state
+- add modal to add sugested plugins
+- modify the server creation section to change server sections
+- modify state server creation -- reload the page after the server is created or after change the server section
+- create a extern server api to get the server list --->     const socket = dgram.createSocket('udp4'); socket.send(DISCOVERY_MSG, DISCOVERY_PORT, '255.255.255.255');
+
