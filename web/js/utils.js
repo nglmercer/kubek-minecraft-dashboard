@@ -612,20 +612,6 @@ class KubekUI {
 
     }
 
-    static setActiveItemByPage(page) {
-        document.querySelectorAll("#main-menu-sidebar .sidebar-item").forEach(item => {
-            if (item.dataset.page === page) {
-                item.classList.add("active");
-            }
-        });
-    }
-
-    static setAllSidebarItemsUnactive() {
-        document.querySelectorAll("#main-menu-sidebar .sidebar-item").forEach(item => {
-            item.classList.remove("active");
-        });
-    }
-
     static changeItemByPage = (page) => {
         this.setAllSidebarItemsUnactive();
         this.setActiveItemByPage(page);
@@ -657,9 +643,9 @@ class KubekUI {
                 if (!servers) return;
                 console.log("servers getServersList", servers);
                 servers.forEach(serverItem => {
-                    const sidebar = document.querySelector('server-menu');
+                    const sidebar = document.querySelector('server-menu') || document.getElementById("main-menu-sidebar");
                     setTimeout(() => {
-                        document.querySelector("server-menu").setActiveElement(window.localStorage.selectedServer);
+                        sidebar.setActiveElement(window.localStorage.selectedServer);
                     }, 1000);
                     const parsedserver = {
                       title: serverItem,

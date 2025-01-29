@@ -1,5 +1,4 @@
 import SHA256 from 'crypto-js/sha256.js';
-
 // Predefined permission values
 export const PERMISSIONS = {
     DEFAULT: "default",

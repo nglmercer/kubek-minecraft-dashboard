@@ -23,10 +23,13 @@
 </style>
 <script src="/pages/newServer.js"></script>
 <!-- Главный контейнер -->
+ <sidebar-menu id="main-menu-sidebar">
+
+ </sidebar-menu>
 <div class="new-server-container animate__animated animate__fadeIn animate__faster">
     <h2>{{newServerWizard.title}}</h2>
+    <button style="position: absolute; top: 0; right: 0; margin: 12px;" class="dark-btn icon-only" id="close-btn" onclick="document.getElementById('main-menu-sidebar').toggleSidebar()"><span class="material-symbols-rounded">Menu</span></button>
 
-    <!-- Первый этап: Название сервера -->
     <div class="stage">
         <div class="stage-header">
             <div class="stage-circle">1</div>
@@ -40,7 +43,6 @@
         </label>
     </div>
 
-    <!-- Второй этап: Выбор ядра -->
     <div class="stage">
         <div class="stage-header">
             <div class="stage-circle">2</div>
@@ -73,7 +75,6 @@
         </div> -->
     </div>
 
-    <!-- Третий этап: Завершающие настройки -->
     <div class="stage">
         <div class="stage-header">
             <div class="stage-circle">3</div>
@@ -123,5 +124,25 @@
         </div>
     </div>
 </div>
-<script>
+<script type="module">
+    document.addEventListener("DOMContentLoaded", () => {
+        const menusidebar = document.querySelector('#main-menu-sidebar');
+        menusidebar.addEventListener('server-change', (event) => {
+            const detail = event.detail;
+            console.log('Changing to page:', detail);
+            window.localStorage.selectedServer = detail.server;
+            if (window.localStorage.selectedServer && detail.server) {
+                window.location.href = `/?act=console`;
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        });
+        menusidebar.addEventListener('new-server', () => {
+            console.log('Creating new server');
+            // Add your new server logic here
+            // href="/?act=newServer"
+            window.location = '/createserver.html';
+        });
+    });
 </script>

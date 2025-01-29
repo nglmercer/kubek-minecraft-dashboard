@@ -3039,13 +3039,6 @@ class SidebarComponent extends HTMLElement {
     this.isVisible = false;
     this.serverlist = [];
     this.sidebarItems = [
-      { title: 'Console', icon: 'terminal', page: 'console' },
-      { title: 'File Manager', icon: 'folder', page: 'fileManager' },
-      { title: 'Plugins and Mods', icon: 'extension', page: 'plugins' },
-      { title: 'Servers Settings', icon: 'settings', page: 'serverSettings' },
-      { title: 'Server.properties', icon: 'settings_ethernet', page: 'server.properties' },
-      { title: 'Kubek Settings', icon: 'settings', page: 'kubekSettings' },
-      { title: 'System Monitoring', icon: 'area_chart', page: 'systemMonitor' }
     ];
   }
 
@@ -3064,8 +3057,8 @@ class SidebarComponent extends HTMLElement {
 
         .sidebar {
           position: absolute;
-          top: 0;
-          bottom: 0;
+          top: 25%;
+          bottom: 25%;
           width: 280px;
           /*add blur effect*/
           backdrop-filter: blur(4px);
@@ -3299,10 +3292,12 @@ class SidebarComponent extends HTMLElement {
   }
 
   handleServerItemClick(item) {
-    const server = item.dataset.server
+    const server = item.getAttribute("data-server");
+
+    console.log("handleServerItemClick", server);
     if (server) {
       this.dispatchEvent(new CustomEvent('server-change', {
-        detail: { server },
+        detail: { server: server },
         bubbles: true,
         composed: true
       }));
@@ -3321,6 +3316,7 @@ class SidebarComponent extends HTMLElement {
     container.innerHTML = this.createServerList();
   }
 }
+customElements.define('sidebar-menu', SidebarComponent);
 class CreateServer extends HTMLElement {
   constructor() {
     super();
