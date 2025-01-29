@@ -26,20 +26,23 @@ export const scanDirectory = (server, path, callback) => {
     }
   };
   
-export const newReadFile = (server,path) => {
+  export const newReadFile = (server, path) => {
     let filePath = constructFilePath(server, path);
     if (!verifyPathForTraversal(filePath)) return false;
+    
     if (fs.existsSync(filePath) && !fs.lstatSync(filePath).isDirectory()) {
-        fs.readFile(filePath, (err, data) => {
-            if (err) throw err;
-            return data;
-        });
-    } else {
-        return false
+        try {
+            return fs.readFileSync(filePath);
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
     }
-} 
+    return false;
+}
 export const readFile = (server, path, cb) => {
     let result = newReadFile(server,path)
+    console.log(result)
     if (cb){
         cb(result)
     }else{

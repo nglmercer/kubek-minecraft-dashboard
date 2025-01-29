@@ -124,7 +124,7 @@
 
 /* Стили file editor */
 .fileEditor {
-    position: absolute;
+    position: fixed;
     left: 0;
     right: 0;
     bottom: 0;

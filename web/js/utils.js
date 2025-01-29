@@ -1242,9 +1242,9 @@ const editableExtensions = [
     `;
 
 class KubekFileManagerUI {
-    static refreshDir(saveScroll = true) {
-        awaitfilemanager.readDirectory(currentPath)
-            .then((data)=>{
+    static async refreshDir(saveScroll = true) {
+        try {
+            let data = await awaitfilemanager.readDirectory(currentPath);
                                        // Sort data to put directories on top
                                        if (data.length > 0) {
                                         data = sortToDirsAndFiles(data);
@@ -1272,7 +1272,9 @@ class KubekFileManagerUI {
                                     this.bindFMFilesList(bindEvent);
                         
                                     document.getElementById("fm-table").scrollTop = scrollData;
-            })
+                                } catch (error) {
+                                    console.error("Error:", error);
+                                }
     }
     static selectedServer = window.localStorage.selectedServer;
     static initaddeventlisteners() {

@@ -15,7 +15,7 @@ router.get("/get", WEBSERVER.serversRouterMiddleware, function (req, res) {
         res.set("Content-Type", "application/json");
         FILE_MANAGER.readFile(q.server, q.path, (rdResult) => {
             // Если путь оказался файлом
-            if (rdResult !== false) {
+            if (rdResult && rdResult !== false) {
                 res.send({
                     fileData: rdResult.toString()
                 });
