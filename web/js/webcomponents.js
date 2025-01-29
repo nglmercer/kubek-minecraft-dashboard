@@ -3430,7 +3430,26 @@ class CreateServer extends HTMLElement {
     this.render();
     this.setupEventListeners();
   }
-
+  setActiveElement(activeElement) {
+    // Desmarcar todos los elementos activos
+    this.shadowRoot.querySelectorAll('.selected').forEach(item => {
+      item.classList.remove('selected');
+    });
+    if (!activeElement) return;
+    const newServerBtn = this.shadowRoot.querySelector('#new-server-btn');
+    if (activeElement.includes("newServer")) {
+      newServerBtn.classList.add('selected');
+      return;
+    }
+    // Buscar y marcar el elemento activo en la lista de servidores
+    const serverItem = this.shadowRoot.querySelector(`.server-item[data-server="${activeElement}"]`);
+    
+    if (serverItem) {
+      console.log("activeElement", activeElement, "serverItem", serverItem);
+      serverItem.classList.add('active');
+      serverItem.classList.add('selected');
+    }
+  }
   render() {
     this.shadowRoot.innerHTML = `
       ${this.getStyles()}

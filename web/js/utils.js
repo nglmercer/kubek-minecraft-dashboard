@@ -658,6 +658,9 @@ class KubekUI {
                 console.log("servers getServersList", servers);
                 servers.forEach(serverItem => {
                     const sidebar = document.querySelector('server-menu');
+                    setTimeout(() => {
+                        document.querySelector("server-menu").setActiveElement(window.localStorage.selectedServer);
+                    }, 1000);
                     const parsedserver = {
                       title: serverItem,
                       icon: `/api/servers/${serverItem}/icon`
@@ -682,7 +685,7 @@ class KubekUI {
                     sidebar.appendChild(serverElement);
                 });
             });
-        
+
     }
 
     static connectionLost() {
