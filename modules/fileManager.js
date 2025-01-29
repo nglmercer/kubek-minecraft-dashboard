@@ -11,20 +11,40 @@ let fileWrites = {}; // Stores ongoing chunked write operations
 // modules/fileManager.js
 export const scanDirectory = (server, path, callback) => {
     try {
-      const fullPath = constructFilePath(server, path);
-      const files = fs.readdirSync(fullPath, { withFileTypes: true });
-      const result = files.map(dirent => ({
-        name: dirent.name,
-        type: dirent.isDirectory() ? "directory" : "file"
-      }));
-      
-      if (callback) callback(result);
-      return result;
+        const fullPath = constructFilePath(server, path);
+        const files = fs.readdirSync(fullPath, { withFileTypes: true });
+        const result = files.map(dirent => {
+            const filePath = `${fullPath}/${dirent.name}`;
+            const stats = fs.statSync(filePath);
+            return {
+                name: dirent.name,
+                type: dirent.isDirectory() ? "directory" : "file",
+                size: stats.size, // Size in bytes
+                lastModified: stats.mtime, // Last modified timestamp
+                stats: stats // Full stats object
+            };
+        });
+        
+        if (callback) callback(result);
+        return result;
     } catch (error) {
-      if (callback) callback(false);
-      return false;
+        console.error('Error scanning directory:', error);
+        if (callback) callback(false);
+        return false;
     }
-  };
+};
+
+// Helper functions remain the same
+export const constructFilePath = (server, path) => {
+    return "./servers/" + server + path;
+}
+
+export const verifyPathForTraversal = (path) => {
+    return path.match(/\%2e\./gim) == null &&
+        path.match(/\%2e\%2e/gim) == null &&
+        path.match(/\.\%2e/gim) == null &&
+        path.match(/\.\./gim) == null;
+};
   
   export const newReadFile = (server, path) => {
     let filePath = constructFilePath(server, path);
@@ -116,16 +136,7 @@ export const newDirectory = (server, path, name) => {
     })
 };
 
-export const constructFilePath = (server, path) => {
-    return "./servers/" + server + path;
-}
 
-export const verifyPathForTraversal = (path) => {
-    return path.match(/\%2e\./gim) == null &&
-        path.match(/\%2e\%2e/gim) == null &&
-        path.match(/\.\%2e/gim) == null &&
-        path.match(/\.\./gim) == null;
-};
 
 export const startChunkyFileWrite = (server, path) => {
     let filePath = constructFilePath(server, path);

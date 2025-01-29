@@ -3003,7 +3003,7 @@ class FileExplorer extends HTMLElement {
               </td>
               <td>${item.path}</td>
               <td>${item.type === 'directory' ? '-' : this.formatFileSize(item.size)}</td>
-              <td>${this.formatDate(item.modify)}</td>
+              <td>${this.formatDate(item.lastModified)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -3013,6 +3013,7 @@ class FileExplorer extends HTMLElement {
     this.shadowRoot.innerHTML = style + content;
   }
   formatDate(dateString) {
+    if(!dateString) return "";
     const date = new Date(dateString);
     
     // Get date components

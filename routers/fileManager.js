@@ -8,20 +8,17 @@ import path from "path";
 const router = express.Router();
 function initializeWebServer() {
     
-// Endpoint сканирования директории или чтения файлов
 router.get("/get", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.server, q.path)) {
         res.set("Content-Type", "application/json");
         FILE_MANAGER.readFile(q.server, q.path, (rdResult) => {
-            // Если путь оказался файлом
             if (rdResult && rdResult !== false) {
                 res.send({
                     fileData: rdResult.toString()
                 });
                 return;
             }
-            // Если путь оказался папкой
             FILE_MANAGER.scanDirectory(q.server, q.path, (dirRdResult) => {
                 console.log(q.server,q.path,dirRdResult)
                 res.send(dirRdResult);
@@ -32,7 +29,6 @@ router.get("/get", WEBSERVER.serversRouterMiddleware, function (req, res) {
     }
 });
 
-// Endpoint для начала записи файла
 router.get("/chunkWrite/start", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.server, q.path)) {
@@ -41,7 +37,6 @@ router.get("/chunkWrite/start", WEBSERVER.serversRouterMiddleware, function (req
     res.sendStatus(400);
 });
 
-// Endpoint для записи чанка в файл
 router.get("/chunkWrite/add", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.id, q.data)) {
@@ -50,7 +45,6 @@ router.get("/chunkWrite/add", WEBSERVER.serversRouterMiddleware, function (req, 
     res.sendStatus(400);
 });
 
-// Endpoint для окончания записи чанков и сохранения в файл
 router.get("/chunkWrite/end", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.id)) {
@@ -59,7 +53,6 @@ router.get("/chunkWrite/end", WEBSERVER.serversRouterMiddleware, function (req, 
     res.sendStatus(400);
 });
 
-// Endpoint для удаления
 router.get("/delete", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.server, q.path)) {
@@ -71,7 +64,6 @@ router.get("/delete", WEBSERVER.serversRouterMiddleware, function (req, res) {
     res.sendStatus(400);
 });
 
-// Endpoint для переименования
 router.get("/rename", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.server, q.path, q.newName)) {
@@ -81,7 +73,6 @@ router.get("/rename", WEBSERVER.serversRouterMiddleware, function (req, res) {
     res.sendStatus(400);
 });
 
-// Endpoint для создания новой директории
 router.get("/newDirectory", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.server, q.path, q.name)) {
@@ -91,7 +82,6 @@ router.get("/newDirectory", WEBSERVER.serversRouterMiddleware, function (req, re
     res.sendStatus(400);
 });
 
-// Endpoint для скачивания файла
 router.get("/download", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
 
@@ -104,12 +94,10 @@ router.get("/download", WEBSERVER.serversRouterMiddleware, function (req, res) {
     res.sendStatus(400);
 });
 
-// Endpoint для загрузки файла на сервер
 router.post("/upload", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.server, q.path)) {
         let sourceFile;
-        // Проверяем присутствие файлов в запросе
         if (!req.files || Object.keys(req.files).length === 0) {
             return res.status(400).send("No files were uploaded.");
         }
@@ -118,7 +106,6 @@ router.post("/upload", WEBSERVER.serversRouterMiddleware, function (req, res) {
 
         COMMONS.moveUploadedFile(q.server, sourceFile, "/" + sourceFile.name, (result) => {
             if (result === true) {
-                // DEVELOPED by seeeroy
                 return res.send(true);
             }
             console.log(result);

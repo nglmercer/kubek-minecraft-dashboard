@@ -1246,35 +1246,35 @@ class KubekFileManagerUI {
         try {
             let data = await awaitfilemanager.readDirectory(currentPath);
                                        // Sort data to put directories on top
-                                       if (data.length > 0) {
-                                        data = sortToDirsAndFiles(data);
-                                    }
-                        
-                                    let bindEvent = window.matchMedia("(min-width: 320px)").matches && 
-                                                   window.matchMedia("(max-width: 480px)").matches ? "click" : "dblclick";
-                        
-                                    // Save scroll position if needed
-                                    const scrollData = saveScroll ? 
-                                        document.querySelector(".fm-container").scrollTop : 0;
-                                    const tableListElement = document.querySelector("#fm-table tbody");
-                        
-                                    tableListElement.innerHTML = "";
-                                    console.log("currentPath", currentPath, "data", data);
-                                    const explorer = document.querySelector('file-explorer');
-                                    explorer.data = data;
-                                    
-                                    document.getElementById('path-display').textContent = `Current Path: ${currentPath}`;
-                                    // Bind breadcrumb events
-                                    this.bindBreadcrumbClicks();
-                        
-                        
-                                    // Bind file list events
-                                    this.bindFMFilesList(bindEvent);
-                        
-                                    document.getElementById("fm-table").scrollTop = scrollData;
-                                } catch (error) {
-                                    console.error("Error:", error);
-                                }
+                if (data.length > 0) {
+                data = sortToDirsAndFiles(data);
+            }
+
+            let bindEvent = window.matchMedia("(min-width: 320px)").matches && 
+                            window.matchMedia("(max-width: 480px)").matches ? "click" : "dblclick";
+
+            // Save scroll position if needed
+            const scrollData = saveScroll ? 
+                document.querySelector(".fm-container").scrollTop : 0;
+            const tableListElement = document.querySelector("#fm-table tbody");
+
+            tableListElement.innerHTML = "";
+            console.log("currentPath", currentPath, "data", data);
+            const explorer = document.querySelector('file-explorer');
+            explorer.data = data;
+            
+            document.getElementById('path-display').textContent = `Current Path: ${currentPath}`;
+            // Bind breadcrumb events
+            this.bindBreadcrumbClicks();
+
+
+            // Bind file list events
+            this.bindFMFilesList(bindEvent);
+
+            document.getElementById("fm-table").scrollTop = scrollData;
+        } catch (error) {
+            console.error("Error:", error);
+        }
     }
     static selectedServer = window.localStorage.selectedServer;
     static initaddeventlisteners() {
