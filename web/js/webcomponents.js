@@ -2469,6 +2469,8 @@ class CustomSelect extends HTMLElement {
           border: 1px solid #ccc;
           border-radius: 4px;
           max-width: 300px;
+          max-height: 480px;
+          overflow-y: auto;
           padding: 8px;
         }
         .preview-container {
@@ -2659,6 +2661,8 @@ class EnhancedSelect extends HTMLElement {
         .select-container {
           border-radius: 4px;
           max-width: ${this.hasAttribute('grid') ? '100%' : '300px'};
+          max-height: 480px;
+          overflow-y: auto;
           padding: 8px;
         }
         .preview-container {

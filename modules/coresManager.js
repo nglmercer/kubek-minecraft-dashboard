@@ -1,5 +1,8 @@
 import * as PREDEFINED from "./predefined.js";
 import * as CORES_URL_GEN from "./coresURLGenerator.js";
+import * as fs from 'fs';
+import * as path from 'path';
+import https from 'https';
 export const getCoreVersions = async (core, cb) => {
     if (typeof PREDEFINED.SERVER_CORES[core] !== "undefined") {
         let coreItem = PREDEFINED.SERVER_CORES[core];
@@ -10,10 +13,8 @@ export const getCoreVersions = async (core, cb) => {
         }
         const name = coreItem.name || coreItem.versionsMethod;
         switch (coreItem.versionsMethod) {
-
             case "vanilla":
-                const allVersions = await getAllMinecraftVersions();
-                cb(Object.keys(allVersions));
+                getvanillacore(cb);
                 break;
             case "externalURL":
                 CORES_URL_GEN.getAllCoresByExternalURL(coreItem.versionsUrl, cb, name);
@@ -79,11 +80,39 @@ export const getCoreVersionURL = async (core, version, cb) => {
 export const getCoresList = () => {
     return PREDEFINED.SERVER_CORES;
 };
-import https from 'https';
 
 const manifestUrl = 'https://piston-meta.mojang.com/mc/game/version_manifest.json';
+const coresFilePath = path.join(process.cwd(), 'cores.json');
 
-function getAllMinecraftVersions() {
+// Función para verificar si el archivo existe
+function fileExists(filePath) {
+    return fs.existsSync(filePath);
+}
+
+// Función para leer el archivo cores.json
+function readCoresFile() {
+    if (fileExists(coresFilePath)) {
+        const data = fs.readFileSync(coresFilePath, 'utf8');
+        return JSON.parse(data);
+    }
+    return null;
+}
+
+// Función para escribir en el archivo cores.json
+function writeCoresFile(data) {
+    fs.writeFileSync(coresFilePath, JSON.stringify(data, null, 2), 'utf8');
+}
+
+// Función para verificar si los datos son recientes (menos de un día)
+function isDataRecent(data) {
+    const now = new Date();
+    const lastUpdated = new Date(data.lastUpdated);
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    return (now - lastUpdated) < oneDayInMs;
+}
+
+// Función para obtener todas las versiones de Minecraft y sus URLs de descarga
+async function getAllMinecraftVersions() {
     return new Promise((resolve, reject) => {
         https.get(manifestUrl, (res) => {
             let data = '';
@@ -133,5 +162,31 @@ function getAllMinecraftVersions() {
     });
 }
 
+// Función principal para obtener las versiones de Minecraft
+export async function getvanillacore(cb) {
+    let cachedData = readCoresFile();
+
+    if (cachedData && isDataRecent(cachedData)) {
+        console.log('Usando datos cacheados');
+        let sortedCachedData = Object.keys(cachedData.versions)
+            .filter(version => version.length <= 7) // Filtra los que tienen más de 9 caracteres
+            .sort((a, b) => a.length - b.length || a.localeCompare(b));
+        cb(sortedCachedData);
+        return;
+    }
+
+    console.log('Obteniendo datos de la red');
+    const allVersions = await getAllMinecraftVersions();
+    let sortedAllVersions = Object.keys(allVersions)
+        .filter(version => version.length <= 7) // Filtra los que tienen más de 9 caracteres
+        .sort((a, b) => a.length - b.length || a.localeCompare(b));
+
+    const newData = {
+        lastUpdated: new Date().toISOString(),
+        versions: allVersions
+    };
+    writeCoresFile(newData);
+    cb(sortedAllVersions);
+}
 
 //getAllMinecraftVersions().then(console.log).catch(console.error);
