@@ -20,7 +20,7 @@ router.get("/get", WEBSERVER.serversRouterMiddleware, function (req, res) {
                 return;
             }
             FILE_MANAGER.scanDirectory(q.server, q.path, (dirRdResult) => {
-                console.log(q.server,q.path,dirRdResult)
+                //console.log(q.server,q.path,dirRdResult)
                 res.send(dirRdResult);
             });
         });

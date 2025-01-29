@@ -524,7 +524,7 @@ class MainContent extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         main {
-          min-height: 100vh;
+          min-height: min(100dvh, 100%);
           background-color: rgb(24, 24, 27);
           color: white;
         } 

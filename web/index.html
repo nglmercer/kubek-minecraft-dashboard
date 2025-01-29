@@ -31,7 +31,6 @@
      <script src="js/utils.js"></script>
      <script src="js/webcomponents.js"></script>
      <script src="js/navwebcomponent.js"></script>
-    <script src="js/jquery-3.7.0.min.js"></script>
     <script src="js/moment.min.js"></script>
     <script src="js/base64.min.js"></script>
     <script src="js/highlight.min.js"></script>
@@ -297,7 +296,7 @@
         </div>
       </side-bar>
       <main-content>
-        <div slot="1-content" class="bg-slate-800 text-white">
+        <div slot="1-content" class="bg-slate-800 text-white" style="margin-bottom: 32px;">
             <link rel="stylesheet" href="/pages/console.css"/>
 
         <div class="console-container animate__animated animate__fadeIn animate__fast">
@@ -591,7 +590,7 @@
             </script>
             </div>
         </div>
-        <div slot="5-content" class="bg-slate-800 text-white">
+        <div slot="5-content" class="bg-slate-800 text-white"  style="margin-bottom: 32px;">
             <link rel="stylesheet" href="/pages/server.properties.css" />
 
             <div
@@ -1087,9 +1086,6 @@
             <system-monitor></system-monitor>
           </div>
       </main-content>
-      <div id="alerts-pool">
-        <div class="alert"></div>
-      </div>
 </body>
 <kubek-alerts id="alerts_pool"></kubek-alerts>
 <script>

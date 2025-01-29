@@ -59,17 +59,18 @@
 
 <script>
     console.log("[UI] Starting Kubek UI...");
-
-    $(function () {
-        $("input").on("input", () => {
-            verifyInputs();
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll("input").forEach(input => {
+            input.addEventListener("input", () => {
+                verifyInputs();
+            });
         });
     });
 
     // Произвести вход
     function login() {
-        let login = $("#login-input").val();
-        let password = $("#password-input").val();
+        let login = document.querySelector("#login-input").value;
+        let password = document.querySelector("#password-input").value;
         KubekRequests.get("/auth/login/" + login + "/" + password, (result) => {
             if (result.success === true) {
                 window.location = "/";
@@ -81,24 +82,24 @@
 
     // Проверить значения полей ввода
     function verifyInputs() {
-        let loginInput = $("#login-input");
-        let passwordInput = $("#password-input");
-        let button = $("#login-btn");
-        if (loginInput.val().match(KubekPredefined.LOGIN_REGEX) !== null) {
-            loginInput.removeClass("error");
+        let loginInput = document.querySelector("#login-input");
+        let passwordInput = document.querySelector("#password-input");
+        let button = document.querySelector("#login-btn");
+        if (loginInput.value.match(KubekPredefined.LOGIN_REGEX) !== null) {
+            loginInput.classList.remove("error");
         } else {
-            loginInput.addClass("error");
-            return button.attr("disabled", true);
+            loginInput.classList.add("error");
+            return button.disabled = true;
         }
 
-        if (passwordInput.val().match(KubekPredefined.PASSWORD_REGEX) !== null) {
-            passwordInput.removeClass("error");
+        if (passwordInput.value.match(KubekPredefined.PASSWORD_REGEX) !== null) {   
+            passwordInput.classList.remove("error");
         } else {
-            passwordInput.addClass("error");
-            return button.attr("disabled", true);
+            passwordInput.classList.add("error");
+            return button.disabled = true;
         }
 
-        button.removeAttr("disabled");
+        button.disabled = false;
     }
 </script>
 
