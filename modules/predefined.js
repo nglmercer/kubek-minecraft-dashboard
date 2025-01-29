@@ -1,59 +1,4 @@
 import SHA256 from 'crypto-js/sha256.js';
-import https from 'https';
-
-const manifestUrl = 'https://piston-meta.mojang.com/mc/game/version_manifest.json';
-
-// Función para obtener todas las versiones de Minecraft y sus URLs de descarga
-function getAllMinecraftVersions() {
-    return new Promise((resolve, reject) => {
-        https.get(manifestUrl, (res) => {
-            let data = '';
-
-            res.on('data', (chunk) => {
-                data += chunk;
-            });
-
-            res.on('end', () => {
-                const manifest = JSON.parse(data);
-                const versions = {};
-                let pendingRequests = manifest.versions.length;
-
-                if (pendingRequests === 0) resolve(versions);
-
-                manifest.versions.forEach((version) => {
-                    https.get(version.url, (versionRes) => {
-                        let versionData = '';
-
-                        versionRes.on('data', (chunk) => {
-                            versionData += chunk;
-                        });
-
-                        versionRes.on('end', () => {
-                            try {
-                                const versionInfo = JSON.parse(versionData);
-                                if (versionInfo.downloads && versionInfo.downloads.server) {
-                                    versions[version.id] = versionInfo.downloads.server.url;
-                                }
-                            } catch (error) {
-                                console.error(`Error parsing version ${version.id}:`, error.message);
-                            }
-
-                            pendingRequests--;
-                            if (pendingRequests === 0) resolve(versions);
-                        });
-                    }).on('error', (err) => {
-                        console.error(`Error fetching version details for ${version.id}:`, err.message);
-                        pendingRequests--;
-                        if (pendingRequests === 0) resolve(versions);
-                    });
-                });
-            });
-        }).on('error', (err) => {
-            reject(`Error fetching version manifest: ${err.message}`);
-        });
-    });
-}
-getAllMinecraftVersions().then(console.log).catch(console.error);
 
 // Predefined permission values
 export const PERMISSIONS = {
@@ -209,7 +154,7 @@ export const SERVER_CORES = {
     vanilla: {
         name: "vanilla",
         displayName: "Vanilla",
-        versionsMethod: "externalURL",
+        versionsMethod: "vanilla",
         versionsUrl: "https://cdn.seeeroy.ru/Kubek/vanilla.json",
         urlGetMethod: "externalURL"
     },

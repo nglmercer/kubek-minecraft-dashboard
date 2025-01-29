@@ -1,6 +1,6 @@
 import * as PREDEFINED from "./predefined.js";
 import * as CORES_URL_GEN from "./coresURLGenerator.js";
-export const getCoreVersions = (core, cb) => {
+export const getCoreVersions = async (core, cb) => {
     if (typeof PREDEFINED.SERVER_CORES[core] !== "undefined") {
         let coreItem = PREDEFINED.SERVER_CORES[core];
         if (!coreItem) {
@@ -10,6 +10,11 @@ export const getCoreVersions = (core, cb) => {
         }
         const name = coreItem.name || coreItem.versionsMethod;
         switch (coreItem.versionsMethod) {
+
+            case "vanilla":
+                const allVersions = await getAllMinecraftVersions();
+                cb(Object.keys(allVersions));
+                break;
             case "externalURL":
                 CORES_URL_GEN.getAllCoresByExternalURL(coreItem.versionsUrl, cb, name);
                 console.log("coreItem.versionsUrl", coreItem.versionsUrl);
@@ -34,7 +39,7 @@ export const getCoreVersions = (core, cb) => {
         cb(false);
     }
 };
-export const getCoreVersionURL = (core, version, cb) => {
+export const getCoreVersionURL = async (core, version, cb) => {
     if (typeof PREDEFINED.SERVER_CORES[core] !== "undefined" && version !== "undefined") {
         let coreItem = PREDEFINED.SERVER_CORES[core];
         if (!coreItem) {
@@ -43,6 +48,10 @@ export const getCoreVersionURL = (core, version, cb) => {
             return;
         }
         switch (coreItem.urlGetMethod) {
+            case "vanilla":
+                const allVersions = await getAllMinecraftVersions();
+                cb(allVersions[version]);
+                break;
             case "externalURL":
                 CORES_URL_GEN.getCoreByExternalURL(coreItem.versionsUrl, version, cb);
                 console.log("externalURL", coreItem.versionsUrl, version);
@@ -70,3 +79,59 @@ export const getCoreVersionURL = (core, version, cb) => {
 export const getCoresList = () => {
     return PREDEFINED.SERVER_CORES;
 };
+import https from 'https';
+
+const manifestUrl = 'https://piston-meta.mojang.com/mc/game/version_manifest.json';
+
+function getAllMinecraftVersions() {
+    return new Promise((resolve, reject) => {
+        https.get(manifestUrl, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                const manifest = JSON.parse(data);
+                const versions = {};
+                let pendingRequests = manifest.versions.length;
+
+                if (pendingRequests === 0) resolve(versions);
+
+                manifest.versions.forEach((version) => {
+                    https.get(version.url, (versionRes) => {
+                        let versionData = '';
+
+                        versionRes.on('data', (chunk) => {
+                            versionData += chunk;
+                        });
+
+                        versionRes.on('end', () => {
+                            try {
+                                const versionInfo = JSON.parse(versionData);
+                                if (versionInfo.downloads && versionInfo.downloads.server) {
+                                    versions[version.id] = versionInfo.downloads.server.url;
+                                }
+                            } catch (error) {
+                                console.error(`Error parsing version ${version.id}:`, error.message);
+                            }
+
+                            pendingRequests--;
+                            if (pendingRequests === 0) resolve(versions);
+                        });
+                    }).on('error', (err) => {
+                        console.error(`Error fetching version details for ${version.id}:`, err.message);
+                        pendingRequests--;
+                        if (pendingRequests === 0) resolve(versions);
+                    });
+                });
+            });
+        }).on('error', (err) => {
+            reject(`Error fetching version manifest: ${err.message}`);
+        });
+    });
+}
+
+
+//getAllMinecraftVersions().then(console.log).catch(console.error);
