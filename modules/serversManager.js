@@ -1,9 +1,8 @@
 import * as PREDEFINED from "./predefined.js";
 import * as CONFIGURATION from "./configuration.js";
 import * as COMMONS from "./commons.js";
-import * as TASKMANAGER from "./taskManager.js";
 import fs from "fs";
-import * as TASK_MANAGER from "./taskManager.js";
+import TASK_MANAGER from "./taskManager.js";
 import path from "path";
 
 export const isServerExists = (serverName) => {
