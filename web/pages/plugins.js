@@ -40,7 +40,7 @@ class KubekPluginsUI {
         }, { url: fileUrl }); // Enviar la URL en el cuerpo de la solicitud
 
     } catch (error) {
-        console.error("Error en downloadAndUploadFromURL:", error.message);
+        console.error("Error en downloadAndUploadFromURL:", error.message, itemType, fileUrl);
         KubekAlerts.addAlert("Error al descargar/subir el archivo", "error", error.message, 5000);
     }
 }
@@ -61,6 +61,23 @@ class KubekPluginsUI {
     });
   }
 } 
+document.addEventListener('download-request', (e) => {
+  const details = e.detail;
+  const isplugin_loader = ["Bukkit", "Spigot", "Paper", "Purpur", "Magma", "Velocity", "BungeeCord", "Waterfall", "WaterfallPlus", "BungeeCordPlus", "SpigotPlus", "PaperPlus", "PurpurPlus", "MagmaPlus"];
+  const ismod_loader = ["Forge", "Fabric", "neoforge", "ForgePlus", "FabricPlus", "neoforgePlus"];
+  if (details && details.files) {
+    const ismodorplugin = details.loaders.some(loader => isplugin_loader.includes(loader)) ? "plugin" : "mod" || details.loaders.some(loader => ismod_loader.includes(loader)) ? "mod" : "plugin";
+    // details.files is array of strings or objects
+    if (Array.isArray(details.files)) {
+      console.log("descargar string", details.files);
+      KubekPluginsUI.downloadAndUploadFromURL(ismodorplugin, details.files[0]);
+    } else {
+      console.log("descargar array", details.files[0].url);
+      KubekPluginsUI.downloadAndUploadFromURL(ismodorplugin, details.files[0].url);
+    }
+
+  }
+});
 //KubekPluginsUI.downloadAndUploadFromURL("plugin","https://github.com/minekube/connect-java/releases/download/latest/connect-spigot.jar");
  /// Clase principal para gestionar el estado de plugins y mods
 

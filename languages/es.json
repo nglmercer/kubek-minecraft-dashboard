@@ -36,6 +36,7 @@
       "wrongCredentials": "Información de inicio de sesión inválida"
     },
     "commons": {
+      "pluginsmodstore": "Tienda de plugins y mods",
       "auth": "Autorización",
       "ok": "OK",
       "gotIt": "Entendido",

@@ -34,10 +34,19 @@ export const scanDirectory = (server, path, callback) => {
     }
 };
 
-// Helper functions remain the same
+// Función para asegurar que un directorio exista
+const ensureDirectoryExists = (path) => {
+    if (!fs.existsSync(path)) {
+        fs.mkdirSync(path, { recursive: true });
+    }
+};
+
+// Modificar constructFilePath para crear el directorio si es necesario
 export const constructFilePath = (server, path) => {
-    return "./servers/" + server + path;
-}
+    const fullPath = "./servers/" + server + path;
+    ensureDirectoryExists(fullPath); // Crear directorio si no existe
+    return fullPath;
+};
 
 export const verifyPathForTraversal = (path) => {
     return path.match(/\%2e\./gim) == null &&

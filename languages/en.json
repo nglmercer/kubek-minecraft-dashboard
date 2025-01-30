@@ -35,6 +35,7 @@
       "wrongCredentials": "Invalid login information"
     },
     "commons": {
+      "pluginsmodstore": "Plugins mods store",
       "auth": "Authorization",
       "ok": "OK",
       "gotIt": "Got it",

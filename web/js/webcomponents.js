@@ -1007,7 +1007,7 @@ class CustomDialog extends HTMLElement {
               input.removeEventListener('change', this.handleInputChange);
             }
             // Limpiamos el evento submit
-            const form = this.shadowRoot.querySelector('#validate-form');
+            const form = this.shadowRoot.querySelector('.validate-form');
           }
       
           handleInputChange(event) {
@@ -1063,7 +1063,7 @@ class CustomDialog extends HTMLElement {
             const allarguments = { type, id, name, value, placeholder, disabled, readonly, options, required, title, pattern };
             this.shadowRoot.innerHTML = `
               <style>${this.getStyles()}</style>
-              <form id="validate-form">
+              <form class="validate-form">
                 <div class="input-container">
                   ${this.renderInput(allarguments)}
                 </div>

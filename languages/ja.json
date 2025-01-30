@@ -35,6 +35,7 @@
         "wrongCredentials": "無効なログイン情報"
       },
       "commons": {
+        "pluginsmodstore": "プラグイン/ MODストア",
         "auth": "認証",
         "ok": "OK",
         "gotIt": "了解",
