@@ -3,8 +3,6 @@
 # What is this project?
 Kubek is a Minecraft web server control panel that supports Linux and Windows. The project offers an intuitive interface for managing servers, plugins and mods and more. Includes an integrated FTP server and file manager with syntax highlighting. Users can control access to servers through a user and role system
 
-[![CI/CD status](https://github.com/Seeroy/kubek-minecraft-dashboard/actions/workflows/build.yml/badge.svg)](https://github.com/Seeroy/kubek-minecraft-dashboard/actions/workflows/build.yml)
-
 **Features:**
 - **Linux and Windows supported**
 - **Intuitive Single-Page UI:** A clean and straightforward user interface for easy navigation and usage
@@ -25,17 +23,14 @@ Kubek is a Minecraft web server control panel that supports Linux and Windows. T
 
 # Installation
 
-## Download prepared release (recommended)
-
-Download and run the file suitable for your OS [from latest release](https://github.com/Seeroy/kubek-minecraft-dashboard/releases/latest)
 
 ## Build from sources
 
 Clone repository and install libs
 **Node.js >= 20 required!**
 ```
-git clone https://github.com/Seeroy/kubek-minecraft-dashboard.git
-cd kubek-minecraft-dashboard
+git clone https://github.com/nglmercer/server-minecraft-dashboard.git
+cd server-minecraft-dashboard
 npm install
 ```
 
