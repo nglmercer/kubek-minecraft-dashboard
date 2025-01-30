@@ -1293,6 +1293,7 @@ class KubekFileManagerUI {
         });
 
         explorer.addEventListener('item-contextmenu', (e) => {
+            const verifycurrentpath = currentPath.endsWith("/") ? currentPath : currentPath + "/";
             const baseOptions = [
                 {
                     id: 'delete',
@@ -1300,7 +1301,7 @@ class KubekFileManagerUI {
                     icon: 'delete',
                     callback: (dataTarget) => {
                         console.log('delete', dataTarget);
-                        const path = dataTarget.path;
+                        const path = verifycurrentpath + e.detail.item.name;
                         KubekNotifyModal.create(
                             "{{commons.delete}}", 
                             "{{fileManager.areYouWantToDelete}} " + KubekUtils.pathFilename(path),
@@ -1329,17 +1330,20 @@ class KubekFileManagerUI {
                     text: '{{commons.rename}}',
                     icon: 'bookmark_manager',
                     callback: (dataTarget) => {
+                        console.log(dataTarget, e.detail.item, dataTarget);
+                        const path = verifycurrentpath + e.detail.item.name;
                         KubekNotifyModal.askForInput(
                             "{{commons.rename}}",
                             "bookmark_manager",
                             (txt) => {
-                                KubekFileManager.renameFile(dataTarget.path, txt, () => {
+                                console.log("rename", path, txt);
+                                KubekFileManager.renameFile(path, txt, () => {
                                     KubekFileManagerUI.refreshDir();
                                 });
                             },
                             "",
                             "{{fileManager.enterName}}",
-                            KubekUtils.pathFilename(dataTarget.path),
+                            KubekUtils.pathFilename(e.detail.item.name),
                             "text"
                         );
                     }
@@ -1365,7 +1369,7 @@ class KubekFileManagerUI {
         });
     }
     static bindFMFilesList(bindEvent) {
-        const baseOptions = [
+/*         const baseOptions = [
             {
                 id: 'delete',
                 text: '{{commons.delete}}',
@@ -1477,7 +1481,7 @@ class KubekFileManagerUI {
                     KubekFileManagerUI.editFile(currentPathfile + data.filename);
                 }
             });
-        });
+        }); */
     }
 
     static bindBreadcrumbClicks() {

@@ -39,7 +39,26 @@ function getNotify_modal_template(parseddata) {
 
     // Añadir elementos adicionales si existen
     if (additionalElements) {
-        notify_window.appendChild(additionalElements);
+        if (Array.isArray(additionalElements)) {
+            // Si es un array, agregar cada elemento
+            additionalElements.forEach(el => {
+                if (el instanceof Node) {
+                    notify_window.appendChild(el);
+                }
+            });
+        } else if (additionalElements instanceof Node) {
+            // Si es un nodo, agregarlo directamente
+            notify_window.appendChild(additionalElements);
+        } else if (typeof additionalElements === 'string') {
+            // Si es un string HTML, convertirlo a elementos
+            const temp = document.createElement('div');
+            temp.innerHTML = additionalElements;
+            while (temp.firstChild) {
+                notify_window.appendChild(temp.firstChild);
+            }
+        } else {
+            console.error('additionalElements no es válido:', additionalElements);
+        }
     }
 
     // Añadir la ventana de notificación al modal
@@ -77,7 +96,6 @@ class KubekNotifyModal {
         console.log("element", element);
     }
     static create(caption, text, buttonText, icon, cb = () => {}, additionalElements = "") {
-        console.log(parseddata,"parseddata, modalHTML");
 
         // Mostrar pantalla difuminada
         const blurScreen = document.querySelector(".blurScreen");
@@ -96,6 +114,7 @@ class KubekNotifyModal {
             buttonText: buttonText,
             additionalElements: additionalElements,
         };
+        console.log(parseddata,"parseddata, modalHTML");
 
         // Generar el HTML del modal
         const modalHTML = getNotify_modal_template(parseddata);

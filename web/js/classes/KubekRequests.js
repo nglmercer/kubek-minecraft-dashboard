@@ -209,11 +209,13 @@ class KubekFileManager extends KubekBase {
 
     // Переименовать файл
     static renameFile(path, newName, cb) {
+        console.log("rename", path, newName, cb);
         this.get("/fileManager/rename?server=" + KubekRequests.selectedServer + "&path=" + path + "&newName=" + newName, cb);
     }
 
     // Удалить файл/директорию
     static delete(path, cb) {
+        console.log("delete", path);
         this.get("/fileManager/delete?server=" + KubekRequests.selectedServer + "&path=" + path, cb);
     }
 
@@ -383,6 +385,7 @@ class awaitfilemanager extends awaitBase {
         return this.get("/fileManager/delete?server=" + awaitRequests.selectedServer + "&path=" + path);
     }
     static renameFile(path, newName) {
+        console.log("rename", path, newName);
         return this.get("/fileManager/rename?server=" + awaitRequests.selectedServer + "&path=" + path + "&newName=" + newName);
     }
     static newDirectory(path, name) {

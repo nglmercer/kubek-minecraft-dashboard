@@ -117,4 +117,5 @@ npm run start
 - modify the server creation section to change server sections
 - modify state server creation -- reload the page after the server is created or after change the server section
 - create a extern server api to get the server list --->     const socket = dgram.createSocket('udp4'); socket.send(DISCOVERY_MSG, DISCOVERY_PORT, '255.255.255.255');
-
+ - create api to send comand to server
+ - fix context menu to rename and delete files
