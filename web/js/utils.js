@@ -1293,9 +1293,75 @@ class KubekFileManagerUI {
         });
 
         explorer.addEventListener('item-contextmenu', (e) => {
+            const baseOptions = [
+                {
+                    id: 'delete',
+                    text: '{{commons.delete}}',
+                    icon: 'delete',
+                    callback: (dataTarget) => {
+                        console.log('delete', dataTarget);
+                        const path = dataTarget.path;
+                        KubekNotifyModal.create(
+                            "{{commons.delete}}", 
+                            "{{fileManager.areYouWantToDelete}} " + KubekUtils.pathFilename(path),
+                            "{{commons.delete}}", 
+                            "delete",
+                            () => {
+                                KubekFileManager.delete(path, (result) => {
+                                    if (result === false) {
+                                        KubekAlerts.addAlert(
+                                            "{{commons.actionFailed}}", 
+                                            "warning",
+                                            "{{commons.delete}} " + KubekUtils.pathFilename(path),
+                                            4000,
+                                            "colored"
+                                        );
+                                    }
+                                    KubekFileManagerUI.refreshDir();
+                                });
+                            },
+                            KubekPredefined.MODAL_CANCEL_BTN
+                        );
+                    }
+                },
+                {
+                    id: 'rename',
+                    text: '{{commons.rename}}',
+                    icon: 'bookmark_manager',
+                    callback: (dataTarget) => {
+                        KubekNotifyModal.askForInput(
+                            "{{commons.rename}}",
+                            "bookmark_manager",
+                            (txt) => {
+                                KubekFileManager.renameFile(dataTarget.path, txt, () => {
+                                    KubekFileManagerUI.refreshDir();
+                                });
+                            },
+                            "",
+                            "{{fileManager.enterName}}",
+                            KubekUtils.pathFilename(dataTarget.path),
+                            "text"
+                        );
+                    }
+                }
+            ];
             console.log('Click derecho en:', e.detail.item);
             if (!e.detail.item) return;
             console.log('Posición:', e.detail.x, e.detail.y);
+            const options = [...baseOptions];
+
+            const popupOptions = options.map(option => ({
+                html: `${hoverStyles}
+                    <div class="dropdown-item">
+                        <span class="material-symbols-rounded">${option.icon}</span>
+                        <span class="default-font">${option.text}</span>
+                    </div>
+                `,
+                callback: () => option.callback(e.target)
+            }));
+            setPopupOptions(popupOptions);
+            openPopup(e.detail.target);
+            console.log("dataTarget", baseOptions, e.target);
         });
     }
     static bindFMFilesList(bindEvent) {
@@ -1377,11 +1443,10 @@ class KubekFileManagerUI {
             row.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 const dataTarget = getElementData(e.target);
-                const options = [...baseOptions];
-                
                 if (dataTarget.type !== 'directory') {
                     options.push(downloadOption);
                 }
+                const options = [...baseOptions];
 
                 const popupOptions = options.map(option => ({
                     html: `${hoverStyles}
@@ -1392,6 +1457,7 @@ class KubekFileManagerUI {
                     `,
                     callback: () => option.callback(dataTarget)
                 }));
+                console.log("dataTarget", dataTarget,baseOptions);
 
                 setPopupOptions(popupOptions);
                 openPopup(e.target);

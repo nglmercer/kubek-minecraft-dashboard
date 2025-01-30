@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function translatedialog(){
       const dialogcontent = document.querySelector('#deletedialog_content');
       dialogcontent._title = localStorage.getItem("selectedServer");
-      dialogcontent._description = "{{serverSettings.deleteServerDescription}}";
+      dialogcontent._description = "{{serverSettings.deleteServer}}";
       dialogcontent.options = [
         {
           label: "{{commons.delete}}",

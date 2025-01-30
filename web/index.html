@@ -27,6 +27,7 @@
     <script src="js/classes/KubekFileManager.js"></script>
 
     <script src="js/classes/KubekRequests.js"></script>
+    <script src="js/classes/KubekNotifyModal.js"></script>
     <!-- Scripts -->
      <script src="js/utils.js"></script>
      <script src="js/webcomponents.js"></script>
@@ -99,6 +100,13 @@
         theme="dark"
         >
         </custom-dialog>
+    </dialog-container>
+    <dialog-container id="globaldialog" style="border-radius: 16px;">
+        <custom-dialog id="globalmodal_content" style="background-color: #151e27; border-radius: 16px;"
+        title="nombre del servidor" 
+        description="desea borrar este servidor"
+        theme="dark">
+    </custom-dialog>
     </dialog-container>
     <sidebar-menu style="font-family: material-symbols-outlined"></sidebar-menu>
     <form id="server-icon-form" enctype="multipart/form-data" style="display: none;">
@@ -632,9 +640,6 @@
                 theme="dark">
             </custom-dialog>
             </dialog-container>
-            <script>
-
-            </script>
             </div>
         </div>
         <div slot="5-content" class="bg-slate-800 text-white"  style="margin-bottom: 32px;">

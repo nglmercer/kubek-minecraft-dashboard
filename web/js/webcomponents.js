@@ -2945,7 +2945,8 @@ class FileExplorer extends HTMLElement {
           detail: {
             item,
             x: e.clientX,
-            y: e.clientY
+            y: e.clientY,
+            target: e.target
           },
           bubbles: true,
           composed: true

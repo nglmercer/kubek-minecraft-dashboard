@@ -1,65 +1,93 @@
-const NOTIFY_MODAL_TEMPLATE = `
-    <div class="notify-modal modal-bg" id="{id}">
-        <div class="notify-window">
-            <div class="notify-icon">{icon}</div>
-            <div class="notify-caption">{caption}</div>
-            <div class="notify-description">{description}</div>
-            <button id="cmbtn-{id}" class="primary-btn">{buttonText}</button>
-            {additionalElements}
-        </div>
-    </div>
-`;
-//3
-const getNotify_modal_template = (parseddata) =>  {
-    const {id,icon,caption,description,buttonText,additionalElements} = parseddata;
+function getNotify_modal_template(parseddata) {
+    const { id, icon, caption, description, buttonText, additionalElements } = parseddata;
+
+    // Crear el contenedor principal del modal
     const modal = document.createElement('div');
     modal.className = "notify-modal modal-bg";
     modal.id = id;
 
+    // Crear la ventana de notificación
     const notify_window = document.createElement('div');
     notify_window.className = "notify-window";
 
+    // Crear el ícono
     const notify_icon = document.createElement('div');
     notify_icon.className = "notify-icon";
     notify_icon.innerHTML = icon;
 
+    // Crear el título
     const notify_caption = document.createElement('div');
     notify_caption.className = "notify-caption";
     notify_caption.innerHTML = caption;
 
+    // Crear la descripción
     const notify_description = document.createElement('div');
     notify_description.className = "notify-description";
     notify_description.innerHTML = description;
 
+    // Crear el botón
     const cmbtn = document.createElement('button');
-    cmbtn.id = `${id}`;
+    cmbtn.id = `cmbtn-${id}`;
     cmbtn.className = "primary-btn";
     cmbtn.innerHTML = buttonText;
+
+    // Añadir elementos a la ventana de notificación
     notify_window.appendChild(notify_icon);
     notify_window.appendChild(notify_caption);
     notify_window.appendChild(notify_description);
     notify_window.appendChild(cmbtn);
-    notify_window.appendChild(additionalElements);
+
+    // Añadir elementos adicionales si existen
+    if (additionalElements) {
+        notify_window.appendChild(additionalElements);
+    }
+
+    // Añadir la ventana de notificación al modal
     modal.appendChild(notify_window);
+
     return modal;
 }
+
 class KubekNotifyModal {
-    /**
-     * Crear una ventana modal de notificación
-     * @param {string} caption - El título de la notificación
-     * @param {string} text - La descripción del mensaje
-     * @param {string} buttonText - El texto del botón principal
-     * @param {string} icon - El icono que se mostrará
-     * @param {Function} cb - Callback a ejecutar al cerrar la ventana
-     * @param {string} additionalElements - Elementos adicionales que se agregarán
-     */
+    static getmodal(){
+        const dialogcontent = document.getElementById("globaldialog");
+        return dialogcontent;
+    }
+    static createModal(caption, text, buttonText, icon, cb = () => {}, additionalElements = "") {
+        const element = this.getmodal();
+        document.querySelector("#globalmodal_content")._title = caption;
+        document.querySelector("#globalmodal_content")._description = text;
+        document.querySelector("#globalmodal_content").options = [
+            {
+                label: buttonText,
+                class: "save-btn",
+                callback: () => {
+                    cb();
+                }
+            },
+            {
+                label: "{{commons.cancel}}",
+                class: "cancel-btn",
+                callback: () => {
+                    cb();
+                }
+            }
+        ];
+        element.show();
+        console.log("element", element);
+    }
     static create(caption, text, buttonText, icon, cb = () => {}, additionalElements = "") {
+        console.log(parseddata,"parseddata, modalHTML");
+
         // Mostrar pantalla difuminada
         const blurScreen = document.querySelector(".blurScreen");
         if (blurScreen) blurScreen.style.display = "block";
 
+        // Generar un ID único para el modal
         const randomID = `notify-${Math.floor(Math.random() * 991) + 10}`;
         const iconElement = `<span class='material-symbols-rounded'>${icon}</span>`;
+            
+        // Crear el objeto con los datos parseados
         const parseddata = {
             id: randomID,
             icon: iconElement,
@@ -67,30 +95,29 @@ class KubekNotifyModal {
             description: text,
             buttonText: buttonText,
             additionalElements: additionalElements,
-        }
+        };
+
+        // Generar el HTML del modal
         const modalHTML = getNotify_modal_template(parseddata);
-        // Insertar el modal en el body
-        const modalElement = document.createElement("div");
-        modalElement.innerHTML = modalHTML;
-        document.body.appendChild(modalElement.firstElementChild);
-        const button = document.getElementById(`${id}`);
-        console.log("button",button);
+        document.body.appendChild(modalHTML);
+
+        // Añadir animación de entrada
+        this.animateCSS(`#${randomID}`, 'fadeIn', 100);
+
+        // Añadir evento al botón
+        const button = document.getElementById(`cmbtn-${randomID}`);
         if (button) {
-/*             button.addEventListener("click", () => {
-                console.log("button",button);
-                animateCSS(`#${id}`, "fadeOut").then(() => {
-                    const modal = document.getElementById(id);
+            button.addEventListener("click", () => {
+                this.animateCSS(`#${randomID}`, 'fadeOut', 100, () => {
+                    const modal = document.getElementById(randomID);
                     if (modal) modal.remove();
+                    if (blurScreen) blurScreen.style.display = "none";
+                    cb(); // Llamar al callback después de cerrar el modal
                 });
-                if (blurScreen) blurScreen.style.display = "none";
-                cb(); 
-            }) */
+            });
         }
     }
 
-    /**
-     * Eliminar todos los modales de notificación
-     */
     static destroyAllModals() {
         const modals = document.querySelectorAll(".notify-modal");
         modals.forEach((modal) => modal.remove());
@@ -99,25 +126,7 @@ class KubekNotifyModal {
         if (blurScreen) blurScreen.style.display = "none";
     }
 
-    /**
-     * Crear un modal solicitando entrada del usuario
-     * @param {string} caption - El título del modal
-     * @param {string} icon - El icono que se mostrará
-     * @param {Function} cb - Callback que recibe el valor ingresado
-     * @param {string} description - La descripción del modal
-     * @param {string} placeholder - Placeholder del campo de entrada
-     * @param {string} value - Valor por defecto en el campo de entrada
-     * @param {string} iType - Tipo del campo de entrada (por defecto "text")
-     */
-    static askForInput(
-        caption,
-        icon,
-        cb = () => {},
-        description = "",
-        placeholder = "{{commons.input}}",
-        value = "",
-        iType = "text"
-    ) {
+    static askForInput(caption, icon, cb = () => {}, description = "", placeholder = "{{commons.input}}", value = "", iType = "text") {
         const inputRandID = `input-${Math.floor(Math.random() * 10000)}`;
         const inputField = `
             <p>${description}</p>
@@ -142,26 +151,29 @@ class KubekNotifyModal {
         );
     }
 
-    /**
-     * Animar un elemento usando clases CSS
-     * @param {string} selector - Selector del elemento
-     * @param {string} animation - Nombre de la animación
-     * @returns {Promise} - Promesa que se resuelve al finalizar la animación
-     */
-    static animateCSS(selector, animation) {
-        return new Promise((resolve) => {
-            const element = document.querySelector(selector);
-            if (!element) return resolve();
+    static animateCSS(selector, animationType, duration = 300, callback) {
+        const element = document.querySelector(selector);
+        if (!element) return;
 
-            element.classList.add("animate__animated", `animate__${animation}`);
-            element.addEventListener(
-                "animationend",
-                () => {
-                    element.classList.remove("animate__animated", `animate__${animation}`);
-                    resolve();
-                },
-                { once: true }
-            );
-        });
+        // Configurar la transición
+        element.style.transition = `opacity ${duration}ms ease-out`;
+
+        // Aplicar la animación
+        if (animationType === 'fadeIn') {
+            element.style.opacity = 0;
+            setTimeout(() => {
+                element.style.opacity = 1;
+            }, 10);
+        } else if (animationType === 'fadeOut') {
+            element.style.opacity = 0;
+        }
+
+        // Ejecutar el callback después de la duración
+        if (typeof callback === 'function') {
+            setTimeout(callback, duration);
+        }
     }
 }
+setTimeout(() => {
+    KubekNotifyModal.createModal("{{commons.updateAvailable}}", "{{commons.updateAvailable}}", "{{commons.goto}}", "update", () => {});
+}, 3222);
