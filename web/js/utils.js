@@ -1278,15 +1278,17 @@ class KubekFileManagerUI {
             if (!e.detail.item) { this.upperDir(); return; }
                 const { path, name, type } = e.detail.item;
                 explorer.setAttribute('current-path', currentPath);
-                console.log("verify", editableExtensions.includes(KubekUtils.pathExt(name)),"e",e.detail);
                 const verifycurrentpath = currentPath.endsWith("/") ? currentPath : currentPath + "/";
+                console.log("verify", editableExtensions.includes(KubekUtils.pathExt(name)),"e",e.detail, currentPath, type, name, verifycurrentpath);
                 if (type === 'directory') {
                     currentPath = verifycurrentpath + name;
 
                     KubekFileManagerUI.refreshDir();
                 } else if (type === 'file' && 
                          editableExtensions.includes(KubekUtils.pathExt(name))) {
-                            KubekFileManagerUI.editFile(verifycurrentpath + name);
+                            const filetoedit = verifycurrentpath + name
+                            console.log("filetoedit", filetoedit);
+                            KubekFileManagerUI.editFile(filetoedit);
                 }
         });
 
@@ -1399,12 +1401,14 @@ class KubekFileManagerUI {
             row.addEventListener(bindEvent, function(e) {
                 const data = getElementData(e.target);
                 console.log("data", data);
+                const currentPathfile = currentPath.endsWith("/") ? currentPath : currentPath + "/";
                 if (data.type === "directory") {
-                    currentPath = currentPath + data.filename;
+                    currentPath = currentPathfile   + data.filename;
                     KubekFileManagerUI.refreshDir();
                 } else if (data.type === "file" && 
                          editableExtensions.includes(KubekUtils.pathExt(data.filename))) {
-                    KubekFileManagerUI.editFile(currentPath + data.filename);
+                            console.log("editableExtensions", currentPath + data.filename);
+                    KubekFileManagerUI.editFile(currentPathfile + data.filename);
                 }
             });
         });
@@ -1416,12 +1420,10 @@ class KubekFileManagerUI {
         breadcrumbLinks.forEach(link => {
             link.addEventListener("click", function() {
                 if (this.textContent === this.selectedServer) {
-                    currentPath = "/";
                     KubekFileManagerUI.refreshDir(false);
                     return;
                 }
 
-                let path = "";
                 const currentIndex = Array.from(breadcrumbLinks).indexOf(this);
                 
                 breadcrumbLinks.forEach((item, index) => {
@@ -1430,7 +1432,6 @@ class KubekFileManagerUI {
                     }
                 });
 
-                currentPath = path;
                 KubekFileManagerUI.refreshDir(false);
             });
         });
@@ -1507,26 +1508,28 @@ class KubekFileManagerUI {
         });
     }
 
-    static writeFile() {
+    static  async writeFile() {
         const inputElement = document.querySelector(".fileEditor input");
         if (!inputElement.value || !FILE_NAME_REGEXP.test(inputElement.value)) {
             return false;
         }
-
-        const path = currentPath + inputElement.value;
+        const currentPathfile = currentPath.endsWith("/") ? currentPath : currentPath + "/";
+        const path = currentPathfile + inputElement.value;
         const data = document.getElementById("code-edit").textContent;
         
         this.closeEditor();
         currentDataParts = data.match(/[\s\S]{1,500}/g) || [];
         currentChunkWriting = -1;
-
-        KubekFileManager.startChunkWrite(path, (result) => {
-            currentChunkID = result;
-            console.log("Starting write for", currentChunkID);
+        try {
+            const resultId = await awaitfilemanager.startChunkyFileWrite(path);
+            currentChunkID = resultId.id
+            console.log("Starting write for", currentChunkID, path,resultId);
             this.writeNextChunk();
-        });
-
-        return true;
+            return true;
+        } catch (error) {
+            console.error("Error starting chunk write:", error, currentChunkID, path);
+            return false;
+        }
     }
 
     static writeNextChunk() {

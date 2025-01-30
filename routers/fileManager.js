@@ -32,11 +32,16 @@ router.get("/get", WEBSERVER.serversRouterMiddleware, function (req, res) {
 router.get("/chunkWrite/start", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.server, q.path)) {
-        return res.send(FILE_MANAGER.startChunkyFileWrite(q.server, q.path));
+        const result = FILE_MANAGER.startChunkyFileWrite(q.server, q.path);
+        if (!result) {
+            console.error("Error starting chunk write for:", q.server, q.path);
+            return res.status(500).send({error: "Failed to initialize file write"});
+        }
+        console.log("Started chunk write for:", q.server, q.path, result);
+        return res.send({id: result});
     }
     res.sendStatus(400);
 });
-
 router.get("/chunkWrite/add", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.query;
     if (COMMONS.isObjectsValid(q.id, q.data)) {

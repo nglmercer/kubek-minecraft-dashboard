@@ -156,7 +156,7 @@ export const SERVER_CORES = {
         displayName: "Vanilla",
         versionsMethod: "vanilla",
         versionsUrl: "https://cdn.seeeroy.ru/Kubek/vanilla.json",
-        urlGetMethod: "externalURL"
+        urlGetMethod: "vanilla"
     },
     paper: {
         name: "paper",

@@ -44,8 +44,14 @@ const ensureDirectoryExists = (path) => {
 // Modificar constructFilePath para crear el directorio si es necesario
 export const constructFilePath = (server, path) => {
     const fullPath = "./servers/" + server + path;
-    ensureDirectoryExists(fullPath); // Crear directorio si no existe
-    return fullPath;
+    try {
+        ensureDirectoryExists(fullPath);
+        console.log("Directory ensured for path:", fullPath);
+        return fullPath;
+    } catch (err) {
+        console.error("Failed to ensure directory exists:", err);
+        return false;
+    }
 };
 
 export const verifyPathForTraversal = (path) => {
@@ -149,8 +155,10 @@ export const newDirectory = (server, path, name) => {
 
 export const startChunkyFileWrite = (server, path) => {
     let filePath = constructFilePath(server, path);
+    console.log("Attempting to write to:", filePath);
 
     if (!verifyPathForTraversal(filePath)) {
+        console.log("Path traversal check failed for:", filePath);
         return false;
     }
 
@@ -160,8 +168,11 @@ export const startChunkyFileWrite = (server, path) => {
         path: filePath,
         text: ""
     }
+    console.log("Created file write with ID:", randomUUID);
     return randomUUID;
 };
+
+
 
 export const addFileChunk = (id, chunk) => {
     if (typeof fileWrites[id] !== "undefined") {

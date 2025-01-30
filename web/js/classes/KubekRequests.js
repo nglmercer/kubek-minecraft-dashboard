@@ -62,6 +62,81 @@ class KubekRequests {
         this.makeAjaxRequest(url, "OPTIONS", data, apiEndpoint, cb);
     };
 }
+class awaitRequests {
+    static selectedServer = window.localStorage.selectedServer;
+
+    // Realizar una solicitud AJAX y retornar una Promesa
+    static makeAjaxRequest = async (url, type, data = "", apiEndpoint = true) => {
+        if (apiEndpoint) {
+            url = KubekPredefined.API_ENDPOINT + url;
+        }
+
+        const options = {
+            method: type.toUpperCase(),
+            headers: {}
+        };
+
+        if (data !== "") {
+            if (data instanceof FormData) {
+                options.body = data;
+            } else {
+                options.body = JSON.stringify(data);
+                options.headers['Content-Type'] = 'application/json';
+            }
+        }
+
+        try {
+            const response = await fetch(url, options);
+            
+            if (!response.ok) {
+                if (response.status === 403) {
+                    KubekAlerts.addAlert(
+                        "{{commons.failedToRequest}}",
+                        "warning",
+                        "{{commons.maybeUDoesntHaveAccess}}",
+                        5000
+                    );
+                }
+                
+                const errorText = await response.text();
+                const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+                error.status = response.status;
+                error.statusText = response.statusText;
+                error.body = errorText;
+                throw error;
+            }
+            
+            return await response.json();
+            
+        } catch (error) {
+            throw error; // Propagamos el error para manejo externo
+        }
+    };
+
+    static get = (url, apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "GET", "", apiEndpoint);
+    };
+
+    static post = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "POST", data, apiEndpoint);
+    };
+
+    static put = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "PUT", data, apiEndpoint);
+    };
+
+    static delete = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "DELETE", data, apiEndpoint);
+    };
+
+    static head = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "HEAD", data, apiEndpoint);
+    };
+
+    static options = (url, data = "", apiEndpoint = true) => {
+        return this.makeAjaxRequest(url, "OPTIONS", data, apiEndpoint);
+    };
+}
 class KubekBase {
     static get(url, cb, apiEndpoint = true) {
         KubekRequests.get(url, cb, apiEndpoint);
@@ -85,6 +160,31 @@ class KubekBase {
 
     static options(url, cb, data = "", apiEndpoint = true) {
         KubekRequests.options(url, cb, data, apiEndpoint);
+    }
+}
+class awaitBase {
+    static get(url, apiEndpoint = true) {
+        return awaitRequests.get(url, apiEndpoint);
+    }
+
+    static post(url, data = "", apiEndpoint = true) {
+        return awaitRequests.post(url, data, apiEndpoint);
+    }
+
+    static put(url, data = "", apiEndpoint = true) {
+        return awaitRequests.put(url, data, apiEndpoint);
+    }
+
+    static delete(url, data = "", apiEndpoint = true) {
+        return awaitRequests.delete(url, data, apiEndpoint);
+    }
+
+    static head(url, data = "", apiEndpoint = true) {
+        return awaitRequests.head(url, data, apiEndpoint);
+    }
+
+    static options(url, data = "", apiEndpoint = true) {
+        return awaitRequests.options(url, data, apiEndpoint);
     }
 }
 class KubekCoresManager extends KubekBase {
@@ -140,6 +240,7 @@ class KubekFileManager extends KubekBase {
     // Создать элемент для записи
     static startChunkWrite(path, cb){
         this.get("/fileManager/chunkWrite/start?server=" + KubekRequests.selectedServer + "&path=" + path, cb);
+        return 
     }
 
     // Дополнить элемент для записи
@@ -259,109 +360,41 @@ class KubekServers extends KubekBase {
         }
     };
 }
-class awaitRequests {
-    static selectedServer = window.localStorage.selectedServer;
 
-    // Realizar una solicitud AJAX y retornar una Promesa
-    static makeAjaxRequest = async (url, type, data = "", apiEndpoint = true) => {
-        if (apiEndpoint) {
-            url = KubekPredefined.API_ENDPOINT + url;
-        }
 
-        const options = {
-            method: type.toUpperCase(),
-            headers: {}
-        };
 
-        if (data !== "") {
-            if (data instanceof FormData) {
-                options.body = data;
-            } else {
-                options.body = JSON.stringify(data);
-                options.headers['Content-Type'] = 'application/json';
-            }
-        }
-
-        try {
-            const response = await fetch(url, options);
-            
-            if (!response.ok) {
-                if (response.status === 403) {
-                    KubekAlerts.addAlert(
-                        "{{commons.failedToRequest}}",
-                        "warning",
-                        "{{commons.maybeUDoesntHaveAccess}}",
-                        5000
-                    );
-                }
-                
-                const errorText = await response.text();
-                const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
-                error.status = response.status;
-                error.statusText = response.statusText;
-                error.body = errorText;
-                throw error;
-            }
-            
-            return await response.json();
-            
-        } catch (error) {
-            throw error; // Propagamos el error para manejo externo
-        }
-    };
-
-    static get = (url, apiEndpoint = true) => {
-        return this.makeAjaxRequest(url, "GET", "", apiEndpoint);
-    };
-
-    static post = (url, data = "", apiEndpoint = true) => {
-        return this.makeAjaxRequest(url, "POST", data, apiEndpoint);
-    };
-
-    static put = (url, data = "", apiEndpoint = true) => {
-        return this.makeAjaxRequest(url, "PUT", data, apiEndpoint);
-    };
-
-    static delete = (url, data = "", apiEndpoint = true) => {
-        return this.makeAjaxRequest(url, "DELETE", data, apiEndpoint);
-    };
-
-    static head = (url, data = "", apiEndpoint = true) => {
-        return this.makeAjaxRequest(url, "HEAD", data, apiEndpoint);
-    };
-
-    static options = (url, data = "", apiEndpoint = true) => {
-        return this.makeAjaxRequest(url, "OPTIONS", data, apiEndpoint);
-    };
-}
-
-class awaitBase {
-    static get(url, apiEndpoint = true) {
-        return awaitRequests.get(url, apiEndpoint);
-    }
-
-    static post(url, data = "", apiEndpoint = true) {
-        return awaitRequests.post(url, data, apiEndpoint);
-    }
-
-    static put(url, data = "", apiEndpoint = true) {
-        return awaitRequests.put(url, data, apiEndpoint);
-    }
-
-    static delete(url, data = "", apiEndpoint = true) {
-        return awaitRequests.delete(url, data, apiEndpoint);
-    }
-
-    static head(url, data = "", apiEndpoint = true) {
-        return awaitRequests.head(url, data, apiEndpoint);
-    }
-
-    static options(url, data = "", apiEndpoint = true) {
-        return awaitRequests.options(url, data, apiEndpoint);
-    }
-}
 class awaitfilemanager extends awaitBase {
     static readDirectory(path) {
         return this.get("/fileManager/get?server=" + awaitRequests.selectedServer + "&path=" + path);
+    }
+    static readFile(path) {
+        return this.get("/fileManager/get?server=" + awaitRequests.selectedServer + "&path=" + path);
+    }
+    static startChunkWrite(path) {
+        return this.get("/fileManager/chunkWrite/start?server=" + awaitRequests.selectedServer + "&path=" + path);
+    }
+    static addChunkWrite(id, data) {
+        return this.get("/fileManager/chunkWrite/add?id=" + id + "&data=" + data);
+    }
+    static endChunkWrite(id) {
+        return this.get("/fileManager/chunkWrite/end?id=" + id);
+    }
+    static deleteFile(path) {
+        return this.get("/fileManager/delete?server=" + awaitRequests.selectedServer + "&path=" + path);
+    }
+    static renameFile(path, newName) {
+        return this.get("/fileManager/rename?server=" + awaitRequests.selectedServer + "&path=" + path + "&newName=" + newName);
+    }
+    static newDirectory(path, name) {
+        return this.get("/fileManager/newDirectory?server=" + awaitRequests.selectedServer + "&path=" + path + "&name=" + name);
+    }
+    static startChunkyFileWrite(path) {
+        return this.get("/fileManager/chunkWrite/start?server=" + awaitRequests.selectedServer + "&path=" + path);
+    }
+    static addFileChunk(id, data) {
+        return this.get("/fileManager/chunkWrite/add?id=" + id + "&data=" + data);
+    }
+    static endChunkyFileWrite(id) {
+        return this.get("/fileManager/chunkWrite/end?id=" + id);
     }
 }
