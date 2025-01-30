@@ -301,6 +301,10 @@ class KubekTasksUI {
                     }
                     this.addTask(id, icon, title, description, true, "symbol", iconBg);
                 }
+                if (tasks.currentStep === "{{commons.completed}}" || tasks.currentStep === "completed") {
+                    this.removeAllTasks();
+                    window.location = "/?act=console";
+                }
             })
             .catch(() => {
                 if (!isConnectionLost) {

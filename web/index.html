@@ -1316,4 +1316,9 @@ KubekConsoleUI = class {
 document.getElementById('mod-search-button').addEventListener('click', () => {
   document.getElementById('custom-modal').open();
 });
+setTimeout(() => {
+    if (!window.localStorage.selectedServer) {
+        window.location.href = "createserver.html";
+    }
+}, 1000);
 </script>

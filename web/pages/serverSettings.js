@@ -14,6 +14,7 @@ class KubekServerSettingsUI {
      */
     static loadSettings = () => {
         let selectedServer = window.localStorage.selectedServer;
+        if (!selectedServer) return;
         KubekRequests.get(`/servers/${selectedServer}/info`, (serverSettings) => {
             loadedSettings = serverSettings;
             
@@ -96,14 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     translatedialog();
     async function translatedialog(){
-      const translations = await getTranslatestore(localStorage.getItem("userlang"));
-      console.log("translations", translations["serverSettings"]);
       const dialogcontent = document.querySelector('#deletedialog_content');
       dialogcontent._title = localStorage.getItem("selectedServer");
-      dialogcontent._description = translations["serverSettings"].deleteServer;
+      dialogcontent._description = "{{serverSettings.deleteServerDescription}}";
       dialogcontent.options = [
         {
-          label: translations.commons.delete,
+          label: "{{commons.delete}}",
           class: "delete-btn",
           callback: () => {
             deleteServerDialog.hide();
@@ -111,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         },
         {
-          label: translations.commons.cancel,
+          label: "{{commons.cancel}}",
           class: "cancel-btn",
           callback: () => {
             deleteServerDialog.hide();
