@@ -1143,7 +1143,7 @@
             class: "save-btn",
             callback: () => {
                 console.log("accept");
-                KubekRequests.get("/kubek/eula/accept", function () {
+                KubekRequests.get("/kubek/eula/accept", () => {
                     window.location.reload();
                 });
             }
