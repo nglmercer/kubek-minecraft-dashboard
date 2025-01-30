@@ -74,6 +74,7 @@ class KubekNotifyModal {
     }
     static createModal(caption, text, buttonText, icon, cb = () => {}, additionalElements = "") {
         const element = this.getmodal();
+        console.log("caption", caption,element);
         document.querySelector("#globalmodal_content")._title = caption;
         document.querySelector("#globalmodal_content")._description = text;
         document.querySelector("#globalmodal_content").options = [
