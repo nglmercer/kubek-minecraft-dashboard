@@ -67,7 +67,7 @@
       "developer": "Developer",
       "done": "Ready",
       "success": "Successfully",
-      "completed": "Completed",
+      "completed": "completed",
       "email": "Email",
       "logout": "Logout",
       "on": "On",
@@ -186,7 +186,7 @@
       "downloadingCore": "Downloading core",
       "creatingBat": "Preparing the launch file",
       "completion": "Completion",
-      "completed": "Completed",
+      "completed": "completed",
       "failed": "There is a problem"
     },
     "fileManager": {

@@ -114,7 +114,7 @@ class KubekNotifyModal {
             buttonText: buttonText,
             additionalElements: additionalElements,
         };
-        console.log(parseddata,"parseddata, modalHTML");
+        //console.log(parseddata,"parseddata, modalHTML");
 
         // Generar el HTML del modal
         const modalHTML = getNotify_modal_template(parseddata);
