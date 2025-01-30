@@ -1,3 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
 <link rel="stylesheet" href="/pages/newServer.css"/>
 <link rel="stylesheet" href="css/elements/elements.css"/>
 
@@ -15,16 +22,28 @@
 <script src="js/moment.min.js"></script>
 <script src="js/jquery-3.7.0.min.js"></script>
 <style>
-    body {
-        background-color: var(--bg-dark);
-        color: white;
-        color-scheme: light dark;
-    }
+body {
+    background-color: var(--bg-dark);
+    color: white;
+    color-scheme: light dark;
+}
 </style>
 <script src="/pages/newServer.js"></script>
+<body>
 <!-- Главный контейнер -->
+<dialog-container
+ id="Eula_dialog_container" 
+ required="true"
+>
+    <custom-dialog id="Eula_dialog" 
+    title=""
+    description="{{commons.eula}}"
+    style=" max-width: 500px; color: white;"
+    theme="dark"
+    >
+    </custom-dialog>
+</dialog-container>
  <sidebar-menu id="main-menu-sidebar">
-
  </sidebar-menu>
 <div class="new-server-container animate__animated animate__fadeIn animate__faster">
     <h2>{{newServerWizard.title}}</h2>
@@ -145,7 +164,7 @@
             window.location = '/createserver.html';
         });
         KubekServers.getServersList((servers) => {
-            if (!servers || !servers.lengtn < 1) {
+            if (!servers || servers.lenght < 1) {
                 return;
             }
             console.log("servers getServersList", servers); 
@@ -156,5 +175,26 @@
                 selectedServer = servers[0];
             }
         });
+        KubekRequests.get("/kubek/settings", (settings) => {
+            console.log("settings /kubek/settings",settings);
+            if (settings.eulaAccepted === false) {
+                document.querySelector("#Eula_dialog_container").show();
+            }
+        });
+        const Eula_dialog = document.querySelector("#Eula_dialog");
+        Eula_dialog.options = [
+            {
+                label: "{{commons.iAccept}}",
+                class: "save-btn",
+                callback: () => {
+                    console.log("accept");
+                    KubekRequests.get("/kubek/eula/accept", function () {
+                        window.location.reload();
+                    });
+                }
+            }
+        ];	
     });
 </script>
+</body>
+</html>
