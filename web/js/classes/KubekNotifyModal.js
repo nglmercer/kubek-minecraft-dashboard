@@ -174,6 +174,6 @@ class KubekNotifyModal {
         }
     }
 }
-setTimeout(() => {
+/* setTimeout(() => {
     KubekNotifyModal.createModal("{{commons.updateAvailable}}", "{{commons.updateAvailable}}", "{{commons.goto}}", "update", () => {});
-}, 3222);
+}, 3222); */
