@@ -144,5 +144,17 @@
             // href="/?act=newServer"
             window.location = '/createserver.html';
         });
+        KubekServers.getServersList((servers) => {
+            if (!servers || !servers.lengtn < 1) {
+                return;
+            }
+            console.log("servers getServersList", servers); 
+            if (servers.has(window.localStorage.selectedServer)) {
+                selectedServer = window.localStorage.selectedServer;
+            } else {
+                localStorage.setItem("selectedServer", servers[0]);
+                selectedServer = servers[0];
+            }
+        });
     });
 </script>

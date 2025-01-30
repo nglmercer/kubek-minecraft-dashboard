@@ -1174,6 +1174,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     KubekServers.getServersList((servers) => {
+        if (!servers && servers !== false && !servers.length) {
+            window.location.href = "createserver.html";
+            console.log("servers getServersList", servers, "servers.length", servers.length);
+            return;
+        }
         if (!servers) return;
         console.log("servers getServersList", servers); 
         if (servers.has(window.localStorage.selectedServer)) {
