@@ -3,14 +3,14 @@ import TASK_MANAGER from "./../modules/taskManager.js";
 import express from "express";
 const router = express.Router();
 function initializeWebServer() {
-// Endpoint списка задач
+// Endpoint GET and POST for getting tasks
 router.get("/", function (req, res) {
     res.set("Content-Type", "application/json");
     res.send(TASK_MANAGER.tasks);
     TASK_MANAGER.removeCompletedTasks();
 });
 
-// Endpoint задачи по её ID
+// Endpoint GET and POST for getting a task
 router.get("/:id", function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.id) && Object.keys(TASK_MANAGER.tasks).includes(q.id)) {

@@ -13,7 +13,7 @@ import Jimp from "jimp";
 const router = express.Router();
 
 function initializeWebServer() {
-// Router для получения списка серверов
+// Router GET for getting the list of servers
 router.get("/", function (req, res) {
     let preparedList = SERVERS_MANAGER.getServersList();
     if (mainConfig.authorization === true) {
@@ -30,8 +30,7 @@ router.get("/", function (req, res) {
     }
     res.send(preparedList);
 });
-// SERVERS_GENERATOR.prepareJavaForServer error  is not a function
-// Router для создания нового сервера
+// Router GET for creating a new server
 router.get("/new", function (req, res) {
     let q = req.query;
     q.gameType = "minecraft";
@@ -51,7 +50,7 @@ router.get("/new", function (req, res) {
     }
 });
 
-// Router для получения лога сервера
+// Router GET for getting the log of the server
 router.get("/:server/log", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server)) {
@@ -67,7 +66,7 @@ router.get("/:server/log", WEBSERVER.serversRouterMiddleware, function (req, res
     res.sendStatus(400);
 });
 
-// Router для запуска сервера
+// Router GET for starting the server
 router.get("/:server/start", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -76,7 +75,7 @@ router.get("/:server/start", WEBSERVER.serversRouterMiddleware, function (req, r
     res.sendStatus(400);
 });
 
-// Router для перезапуска сервера
+// Router GET for restarting the server
 router.get("/:server/restart", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -85,7 +84,7 @@ router.get("/:server/restart", WEBSERVER.serversRouterMiddleware, function (req,
     res.sendStatus(400);
 });
 
-// Router для остановки сервера
+// Router GET for stopping the server
 router.get("/:server/stop", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -94,7 +93,7 @@ router.get("/:server/stop", WEBSERVER.serversRouterMiddleware, function (req, re
     res.sendStatus(400);
 });
 
-// Router для принудительного завершения сервера
+// Router GET for killing the server
 router.get("/:server/kill", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -103,7 +102,7 @@ router.get("/:server/kill", WEBSERVER.serversRouterMiddleware, function (req, re
     res.sendStatus(400);
 });
 
-// Router для отправки команд на сервер
+// Router GET for sending commands to the server
 router.get("/:server/send", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let q2 = req.query;
@@ -113,7 +112,7 @@ router.get("/:server/send", WEBSERVER.serversRouterMiddleware, function (req, re
     res.sendStatus(400);
 });
 
-// Router для получения иконки сервера
+// Router GET for getting the icon of the server
 router.get("/:server/icon", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -137,7 +136,7 @@ router.get("/:server/icon", WEBSERVER.serversRouterMiddleware, function (req, re
     res.sendStatus(400);
 });
 
-// Router для смены иконки сервера
+// Router POST for changing the icon of the server
 router.post("/:server/icon", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let sourceFile, sourceExt;
@@ -164,7 +163,7 @@ router.post("/:server/icon", WEBSERVER.serversRouterMiddleware, function (req, r
     })
 });
 
-// Router для получения информации о сервере
+// Router GET for getting the information of the server
 router.get("/:server/info", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -173,7 +172,7 @@ router.get("/:server/info", WEBSERVER.serversRouterMiddleware, function (req, re
     return res.sendStatus(400);
 });
 
-// Router для записи информации о сервере
+// Router PUT for writing the information of the server
 router.put("/:server/info", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let q2 = req.query;
@@ -183,7 +182,7 @@ router.put("/:server/info", WEBSERVER.serversRouterMiddleware, function (req, re
     res.sendStatus(400);
 });
 
-// Router для получения информации о сервере
+// Router GET for getting the query of the server
 router.get("/:server/query", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server) && SERVERS_MANAGER.getServerStatus(q.server) === PREDEFINED.SERVER_STATUSES.RUNNING) {
@@ -195,7 +194,7 @@ router.get("/:server/query", WEBSERVER.serversRouterMiddleware, function (req, r
     }
 });
 
-// Router для получения скрипта запуска
+// Router GET for getting the start script of the server
 router.get("/:server/startScript", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -206,7 +205,7 @@ router.get("/:server/startScript", WEBSERVER.serversRouterMiddleware, function (
     res.sendStatus(400);
 });
 
-// Router для записи скрипта запуска
+// Router PUT for writing the start script of the server
 router.put("/:server/startScript", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let q2 = req.query;
@@ -219,7 +218,7 @@ router.put("/:server/startScript", WEBSERVER.serversRouterMiddleware, function (
     res.sendStatus(400);
 });
 
-// Router для получения server.properties
+// Router GET for getting the server.properties of the server
 router.get("/:server/server.properties", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -228,7 +227,7 @@ router.get("/:server/server.properties", WEBSERVER.serversRouterMiddleware, func
     res.sendStatus(400);
 });
 
-// Router для записи server.properties
+// Router PUT for writing the server.properties of the server
 router.put("/:server/server.properties", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let q2 = req.query;
@@ -238,7 +237,7 @@ router.put("/:server/server.properties", WEBSERVER.serversRouterMiddleware, func
     res.sendStatus(400);
 });
 
-// Router для удаления сервера
+// Router DELETE for deleting the server
 router.delete("/:server", (req, res) => {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server)) {

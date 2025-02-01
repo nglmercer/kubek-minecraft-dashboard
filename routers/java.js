@@ -5,23 +5,23 @@ import express from "express";
 
 const router = express.Router();
 function initializeWebServer() {
-// Endpoint списка установленных версий Java
+// Endpoint GET for getting the list of Java versions
 router.get("/", function (req, res) {
     res.send(STATS_COLLECTOR.getAllJavaInstalled());
 });
 
-// Endpoint списка установленных версий Java в Kubek
+// Endpoint GET for getting the list of Java versions installed in Kubek
 router.get("/kubek", function (req, res) {
     res.send(JAVA_MANAGER.getLocalJavaVersions());
 });
 
-// Endpoint списка доступных для скачивания версий Java
+// Endpoint GET for getting the list of available Java versions for download
 router.get("/online", function (req, res) {
     const result = JAVA_MANAGER.getDownloadableJavaVersions();
     res.send(result);
 });
 
-// Endpoint для получения общего списка Java
+// Endpoint GET for getting the overall list of Java versions
 router.get("/all", async (req, res) => {
     let result = {
         installed: STATS_COLLECTOR.getAllJavaInstalled(),

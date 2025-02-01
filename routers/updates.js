@@ -2,7 +2,7 @@ import * as UPDATER from "./../modules/updater.js";
 import express from "express";
 const router = express.Router();
 function initializeWebServer() {
-// Endpoint для проверки обновлений
+// Endpoint GET and POST for checking for updates
 router.get("/", function (req, res) {
     let updInfo = UPDATER.getCachedUpdate();
     if (updInfo === false) {

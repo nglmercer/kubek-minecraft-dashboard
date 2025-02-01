@@ -4,14 +4,14 @@ import * as COMMONS from "./../modules/commons.js";
 import * as WEBSERVER from "./../modules/webserver.js";
 import express from "express";
 const router = express.Router();
-// Endpoint списка ядер
 function initializeWebServer() {
+    // Endpoint INFO for getting the list of cores
     router.get("/", function (req, res) {
         res.set("Content-Type", "application/json");
         res.send(PREDEFINED.SERVER_CORES);
     });
     
-    // Endpoint списка версий конкретного ядра
+    // Endpoint GET for getting the list of available cores for a server
     router.get("/:core", function (req, res) {
         let q = req.params;
         if (COMMONS.isObjectsValid(q.core) && Object.keys(PREDEFINED.SERVER_CORES).includes(q.core)) {
@@ -24,7 +24,7 @@ function initializeWebServer() {
         }
     });
     
-    // Endpoint ссылки на выбранную версию ядра
+    // Endpoint GET for getting the download URL of a core version
     router.get("/:core/:version", function (req, res) {
         let q = req.params;
         if (COMMONS.isObjectsValid(q.core, q.version) && Object.keys(PREDEFINED.SERVER_CORES).includes(q.core)) {

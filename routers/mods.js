@@ -5,7 +5,7 @@ import * as WEBSERVER from "./../modules/webserver.js";
 import express from "express";
 const router = express.Router();
 function initializeWebServer() {
-// Endpoint списка модов
+// Endpoint GET for getting the list of mods
 router.get("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -26,7 +26,7 @@ router.get("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     }
 });
 
-// Endpoint для загрузки мода на сервер
+// Endpoint POST for uploading a mod
 router.post("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let sourceFile;
@@ -46,7 +46,7 @@ router.post("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     })
 });
 
-// Endpoint удаления мода
+// Endpoint DELETE for deleting a mod
 router.delete("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let q2 = req.query;

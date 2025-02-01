@@ -5,7 +5,7 @@ import * as WEBSERVER from "./../modules/webserver.js";
 import express from "express";
 const router = express.Router();
 function initializeWebServer() {
-// Endpoint списка плагинов
+// Endpoint GET for getting the list of plugins
 router.get("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     if (COMMONS.isObjectsValid(q.server) && SERVERS_MANAGER.isServerExists(q.server)) {
@@ -28,7 +28,7 @@ router.get("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     }
 });
 
-// Endpoint для загрузки плагина
+// Endpoint POST for uploading a plugin
 router.post("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let sourceFile;
@@ -38,7 +38,6 @@ router.post("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     }
 
     sourceFile = req.files["server-plugin-input"];
-    // DEVELOPED by seeeroy
 
     COMMONS.moveUploadedFile(q.server, sourceFile, "/plugins/" + sourceFile.name, (result) => {
         if (result === true) {
@@ -49,7 +48,7 @@ router.post("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     })
 });
 
-// Endpoint удаления плагина
+// Endpoint DELETE for deleting a plugin
 router.delete("/:server", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let q2 = req.query;
