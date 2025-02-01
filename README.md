@@ -96,21 +96,3 @@ cd server-minecraft-dashboard
 npm install
 npm run start
 ```
-
-## spanish description
-	# projecto opensource para crear y hostear servidores de miencraft funciona en windows, linux, android (usando termux) 
-	este proyecto se encarga de facilitar la creación de servidores de miencraft en cualquier sistema operativo usando js, tambien puedes usar docker , y también permite la gestión de los servidores en la interfaz web.
-	este es un fork creado para corregir errores y actualizar las apis que no funcionaban, 
-	- tambien puede hostearlo en github codespaces y project idx
-	- en proceso de migracion del frontend a webcomponents y tecnologias modernas
-	- en proceso de implementacion de mas herramientas para la gestion como un gestor de plugins y mods
-	- puede aportar al proyecto en o darme su feedback, estare completamente abierto a cualquier tipo de contribucion
-	https://github.com/nglmercer/kubek-minecraft-dashboard
-## TASKS
-- create a and modify alerts state
-- add modal to add sugested plugins
-- modify the server creation section to change server sections
-- modify state server creation -- reload the page after the server is created or after change the server section
-- create a extern server api to get the server list --->     const socket = dgram.createSocket('udp4'); socket.send(DISCOVERY_MSG, DISCOVERY_PORT, '255.255.255.255');
- - create api to send comand to server
- - fix context menu to rename and delete files
