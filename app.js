@@ -1,11 +1,11 @@
-// Загружаем нужные самописные модули
+// Cargamos los módulos personalizados necesarios
 import * as COMMONS from "./modules/commons.js";
 import * as CONFIGURATION from "./modules/configuration.js";    
 
-// Создаём нужные папки (если их не существует)
+// Creamos las carpetas necesarias (si no existen)
 COMMONS.makeBaseDirs();
 
-// Загружаем файлы конфигурации в глобальные переменные
+// Cargamos los archivos de configuración en variables globales
 CONFIGURATION.reloadAllConfigurations();
 CONFIGURATION.migrateOldMainConfig();
 CONFIGURATION.migrateOldServersConfig();
@@ -19,19 +19,20 @@ import * as FTP_DAEMON from "./modules/ftpDaemon.js";
 const collStats = STATS_COLLECTION.collectStats();
 STATS_COLLECTION.sendStatsToServer(collStats, true);
 
-// Загружаем доступные языки и ставим переменную с языком из конфига
+// Cargamos los idiomas disponibles y establecemos la variable con el idioma de la configuración
 MULTI_LANGUAGE.loadAvailableLanguages();
 globalThis.currentLanguage = mainConfig.language;
 
-// Показываем приветствие
+// Mostramos un mensaje de bienvenida
 LOGGER.kubekWelcomeMessage();
+
 
 WEBSERVER.loadAllDefinedRouters();
 WEBSERVER.startWebServer();
 
-// Запускаем FTP-сервер
+// Iniciamos el servidor FTP
 globalThis.ftpDaemon = null;
 FTP_DAEMON.startFTP();
 
-// Автоматически запустить сервера, которые были запущены при закрытии Kubek
+// Iniciamos automáticamente los servidores que estaban en ejecución cuando se cerró Kubek
 CONFIGURATION.autoStartServers();
