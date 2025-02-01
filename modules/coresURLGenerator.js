@@ -1,5 +1,5 @@
 import * as COMMONS from './commons.js';
-import * as LOGGER from "./logger.js";
+import LOGGER from "./logger.js";
 
 /////////////////////////////////////////////////////
 /* FUNCTIONS TO GET CORE DOWNLOAD LINKS            */

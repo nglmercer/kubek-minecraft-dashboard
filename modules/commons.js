@@ -144,4 +144,114 @@ export const getSafeFilename = (url) => {
         .pop()
         .replace(/[^a-z0-9\.]/gi, "_");
 };
-// DEVELOPED by seeeroy
+class Commons {
+    static supportedLocales = ["ru", "nl", "en", "es"];
+
+    static detectUserLocale() {
+        const userLocale = Intl.DateTimeFormat()
+            .resolvedOptions()
+            .locale.toString()
+            .split("-")[0]
+            .toLowerCase();
+
+        return this.supportedLocales.includes(userLocale) ? userLocale : "en";
+    }
+
+    static makeBaseDirs() {
+        PREDEFINED.BASE_DIRS.forEach(dir => {
+            const dirPath = path.join("./", dir);
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+            }
+        });
+    }
+
+    static isObjectsValid(...objects) {
+        return objects.every(obj => obj !== null && typeof obj !== "undefined");
+    }
+
+    static async getDataByURL(url) {
+        try {
+            const response = await axios.get(url);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching data:", error.message);
+            return null;
+        }
+    }
+
+    static async moveUploadedFile(server, sourceFile, filePath) {
+        if (!this.isObjectsValid(server, sourceFile?.name)) {
+            throw new Error("Invalid parameters");
+        }
+
+        const uploadPath = path.join("./servers", server, filePath);
+        fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+
+        return new Promise((resolve, reject) => {
+            sourceFile.mv(uploadPath, err => {
+                if (err) return reject(err);
+                resolve(true);
+            });
+        });
+    }
+
+    static testForRegexArray(text, regexArray) {
+        return regexArray.some(regexpItem => {
+            if (typeof regexpItem === "object" && text.match(regexpItem)) return true;
+            if (typeof regexpItem === "string" && regexpItem === text) return true;
+            return false;
+        });
+    }
+
+    static async downloadFileFromUrl(server, url, filePath) {
+        if (!this.isObjectsValid(server, url, filePath)) {
+            throw new Error("Invalid parameters");
+        }
+
+        if (!this.isValidUrl(url)) {
+            throw new Error("Invalid URL");
+        }
+
+        const uploadPath = path.join("./servers", server, filePath);
+        fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+
+        try {
+            const response = await axios({
+                method: "get",
+                url,
+                responseType: "stream"
+            });
+
+            const writer = fs.createWriteStream(uploadPath);
+            response.data.pipe(writer);
+
+            return new Promise((resolve, reject) => {
+                writer.on("finish", resolve);
+                writer.on("error", reject);
+            });
+        } catch (error) {
+            fs.unlinkSync(uploadPath);
+            throw error;
+        }
+    }
+
+    static isValidUrl(url) {
+        if (!url || typeof url !== "string") return false;
+        try {
+            const parsed = new URL(url);
+            return parsed.protocol === "http:" || parsed.protocol === "https:";
+        } catch {
+            return false;
+        }
+    }
+
+    static getSafeFilename(url) {
+        if (!url || typeof url !== "string") return null;
+        const parsed = new URL(url);
+        return parsed.pathname
+            .split("/")
+            .pop()
+            .replace(/[^a-z0-9.]/gi, "_");
+    }
+}

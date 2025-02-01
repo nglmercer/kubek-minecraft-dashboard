@@ -4,7 +4,7 @@
 Kubek is a Minecraft web server control panel that supports Linux and Windows. The project offers an intuitive interface for managing servers, plugins and mods and more. Includes an integrated FTP server and file manager with syntax highlighting. Users can control access to servers through a user and role system
 
 **Features:**
-- **Linux and Windows supported**
+- **Linux, Windows and Android(Termux) supported**
 - **Intuitive Single-Page UI:** A clean and straightforward user interface for easy navigation and usage
 - **Plugins and Mods Management:** Manage plugins and mods for your Minecraft server
 - **Server Properties Editor:** Easily edit server.properties file to customize server settings
@@ -38,6 +38,8 @@ Start after installation
 ```
 npm start
 ```
+
+
 
 ## Use Docker container
 

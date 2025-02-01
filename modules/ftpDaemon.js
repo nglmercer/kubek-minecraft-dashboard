@@ -4,7 +4,7 @@
  */
 
 import * as MULTILANG from "./multiLanguage.js";  // Multi-language support module
-import * as LOGGER from "./logger.js";            // Logging utility module
+import LOGGER from './logger.js';                 // Logging utility module
 import ftpd from "ftpd";                          // FTP server library
 import colors from "colors";                      // Terminal text coloring
 import path from "path";                          // Path manipulation utilities

@@ -5,7 +5,7 @@ import * as DOWNLOADS_MANAGER from "./downloadsManager.js";
 import * as SERVERS_MANAGER from "./serversManager.js";
 import * as PREDEFINED from "./predefined.js";
 import * as CONFIGURATION from "./configuration.js";
-import * as LOGGER from "./logger.js";
+import LOGGER from './logger.js';
 import * as MULTILANG from "./multiLanguage.js";
 import fs from "fs";
 import path from "path";

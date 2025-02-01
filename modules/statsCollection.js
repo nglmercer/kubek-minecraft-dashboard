@@ -1,7 +1,7 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const packageJSON = require("./../package.json");
-import * as LOGGER from "./logger.js";
+import LOGGER from './logger.js';
 import * as COMMONS from "./commons.js";
 import * as PREDEFINED from "./predefined.js";
 import pkg from 'node-machine-id';

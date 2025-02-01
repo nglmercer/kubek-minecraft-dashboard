@@ -1,6 +1,6 @@
 import * as PREDEFINED from "./predefined.js";
 import TASK_MANAGER from "./taskManager.js";
-import * as LOGGER from "./logger.js";
+import LOGGER from "./logger.js";
 import * as MULTILANG from "./multiLanguage.js";
 import path from "path";
 import axios from "axios";

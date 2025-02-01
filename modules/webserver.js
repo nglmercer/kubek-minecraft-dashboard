@@ -6,7 +6,7 @@
  * It also manages security checks and server-side utilities.
  */
 
-import * as LOGGER from "./logger.js";
+import LOGGER from './logger.js';
 import * as PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
 import * as SECURITY from "./security.js";

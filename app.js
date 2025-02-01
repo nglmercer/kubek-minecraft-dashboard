@@ -9,8 +9,7 @@ COMMONS.makeBaseDirs();
 CONFIGURATION.reloadAllConfigurations();
 CONFIGURATION.migrateOldMainConfig();
 CONFIGURATION.migrateOldServersConfig();
-
-import * as LOGGER from "./modules/logger.js";
+import LOGGER from "./modules/logger.js";
 import * as MULTI_LANGUAGE from "./modules/multiLanguage.js";
 import * as WEBSERVER from "./modules/webserver.js";
 import * as STATS_COLLECTION from "./modules/statsCollection.js";
