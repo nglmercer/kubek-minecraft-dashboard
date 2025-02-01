@@ -1,7 +1,7 @@
 import dgram from 'dgram';
 import os from 'os';
 import { configManager } from "./configuration.js";
-let mainConfig = configManager.mainConfig;
+
 const DISCOVERY_PORT = 48899;
 const DISCOVERY_MSG = 'KUBEK_DISCOVERY';
 const INTERVAL = 60000;
@@ -38,12 +38,12 @@ export function startDiscovery() {
             const response = Buffer.from(`${DISCOVERY_MSG}_RESPONSE`);
             socket.send(response, rinfo.port, rinfo.address);
         } else if (message === `${DISCOVERY_MSG}_RESPONSE`) {
-            const serverKey = `${rinfo.address}:${mainConfig.webserverPort}`;
+            const serverKey = `${rinfo.address}:${configManager.mainConfig.webserverPort}`;
             
             if (!discoveredServers.has(serverKey)) {
                 discoveredServers.set(serverKey, {
                     ip: rinfo.address,
-                    port: mainConfig.webserverPort,
+                    port: configManager.mainConfig.webserverPort,
                     lastSeen: Date.now()
                 });
             }
@@ -85,8 +85,8 @@ export function getCurrentServerInfo() {
     const localIPs = getLocalIPs();
     return {
         ip: localIPs[0], // Usar la primera IP local
-        port: mainConfig.webserverPort,
-        name: mainConfig.serverName || 'Kubek Server',
+        port: configManager.mainConfig.webserverPort,
+        name: configManager.mainConfig.serverName || 'Minecraft Server',
         version: globalThis.kubekVersion
     };
 }

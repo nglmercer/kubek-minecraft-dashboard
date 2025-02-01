@@ -1,5 +1,5 @@
 import PREDEFINED from "./predefined.js";
-import { configManager, mainConfig } from "./configuration.js";
+import { configManager } from "./configuration.js";
 import bcrypt from 'bcrypt';
 import UserAuth from './security.js';
 

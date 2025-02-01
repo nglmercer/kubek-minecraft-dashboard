@@ -1,6 +1,6 @@
 // Cargamos los módulos personalizados necesarios
 import * as COMMONS from "./modules/commons.js";
-import { configManager, mainConfig } from "./modules/configuration.js";   
+import { configManager } from "./modules/configuration.js";   
 import * as CONFIGURATION from "./modules/configuration.js";
 // Creamos las carpetas necesarias (si no existen)
 COMMONS.makeBaseDirs();
@@ -19,7 +19,7 @@ STATS_COLLECTION.sendStatsToServer(collStats, true);
 
 // Cargamos los idiomas disponibles y establecemos la variable con el idioma de la configuración
 MULTILANG.loadAvailableLanguages();
-globalThis.currentLanguage = mainConfig.language;
+globalThis.currentLanguage = configManager.mainConfig.language;
 
 // Mostramos un mensaje de bienvenida
 LOGGER.kubekWelcomeMessage();

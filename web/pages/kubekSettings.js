@@ -182,9 +182,9 @@ KubekSettingsUI = class {
                 KubekAlerts.addAlert("{{kubekSettings.configNotSaved}}", "warning", result.toString(), 5000);
             }
           });
-          /*             setTimeout(() => {
-                          window.location.reload();
-                      }, 1000); */
+          setTimeout(() => {
+              window.location.reload();
+          }, 1000); 
     }
 
     static refreshUsersList = () => {

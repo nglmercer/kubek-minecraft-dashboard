@@ -38,7 +38,7 @@ import * as accountsRouter from "./../routers/accounts.js";
 import * as kubekRouter from "./../routers/kubek.js";
 import * as updatesRouter from "./../routers/updates.js";
 import * as discoveryRouter from "./../routers/discovery.js";
-const SECURITY = new UserAuth(mainConfig, usersConfig);
+const SECURITY = new UserAuth(configManager.mainConfig, usersConfig);
 // Get directory paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

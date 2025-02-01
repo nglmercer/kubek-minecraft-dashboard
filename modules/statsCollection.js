@@ -11,7 +11,6 @@ import os from "os";
 import { configManager } from "./configuration.js";
 let usersConfig = globalThis.usersConfig;
 let serversConfig = globalThis.serversConfig;
-let mainConfig = configManager.mainConfig;
 
 // Función personalizada para obtener ID en Termux
 const getTermuxMachineId = () => {
@@ -81,14 +80,14 @@ export const collectStats = () => {
         totalRAM: Math.round(os.totalmem() / 1024 / 1024),
         cpu: cpuProps,
         uniqueID: uniqueID,
-        language: mainConfig?.language,
+        language: configManager.mainConfig?.language,
         version: packageJSON.version,
         javas: JSON.stringify(javasInstalled),
         serversCount: serversCount,
-        authEnabled: mainConfig?.authorization,
+        authEnabled: configManager.mainConfig?.authorization,
         usersCount: usersCount,
-        tgbotEnabled: mainConfig?.telegramBot.enabled,
-        ftpdEnabled: mainConfig?.ftpd.enabled,
+        tgbotEnabled: configManager.mainConfig?.telegramBot.enabled,
+        ftpdEnabled: configManager.mainConfig?.ftpd.enabled,
         uptime: Math.round(process.uptime())
     };
 };
