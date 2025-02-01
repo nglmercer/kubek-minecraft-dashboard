@@ -3,7 +3,7 @@ import path from "path";
 import colors from "colors";
 import PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
-import * as SECURITY from "./security.js";
+import SECURITY from './security.js';
 import * as SERVERS_CONTROLLER from "./serversController.js";
 globalThis.autoStartedServers = [];
 
@@ -202,6 +202,3 @@ export const autoStartServers = () => {
         }
     }
 };
-//globalThis.serversConfig = readServersConfig(); globalThis.autoStartedServers = []; readServersConfig
-
-// DEVELOPED by seeeroy

@@ -209,7 +209,6 @@ router.get("/:server/startScript", WEBSERVER.serversRouterMiddleware, function (
 router.put("/:server/startScript", WEBSERVER.serversRouterMiddleware, function (req, res) {
     let q = req.params;
     let q2 = req.query;
-    // DEVELOPED by seeeroy
     if (COMMONS.isObjectsValid(q.server, q2.data) && SERVERS_MANAGER.isServerExists(q.server)) {
         const startScript = SERVERS_CONTROLLER.setStartScript(q.server, Base64.decode(q2.data));
         console.log("startScript", startScript);

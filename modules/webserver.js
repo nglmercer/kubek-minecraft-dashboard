@@ -9,7 +9,8 @@
 import LOGGER from './logger.js';
 import PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
-import * as SECURITY from "./security.js";
+import UserAuth from "./security.js";
+import { configManager, mainConfig } from "./configuration.js";
 import * as FILE_MANAGER from "./fileManager.js";
 import MULTILANG from "./multiLanguage.js";
 import os from 'os';
@@ -37,6 +38,7 @@ import * as accountsRouter from "./../routers/accounts.js";
 import * as kubekRouter from "./../routers/kubek.js";
 import * as updatesRouter from "./../routers/updates.js";
 import * as discoveryRouter from "./../routers/discovery.js";
+const SECURITY = new UserAuth(mainConfig, usersConfig);
 // Get directory paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

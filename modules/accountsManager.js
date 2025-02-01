@@ -1,12 +1,12 @@
 import PREDEFINED from "./predefined.js";
-import * as SECURITY from "./security.js";
 import { configManager, mainConfig } from "./configuration.js";
 import bcrypt from 'bcrypt';
+import UserAuth from './security.js';
 
 const SALT_ROUNDS = 10; // Número de rondas de sal para bcrypt
 
 let usersConfig = globalThis.usersConfig;
-
+const SECURITY = new UserAuth(mainConfig, usersConfig);
 export const createNewAccount = async (login, password, permissions = [], email = "", servers = []) => {
     configManager.reloadAllConfigurations();
     if (login !== "kubek" && !SECURITY.isUserExists(login)) {

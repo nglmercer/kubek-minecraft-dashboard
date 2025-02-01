@@ -1,9 +1,10 @@
-import * as SECURITY from "./../modules/security.js";         // Módulo para gestionar la seguridad
+import UserAuth from "./../modules/security.js";         // Módulo para gestionar la seguridad
 import * as SERVERS_MANAGER from "./../modules/serversManager.js"; // Módulo para gestionar servidores
 import * as MULTI_LANGUAGE from "./../modules/multiLanguage.js";   // Módulo para gestión de idiomas
 import * as COMMONS from "./../modules/commons.js";                // Funciones comunes
 import express from "express";                                     // Framework para crear el servidor web
-
+import { configManager, mainConfig } from "./../modules/configuration.js";
+const SECURITY = new UserAuth(mainConfig, usersConfig);
 const router = express.Router(); // Router de Express para definir endpoints
 
 // Función para inicializar el servidor web

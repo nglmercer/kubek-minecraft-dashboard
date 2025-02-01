@@ -1,6 +1,9 @@
 import PREDEFINED from "./predefined.js";
-import * as SECURITY from "./security.js";
+import { configManager, mainConfig } from "./configuration.js";
+import UserAuth from "./security.js";
 import * as COMMONS from "./commons.js";
+let usersConfig = globalThis.usersConfig;
+const SECURITY = new UserAuth(mainConfig, usersConfig);
 // Проверка permissions для управления аккаунтами
 export function initializeWebServer(webServer) {
     webServer.use("/api/accounts", (req, res, next) => {

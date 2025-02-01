@@ -1,6 +1,6 @@
 import fs from "fs";
 import { Base64 } from "js-base64";
-import * as SECURITY from './security.js';
+import SECURITY from './security.js';
 /**
  * @namespace FileOperations
  * @description Provides secure file system operations for server management with path validation and chunked file writing capabilities.
