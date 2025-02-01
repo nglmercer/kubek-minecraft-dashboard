@@ -2,7 +2,7 @@ import * as HARDWARE_MANAGER from "./../modules/hardwareManager.js"; // Módulo 
 import { configManager, mainConfig } from "./../modules/configuration.js";     // Módulo para gestionar configuraciones
 import * as COMMONS from "./../modules/commons.js";                 // Funciones comunes
 import * as FTP_DAEMON from "./../modules/ftpDaemon.js";            // Módulo para gestionar el servidor FTP
-import * as MULTILANG from "./../modules/multiLanguage.js";         // Módulo para gestión de idiomas
+import MULTILANG from "./../modules/multiLanguage.js";         // Módulo para gestión de idiomas
 import express from "express";                                      // Framework para crear el servidor web
 import { createRequire } from 'module';                             // Para usar require en ES modules
 const require = createRequire(import.meta.url);
@@ -74,12 +74,12 @@ function initializeWebServer() {
 
     // Endpoint para obtener la lista de idiomas disponibles
     router.get("/languages", function (req, res) {
-        res.send(avaliableLanguages); // Envía la lista de idiomas
+        res.send(MULTILANG.availableLanguages); // Envía la lista de idiomas
     });
 
     // Endpoint para obtener los datos brutos de los idiomas
     router.get("/rawlanguages", function (req, res) {
-        res.send(rawdatalanguages); // Envía los datos brutos de los idiomas
+        res.send(MULTILANG.rawDataLanguages); // Envía los datos brutos de los idiomas
     });
 }
 

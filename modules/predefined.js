@@ -1,4 +1,6 @@
-import SHA256 from 'crypto-js/sha256.js';
+import bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 10; // Número de rondas de sal para bcrypt
 const PERMISSIONS = {
     DEFAULT: "default",
     ACCOUNTS: "accounts",
@@ -89,7 +91,7 @@ const Constants = {
         USERS: {
             "kubek": {
                 username: "kubek",
-                password: SHA256("Kubek2024").toString(),
+                password: bcrypt.hashSync("Kubek2024", SALT_ROUNDS),
                 email: "",
                 secret: "",
                 permissions: Object.values(PERMISSIONS),

@@ -1,5 +1,5 @@
 import PREDEFINED from "./predefined.js";
-import * as CORES_URL_GEN from "./coresURLGenerator.js";
+import CORES_URL_GEN from "./coresURLGenerator.js";
 import * as fs from 'fs';
 import * as path from 'path';
 import https from 'https';

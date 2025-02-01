@@ -1,10 +1,9 @@
+import bcrypt from 'bcrypt';
+
 /**
  * User Authentication & Authorization Module
  * @module UserAuth
  */
-
-import sha256 from 'crypto-js/sha256.js';
-const SHA256 = sha256;  // Cryptographic hash function for password security
 
 /**
  * Check if user has specific permission
@@ -12,7 +11,7 @@ const SHA256 = sha256;  // Cryptographic hash function for password security
  * @param {string} permission - Permission to verify
  * @returns {boolean} Authorization status
  */
-export const isUserHasPermission = (username, permission) => {  
+export const isUserHasPermission = (username, permission) => {
     if (!mainConfig.authorization) return true;
     const userData = getUserDataByUsername(username);
     return !!userData?.permissions?.includes(permission);
@@ -28,7 +27,7 @@ export const isUserHasServerAccess = (username, server) => {
     if (!mainConfig.authorization) return true;
     const userData = getUserDataByUsername(username);
     return userData && (
-        !userData.serversAccessRestricted || 
+        !userData.serversAccessRestricted ||
         userData.serversAllowed?.includes(server)
     );
 };
@@ -39,10 +38,10 @@ export const isUserHasServerAccess = (username, server) => {
  * @param {string} password - Plain text password
  * @returns {boolean} Authentication success
  */
-export const authorizeUser = (login, password) => {
+export const authorizeUser = async (login, password) => {
     if (!mainConfig.authorization) return true;
     const userData = getUserDataByUsername(login);
-    return userData?.password === SHA256(password).toString();
+    return userData && await bcrypt.compare(password, userData.password);
 };
 
 /**
@@ -93,7 +92,7 @@ export const isUserExists = (username) => {
  */
 export const generateSecureID = (length = 18) => {
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    return Array.from({length}, () => 
+    return Array.from({ length }, () =>
         charset.charAt(Math.floor(Math.random() * charset.length))
     ).join('');
 };

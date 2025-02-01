@@ -11,7 +11,7 @@ import PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
 import * as SECURITY from "./security.js";
 import * as FILE_MANAGER from "./fileManager.js";
-import * as MULTILANG from "./multiLanguage.js";
+import MULTILANG from "./multiLanguage.js";
 import os from 'os';
 import fs from 'fs';
 import express from 'express';

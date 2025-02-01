@@ -6,7 +6,7 @@ import * as SERVERS_MANAGER from "./serversManager.js";
 import PREDEFINED from "./predefined.js";
 import { configManager, mainConfig } from "./configuration.js";
 import LOGGER from './logger.js';
-import * as MULTILANG from "./multiLanguage.js";
+import MULTILANG from "./multiLanguage.js";
 import fs from "fs";
 import path from "path";
 import colors from "colors";

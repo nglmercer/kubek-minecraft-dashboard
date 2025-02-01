@@ -3,117 +3,116 @@ import * as ACCOUNTS_MANAGER from "./../modules/accountsManager.js";
 import * as COMMONS from "./../modules/commons.js";
 import * as WEBSERVER from "./../modules/webserver.js";
 import express from "express";
-import sha256 from 'crypto-js/sha256.js';
-const SHA256 = sha256;
+import bcrypt from 'bcrypt';
+
 const router = express.Router();
+
 function initializeWebServer() {
-// Endpoint для получения списка аккаунтов
-router.get("/", function (req, res) {
-    res.send(ACCOUNTS_MANAGER.getUsersList());
-});
+    // Endpoint para obtener la lista de cuentas
+    router.get("/", function (req, res) {
+        res.send(ACCOUNTS_MANAGER.getUsersList());
+    });
 
-// Endpoint для получения информации об аккаунте
-router.get("/:login", function (req, res) {
-    let q = req.params;
-    if (COMMONS.isObjectsValid(q.login)) {
-        return res.send(ACCOUNTS_MANAGER.getUserData(q.login));
-    }
-    res.sendStatus(400);
-});
-
-// Endpoint для удаления аккаунта
-router.delete("/:login", function (req, res) {
-    let q = req.params;
-    if (COMMONS.isObjectsValid(q.login)) {
-        return res.send(ACCOUNTS_MANAGER.deleteUser(q.login));
-    }
-    res.sendStatus(400);
-});
-
-// Endpoint для регенерации хеша
-router.get("/:login/regenHash", function (req, res) {
-    let q = req.params;
-    if (COMMONS.isObjectsValid(q.login)) {
-        return res.send(ACCOUNTS_MANAGER.regenUserHash(q.login));
-    }
-    res.sendStatus(400);
-});
-
-// Endpoint для смены пользовательского пароля
-router.put("/:login/password", function (req, res) {
-    let q = req.params;
-    let q2 = req.query;
-
-    if (q.login !== "kubek") {
-        if (COMMONS.isObjectsValid(q.login, q2.newPassword)) {
-            return res.send(ACCOUNTS_MANAGER.changePassword(q.login, q2.newPassword));
+    // Endpoint para obtener información de una cuenta
+    router.get("/:login", function (req, res) {
+        let q = req.params;
+        if (COMMONS.isObjectsValid(q.login)) {
+            return res.send(ACCOUNTS_MANAGER.getUserData(q.login));
         }
-    } else {
-        if (COMMONS.isObjectsValid(q.login, q2.oldPassword, q2.newPassword)) {
-            let getKubekPwd = ACCOUNTS_MANAGER.getUserData("kubek").password;
-            if (getKubekPwd === SHA256(q2.oldPassword).toString()) {
-                return res.send(ACCOUNTS_MANAGER.changePassword(q.login, q2.newPassword));
-            } else {
-                return res.send(false);
+        res.sendStatus(400);
+    });
+
+    // Endpoint para eliminar una cuenta
+    router.delete("/:login", function (req, res) {
+        let q = req.params;
+        if (COMMONS.isObjectsValid(q.login)) {
+            return res.send(ACCOUNTS_MANAGER.deleteUser(q.login));
+        }
+        res.sendStatus(400);
+    });
+
+    // Endpoint para regenerar el hash
+    router.get("/:login/regenHash", function (req, res) {
+        let q = req.params;
+        if (COMMONS.isObjectsValid(q.login)) {
+            return res.send(ACCOUNTS_MANAGER.regenUserHash(q.login));
+        }
+        res.sendStatus(400);
+    });
+
+    // Endpoint para cambiar la contraseña de un usuario
+    router.put("/:login/password", async function (req, res) {
+        let q = req.params;
+        let q2 = req.query;
+
+        if (q.login !== "kubek") {
+            if (COMMONS.isObjectsValid(q.login, q2.newPassword)) {
+                return res.send(await ACCOUNTS_MANAGER.changePassword(q.login, q2.newPassword));
+            }
+        } else {
+            if (COMMONS.isObjectsValid(q.login, q2.oldPassword, q2.newPassword)) {
+                let getKubekPwd = ACCOUNTS_MANAGER.getUserData("kubek").password;
+                if (await bcrypt.compare(q2.oldPassword, getKubekPwd)) {
+                    return res.send(await ACCOUNTS_MANAGER.changePassword(q.login, q2.newPassword));
+                } else {
+                    return res.send(false);
+                }
             }
         }
-    }
-    res.sendStatus(400);
-});
+        res.sendStatus(400);
+    });
 
-// Endpoint для создания пользователя
-router.put("/", function (req, res) {
-    let q2 = req.query;
-    let permSplit = [];
-    let serversAllowed = [];
-    if (COMMONS.isObjectsValid(q2.login, q2.password, q2.permissions)) {
-        // Конвертируем permissions в массив
-        console.log("q2.permissions", q2.permissions);
-        if (!q2.permissions) return res.sendStatus(400);
-        // if q2.permissions is array of strings
-        if (Array.isArray(q2.permissions)) {
-          permSplit = q2.permissions;
-        } else {
-          permSplit = q2.permissions.split(",");
+    // Endpoint para crear un usuario
+    router.put("/", async function (req, res) {
+        let q2 = req.query;
+        let permSplit = [];
+        let serversAllowed = [];
+        if (COMMONS.isObjectsValid(q2.login, q2.password, q2.permissions)) {
+            // Convertir permissions en un array
+            if (!q2.permissions) return res.sendStatus(400);
+            if (Array.isArray(q2.permissions)) {
+                permSplit = q2.permissions;
+            } else {
+                permSplit = q2.permissions.split(",");
+            }
+            // Convertir servers en un array
+            if (COMMONS.isObjectsValid(q2.servers)) {
+                serversAllowed = q2.servers.split(",");
+            }
+            // Verificar la validez del email
+            if (!COMMONS.isObjectsValid(q2.email)) {
+                q2.email = "";
+            }
+            return res.send(await ACCOUNTS_MANAGER.createNewAccount(q2.login, q2.password, permSplit, q2.email, serversAllowed));
         }
-        // Конвертируем servers в массив
-        if (COMMONS.isObjectsValid(q2.servers)) {
-            serversAllowed = q2.servers.split(",");
-        }
-        // Проверяем валидность email
-        if (!COMMONS.isObjectsValid(q2.email)) {
-            q2.email = "";
-        }
-        return res.send(ACCOUNTS_MANAGER.createNewAccount(q2.login, q2.password, permSplit, q2.email, serversAllowed));
-    }
-    res.sendStatus(400);
-});
+        res.sendStatus(400);
+    });
 
-// Endpoint для изменения пользователя
-router.put("/:login", function (req, res) {
-    let q = req.params;
-    let q2 = req.query;
-    let permSplit = [];
-    let serversAllowed = [];
-    if (COMMONS.isObjectsValid(q.login, q2.permissions)) {
-        // Конвертируем permissions в массив
-        permSplit = q2.permissions.split(",");
-        // Конвертируем servers в массив
-        // DEVELOPED by seeeroy
-        if (COMMONS.isObjectsValid(q2.servers)) {
-            serversAllowed = q2.servers.split(",");
+    // Endpoint para actualizar un usuario
+    router.put("/:login", async function (req, res) {
+        let q = req.params;
+        let q2 = req.query;
+        let permSplit = [];
+        let serversAllowed = [];
+        if (COMMONS.isObjectsValid(q.login, q2.permissions)) {
+            // Convertir permissions en un array
+            permSplit = q2.permissions.split(",");
+            // Convertir servers en un array
+            if (COMMONS.isObjectsValid(q2.servers)) {
+                serversAllowed = q2.servers.split(",");
+            }
+            // Verificar la validez del email
+            if (!COMMONS.isObjectsValid(q2.email)) {
+                q2.email = "";
+            }
+            // Verificar la validez de la contraseña
+            if (!COMMONS.isObjectsValid(q2.password)) {
+                q2.password = "";
+            }
+            return res.send(await ACCOUNTS_MANAGER.updateAccount(q.login, q2.password, permSplit, q2.email, serversAllowed));
         }
-        // Проверяем валидность email
-        if (!COMMONS.isObjectsValid(q2.email)) {
-            q2.email = "";
-        }
-        // Проверяем валидность пароля
-        if (!COMMONS.isObjectsValid(q2.password)) {
-            q2.password = "";
-        }
-        return res.send(ACCOUNTS_MANAGER.updateAccount(q.login, q2.password, permSplit, q2.email, serversAllowed));
-    }
-    res.sendStatus(400);
-});
+        res.sendStatus(400);
+    });
 }
+
 export { router, initializeWebServer };

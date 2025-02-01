@@ -482,8 +482,8 @@ async function getparsedtranslations(element,subelement, lang = "en") {
   }
   console.log("alltranslations", alltranslations);
   if (!element && !subelement || !element) return alltranslations;
+  if (alltranslations.length < 1) return alltranslations;
   if (!subelement && element) return alltranslations.find(item => item.lang === lang).translation[element];
-  if (!alltranslations.length < 1) return alltranslations;
   if (subelement && element) {
       if (alltranslations.find(item => item.lang === lang).translation[element]) {
           return alltranslations.find(item => item.lang === lang).translation[element][subelement];

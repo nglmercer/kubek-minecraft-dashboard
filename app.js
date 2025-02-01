@@ -9,7 +9,7 @@ configManager.reloadAllConfigurations();
 configManager.migrateOldMainConfig();
 configManager.migrateOldServersConfig();
 import LOGGER from "./modules/logger.js";
-import * as MULTI_LANGUAGE from "./modules/multiLanguage.js";
+import MULTILANG from "./modules/multiLanguage.js";
 import * as WEBSERVER from "./modules/webserver.js";
 import * as STATS_COLLECTION from "./modules/statsCollection.js";
 import * as FTP_DAEMON from "./modules/ftpDaemon.js";
@@ -18,7 +18,7 @@ const collStats = STATS_COLLECTION.collectStats();
 STATS_COLLECTION.sendStatsToServer(collStats, true);
 
 // Cargamos los idiomas disponibles y establecemos la variable con el idioma de la configuración
-MULTI_LANGUAGE.loadAvailableLanguages();
+MULTILANG.loadAvailableLanguages();
 globalThis.currentLanguage = mainConfig.language;
 
 // Mostramos un mensaje de bienvenida
@@ -34,4 +34,4 @@ FTP_DAEMON.startFTP();
 
 // Iniciamos automáticamente los servidores que estaban en ejecución cuando se cerró Kubek
 configManager.autoStartServers();
-CONFIGURATION.autoStartServers(); // FIX THIS
+CONFIGURATION.autoStartServers(); // FIX THIS ** and debug

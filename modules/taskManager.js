@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import LOGGER from './logger.js';
-import * as MULTILANG from "./multiLanguage.js";
+import MULTILANG from "./multiLanguage.js";
 import colors from "colors";
 import PREDEFINED from "./predefined.js"
 class TaskManager {
