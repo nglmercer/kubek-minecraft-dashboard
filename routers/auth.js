@@ -3,8 +3,8 @@ import * as SERVERS_MANAGER from "./../modules/serversManager.js"; // Módulo pa
 import * as MULTI_LANGUAGE from "./../modules/multiLanguage.js";   // Módulo para gestión de idiomas
 import * as COMMONS from "./../modules/commons.js";                // Funciones comunes
 import express from "express";                                     // Framework para crear el servidor web
-import { configManager, mainConfig } from "./../modules/configuration.js";
-const SECURITY = new UserAuth(mainConfig, usersConfig);
+import { configManager } from "./../modules/configuration.js";
+const SECURITY = new UserAuth(configManager.mainConfig, usersConfig);
 const router = express.Router(); // Router de Express para definir endpoints
 
 // Función para inicializar el servidor web
@@ -14,7 +14,7 @@ function initializeWebServer() {
     router.get("/login/:login/:password", function (req, res) {
         let q = req.params;
         // Si la autorización está desactivada en la configuración
-        if (mainConfig.authorization === false) {
+        if (configManager.mainConfig.authorization === false) {
             return res.send({
                 success: false,
                 error: MULTI_LANGUAGE.translateText(currentLanguage, "{{security.authDisabled}}")
@@ -101,7 +101,7 @@ function initializeWebServer() {
 
     // Endpoint para verificar si la autorización está habilitada
     router.get("/isEnabled", (req, res) => {
-        res.send(mainConfig.authorization); // Devuelve el estado de la autorización
+        res.send(configManager.mainConfig.authorization); // Devuelve el estado de la autorización
     });
 }
 

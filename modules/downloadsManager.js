@@ -8,6 +8,7 @@ import fs from "fs";
 import { pipeline } from "stream/promises";
 import decompress from "decompress";
 import colors from "colors";
+import { configManager } from "./configuration.js";
 
 function updateDownloadProgress(taskID, chunkLength) {
     const task = TASK_MANAGER.getTaskData(taskID);
@@ -86,7 +87,7 @@ function createDownloadTask(downloadURL, filePath, contentLength) {
     
     LOGGER.log(
         MULTILANG.translateText(
-            mainConfig.language,
+            configManager.mainConfig.language,
             "{{console.downloadTaskCreated}}",
             colors.cyan(taskID),
             colors.cyan(taskData.filename)

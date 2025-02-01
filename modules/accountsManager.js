@@ -6,7 +6,7 @@ import UserAuth from './security.js';
 const SALT_ROUNDS = 10; // Número de rondas de sal para bcrypt
 
 let usersConfig = globalThis.usersConfig;
-const SECURITY = new UserAuth(mainConfig, usersConfig);
+const SECURITY = new UserAuth(configManager.mainConfig, usersConfig);
 export const createNewAccount = async (login, password, permissions = [], email = "", servers = []) => {
     configManager.reloadAllConfigurations();
     if (login !== "kubek" && !SECURITY.isUserExists(login)) {
@@ -17,7 +17,7 @@ export const createNewAccount = async (login, password, permissions = [], email 
 
                 // Crear variables adicionales
                 let serversRestricted = false;
-                let userHash = SECURITY.generateSecureID();
+                let userHash = SECURITY.generateID();
                 if (servers.length > 0) {
                     serversRestricted = true;
                 }
@@ -81,7 +81,7 @@ export const updateAccount = async (login, password = "", permissions = [], emai
 export const regenUserHash = (login) => {
     configManager.reloadAllConfigurations();
     if (SECURITY.isUserExists(login)) {
-        usersConfig[login].secret = SECURITY.generateSecureID();
+        usersConfig[login].secret = SECURITY.generateID();
         configManager.writeUsersConfig(usersConfig);
         return true;
     }

@@ -10,7 +10,7 @@ import LOGGER from './logger.js';
 import PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
 import UserAuth from "./security.js";
-import { configManager, mainConfig } from "./configuration.js";
+import { configManager } from "./configuration.js";
 import * as FILE_MANAGER from "./fileManager.js";
 import MULTILANG from "./multiLanguage.js";
 import os from 'os';
@@ -68,7 +68,7 @@ webServer.use(
 );
 
 // Get web server port from configuration
-let webPort = globalThis.mainConfig?.webserverPort;
+let webPort = configManager.mainConfig.webserverPort;
 
 /**
  * Logs web requests with client information
@@ -102,7 +102,7 @@ export const authLoggingMiddleware = (req, res, next) => {
 
     // Check for user authentication cookies
     let username = null;
-    if (SECURITY.isUserHasCookies(req) && mainConfig.authorization === true) {
+    if (SECURITY.isUserHasCookies(req) && configManager.mainConfig.authorization === true) {
         username = req.cookies["kbk__login"];
     }
 
@@ -112,12 +112,12 @@ export const authLoggingMiddleware = (req, res, next) => {
     }
 
     // IP whitelist validation
-    if (mainConfig.allowOnlyIPsList === true && !isInSubnet(ip, mainConfig.IPsAllowed)) {
+    if (configManager.mainConfig.allowOnlyIPsList === true && !isInSubnet(ip, configManager.mainConfig.IPsAllowed)) {
         return; // Block unauthorized IPs
     }
 
     // Authentication system check
-    if (mainConfig.authorization === true && !COMMONS.testForRegexArray(req.originalUrl, PREDEFINED.SKIP_AUTH_URLS)) {
+    if (configManager.mainConfig.authorization === true && !COMMONS.testForRegexArray(req.originalUrl, PREDEFINED.SKIP_AUTH_URLS)) {
         if (SECURITY.isUserHasCookies(req) && SECURITY.authenticateUser(req.cookies["kbk__login"], req.cookies["kbk__hash"])) {
             return next();
         } else {
@@ -170,7 +170,7 @@ export const staticsMiddleware = (req, res, next) => {
  * Checks user permissions for specific server operations
  */
 export const serversRouterMiddleware = (req, res, next) => {
-    if (mainConfig.authorization === false) {
+    if (configManager.mainConfig.authorization === false) {
         return next();
     }
 
@@ -243,7 +243,7 @@ export const loadAllDefinedRouters = () => {
 export const startWebServer = () => {
     webServer.listen(webPort, () => {
         LOGGER.log(MULTILANG.translateText(
-            mainConfig.language,
+            configManager.mainConfig.language,
             "{{console.webserverStarted}}",
             colors.cyan(webPort)
         ));

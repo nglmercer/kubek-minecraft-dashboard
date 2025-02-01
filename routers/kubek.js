@@ -1,16 +1,16 @@
-import * as HARDWARE_MANAGER from "./../modules/hardwareManager.js"; // Módulo para gestionar hardware
-import { configManager, mainConfig } from "./../modules/configuration.js";     // Módulo para gestionar configuraciones
-import * as COMMONS from "./../modules/commons.js";                 // Funciones comunes
-import * as FTP_DAEMON from "./../modules/ftpDaemon.js";            // Módulo para gestionar el servidor FTP
-import MULTILANG from "./../modules/multiLanguage.js";         // Módulo para gestión de idiomas
-import express from "express";                                      // Framework para crear el servidor web
-import { createRequire } from 'module';                             // Para usar require en ES modules
+import * as HARDWARE_MANAGER from "./../modules/hardwareManager.js"; 
+import { configManager } from "./../modules/configuration.js";    
+import * as COMMONS from "./../modules/commons.js";             
+import * as FTP_DAEMON from "./../modules/ftpDaemon.js";         
+import MULTILANG from "./../modules/multiLanguage.js";      
+import express from "express";                                   
+import { createRequire } from 'module';                             
 const require = createRequire(import.meta.url);
-const router = express.Router();                                    // Router de Express para definir endpoints
-import { Base64 } from "js-base64";                                 // Librería para codificación Base64
-const packageJSON = require("../package.json");                     // Carga el archivo package.json
+const router = express.Router();                                 
+import { Base64 } from "js-base64";                                
+const packageJSON = require("../package.json");                    
 
-// Función para inicializar el servidor web
+
 function initializeWebServer() {
 
     // Endpoint para obtener el uso de recursos del sistema
@@ -42,19 +42,21 @@ function initializeWebServer() {
     });
 
     router.get("/settings", function (req, res) {
-        res.send(mainConfig); // Envía la configuración principal
+        res.send(configManager.mainConfig); // Envía la configuración principal
     });
 
     router.put("/settings", function (req, res) {
         let q = req.query;
         if (COMMONS.isObjectsValid(q.config)) {
+            let decodedConfig = Base64.decode(q.config);
+            //console.log("Decoded Config:", decodedConfig); // Verifica la decodificación
             // Detiene el servidor FTP si está en ejecución
             if (FTP_DAEMON.isFTPStarted()) {
                 FTP_DAEMON.stopFTP();
             }
-            let writeResult = configManager.writeMainConfig(Base64.decode(q.config));
+            let writeResult = configManager.writeMainConfig(decodedConfig);
             configManager.reloadAllConfigurations();
-            globalThis.currentLanguage = mainConfig.language;
+            globalThis.currentLanguage = configManager.mainConfig.language;
             // Reinicia el servidor FTP
             FTP_DAEMON.startFTP();
             // Envía el resultado de la operación
@@ -66,8 +68,8 @@ function initializeWebServer() {
 
     // Endpoint para aceptar el acuerdo EULA
     router.get("/eula/accept", function (req, res) {
-        mainConfig.eulaAccepted = true; // Marca el EULA como aceptado
-        configManager.writeMainConfig(mainConfig); // Guarda la configuración actualizada
+        configManager.mainConfig.eulaAccepted = true; // Marca el EULA como aceptado
+        configManager.writeMainConfig(configManager.mainConfig); // Guarda la configuración actualizada
         configManager.reloadAllConfigurations();   // Recarga las configuraciones
         res.send(true); // Confirma que el EULA fue aceptado
     });

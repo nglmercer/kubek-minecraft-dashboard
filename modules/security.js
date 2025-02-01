@@ -97,6 +97,12 @@ class UserAuth {
             charset.charAt(Math.floor(Math.random() * charset.length))
         ).join('');
     }
+    generateID(length = 18) {
+        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        return Array.from({ length }, () =>
+            charset.charAt(Math.floor(Math.random() * charset.length))
+        ).join('');
+    }
 }
 
 export default UserAuth;

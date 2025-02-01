@@ -1,14 +1,13 @@
 import express from 'express';
 import { discoveredServers } from '../modules/networkDiscovery.js';
-
+import { configManager } from "./../modules/configuration.js";
 export const router = express.Router();
-let mainConfig = globalThis.mainConfig;
 router.get('/', (req, res) => {
     res.json({
-        name: mainConfig.serverName || 'Kubek Server',
-        port: mainConfig.webserverPort,
+        name: configManager.mainConfig.serverName || 'Kubek Server',
+        port: configManager.mainConfig.webserverPort,
         version: globalThis.kubekVersion,
-        servers: mainConfig.servers
+        servers: configManager.mainConfig.servers
     });
 });
 

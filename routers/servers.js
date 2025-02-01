@@ -5,6 +5,7 @@ import * as ACCOUNTS_MANAGER from "./../modules/accountsManager.js";
 import * as COMMONS from "./../modules/commons.js";
 import * as WEBSERVER from "./../modules/webserver.js";
 import PREDEFINED from "./../modules/predefined.js";
+import { configManager } from "./../modules/configuration.js";
 import express from "express";
 import fs from "fs";
 import path from "path";
@@ -16,7 +17,7 @@ function initializeWebServer() {
 // Router GET for getting the list of servers
 router.get("/", function (req, res) {
     let preparedList = SERVERS_MANAGER.getServersList();
-    if (mainConfig.authorization === true) {
+    if (configManager.mainConfig.authorization === true) {
         let uData = ACCOUNTS_MANAGER.getUserData(req.cookies["kbk__login"]);
         if (ACCOUNTS_MANAGER.getUserData(req.cookies["kbk__login"]).serversAccessRestricted === true) {
             let newList = [];

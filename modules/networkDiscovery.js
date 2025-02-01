@@ -1,7 +1,7 @@
 import dgram from 'dgram';
 import os from 'os';
-
-let mainConfig = globalThis.mainConfig;
+import { configManager } from "./configuration.js";
+let mainConfig = configManager.mainConfig;
 const DISCOVERY_PORT = 48899;
 const DISCOVERY_MSG = 'KUBEK_DISCOVERY';
 const INTERVAL = 60000;

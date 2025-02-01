@@ -3,6 +3,7 @@ import LOGGER from './logger.js';
 import MULTILANG from "./multiLanguage.js";
 import colors from "colors";
 import PREDEFINED from "./predefined.js"
+import { configManager } from "./configuration.js";
 class TaskManager {
     constructor() {
         this.tasks = {};
@@ -20,7 +21,7 @@ class TaskManager {
             updatedAt: Date.now()
         };
         LOGGER.log(MULTILANG.translateText(
-            mainConfig.language, 
+            configManager.mainConfig.language, 
             "{{console.taskAdded}}", 
             colors.cyan(newTaskID), 
             colors.cyan(data.type)
@@ -32,7 +33,7 @@ class TaskManager {
         if (this.tasks[taskID]) {
             delete this.tasks[taskID];
             LOGGER.log(MULTILANG.translateText(
-                mainConfig.language, 
+                configManager.mainConfig.language, 
                 "{{console.taskRemoved}}", 
                 colors.cyan(taskID)
             ));

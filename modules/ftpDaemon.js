@@ -8,7 +8,7 @@ import LOGGER from './logger.js';                 // Logging utility module
 import ftpd from "ftpd";                          // FTP server library
 import colors from "colors";                      // Terminal text coloring
 import path from "path";                          // Path manipulation utilities
-
+import { configManager } from "./configuration.js";
 // Default FTP server configuration
 const defaultOptions = {
     host: "127.0.0.1",         // Default binding address
@@ -19,13 +19,13 @@ const defaultOptions = {
 // Global FTP server instance reference
 let ftpDaemon = null;
 export const startFTP = () => {
-    const isEnabled = mainConfig.ftpd.enabled;
+    const isEnabled = configManager.mainConfig.ftpd.enabled;
     
     if (!isEnabled) return false;
 
     // Server configuration initialization
     const initPath = path.normalize("./");               // Root directory
-    const { username, password, port } = mainConfig.ftpd; // Auth credentials
+    const { username, password, port } = configManager.mainConfig.ftpd; // Auth credentials
 
     // Create FTP server instance
     ftpDaemon = new ftpd.FtpServer(defaultOptions.host, {
@@ -68,12 +68,12 @@ export const startFTP = () => {
 
     // Error handling
     ftpDaemon.on("error", (error) => {
-        LOGGER.error(`${MULTILANG.translateText(mainConfig.language, "{{console.ftpError}}")} ${error}`);
+        LOGGER.error(`${MULTILANG.translateText(configManager.mainConfig.language, "{{console.ftpError}}")} ${error}`);
     });
 
     // Client connection handling
     ftpDaemon.on("client:connected", (connection) => {
-        LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.ftpNewConnection}}"));
+        LOGGER.log(MULTILANG.translateText(configManager.mainConfig.language, "{{console.ftpNewConnection}}"));
 
         // Username validation
         connection.on("command:user", (user, success, failure) => {
@@ -83,7 +83,7 @@ export const startFTP = () => {
         // Password validation
         connection.on("command:pass", (pass, success, failure) => {
             if (pass === password) {
-                LOGGER.log(`${MULTILANG.translateText(mainConfig.language, "{{console.ftpConnected}}")} ${colors.green(username)}`);
+                LOGGER.log(`${MULTILANG.translateText(configManager.mainConfig.language, "{{console.ftpConnected}}")} ${colors.green(username)}`);
                 success(username);
             } else {
                 failure();
@@ -94,7 +94,7 @@ export const startFTP = () => {
     // Server initialization
     ftpDaemon.debugging = 0;  // Disable debug output
     ftpDaemon.listen(port);
-    LOGGER.log(`${MULTILANG.translateText(mainConfig.language, "{{console.ftpStarted}}")} ${colors.cyan(port)}`);
+    LOGGER.log(`${MULTILANG.translateText(configManager.mainConfig.language, "{{console.ftpStarted}}")} ${colors.cyan(port)}`);
     return true;
 };
 
@@ -104,7 +104,7 @@ export const stopFTP = () => {
     
     ftpDaemon.close();
     ftpDaemon = null;
-    LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.ftpStopped}}"));
+    LOGGER.log(MULTILANG.translateText(configManager.mainConfig.language, "{{console.ftpStopped}}"));
     return true;
 };
 

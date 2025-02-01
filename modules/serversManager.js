@@ -1,5 +1,5 @@
 import PREDEFINED from "./predefined.js";
-import { configManager, mainConfig } from "./configuration.js";
+import { configManager } from "./configuration.js";
 import * as COMMONS from "./commons.js";
 import fs from "fs";
 import TASK_MANAGER from "./taskManager.js";

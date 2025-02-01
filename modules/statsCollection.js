@@ -8,10 +8,10 @@ import pkg from 'node-machine-id';
 const { machineIdSync } = pkg;
 import fs from "fs";
 import os from "os";
-
+import { configManager } from "./configuration.js";
 let usersConfig = globalThis.usersConfig;
 let serversConfig = globalThis.serversConfig;
-let mainConfig = globalThis.mainConfig;
+let mainConfig = configManager.mainConfig;
 
 // Función personalizada para obtener ID en Termux
 const getTermuxMachineId = () => {

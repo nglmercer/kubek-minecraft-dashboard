@@ -1,9 +1,9 @@
 import PREDEFINED from "./predefined.js";
-import { configManager, mainConfig } from "./configuration.js";
+import { configManager } from "./configuration.js";
 import UserAuth from "./security.js";
 import * as COMMONS from "./commons.js";
 let usersConfig = globalThis.usersConfig;
-const SECURITY = new UserAuth(mainConfig, usersConfig);
+const SECURITY = new UserAuth(configManager.mainConfig, usersConfig);
 // Проверка permissions для управления аккаунтами
 export function initializeWebServer(webServer) {
     webServer.use("/api/accounts", (req, res, next) => {
@@ -178,7 +178,7 @@ export function initializeWebServer(webServer) {
     })
 }
 export const chkUserPermission = (req, permission) => {
-    if (mainConfig.authorization === false) {
+    if (configManager.mainConfig.authorization === false) {
         return true;
     }
     return !!(SECURITY.isUserHasCookies(req) && SECURITY.isUserHasPermission(req.cookies["kbk__login"], permission));
