@@ -1,5 +1,5 @@
 import PREDEFINED from "./predefined.js";
-import * as CONFIGURATION from "./configuration.js";
+import { configManager, mainConfig } from "./configuration.js";
 import * as COMMONS from "./commons.js";
 import fs from "fs";
 import TASK_MANAGER from "./taskManager.js";
@@ -19,7 +19,7 @@ export const getServerInfo = (serverName) => {
 export const writeServerInfo = (serverName, data) => {
     if (isServerExists(serverName)) {
         serversConfig[serverName] = data;
-        CONFIGURATION.writeServersConfig(serversConfig);
+        configManager.writeServersConfig(serversConfig);
         return true;
     }
     return false;
@@ -36,7 +36,7 @@ export const getServerStatus = (serverName) => {
 export const setServerStatus = (serverName, status) => {
     if (isServerExists(serverName) && Object.values(PREDEFINED.SERVER_STATUSES).includes(status) && serversConfig[serverName].status !== status) {
         serversConfig[serverName].status = status;
-        CONFIGURATION.writeServersConfig(serversConfig);
+        configManager.writeServersConfig(serversConfig);
         return true;
     }
     return false;
@@ -45,7 +45,7 @@ export const setServerStatus = (serverName, status) => {
 export const setServerProperty = (serverName, property, value) => {
     if (isServerExists(serverName) && COMMONS.isObjectsValid(property, value, serversConfig[serverName][property])) {
         serversConfig[serverName][property] = value;
-        CONFIGURATION.writeServersConfig(serversConfig);
+        configManager.writeServersConfig(serversConfig);
         return true;
     }
     return false;
@@ -72,7 +72,7 @@ export const deleteServer = (serverName) => {
             // Удаляем сервер из конфигурации и меняем статус таски
             serversConfig[serverName] = null;
             delete serversConfig[serverName];
-            CONFIGURATION.writeServersConfig(serversConfig);
+            configManager.writeServersConfig(serversConfig);
             let tData = TASK_MANAGER.getTaskData(serverDelTaskID);
             tData.status = PREDEFINED.SERVER_CREATION_STEPS.COMPLETED;
         });

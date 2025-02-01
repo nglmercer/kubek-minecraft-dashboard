@@ -4,7 +4,7 @@ import * as JAVA_MANAGER from "./javaManager.js";
 import * as DOWNLOADS_MANAGER from "./downloadsManager.js";
 import * as SERVERS_MANAGER from "./serversManager.js";
 import PREDEFINED from "./predefined.js";
-import * as CONFIGURATION from "./configuration.js";
+import { configManager, mainConfig } from "./configuration.js";
 import LOGGER from './logger.js';
 import * as MULTILANG from "./multiLanguage.js";
 import fs from "fs";
@@ -128,7 +128,7 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
                 stopCommand: "stop"
             };
 
-            CONFIGURATION.writeServersConfig(serversConfig);
+            configManager.writeServersConfig(serversConfig);
             writeJavaStartFiles(serverName, core, startParameters, javaExecutablePath, serverPort);
             LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.serverCreatedSuccess}}", colors.cyan(serverName)));
             cb(true);
@@ -184,7 +184,7 @@ export async function startJavaServerGeneration(serverName, core, coreVersion, s
                             stopCommand: "stop"
                         };
                         
-                        CONFIGURATION.writeServersConfig(serversConfig);
+                        configManager.writeServersConfig(serversConfig);
                         writeJavaStartFiles(serverName, coreFileName, startParameters, javaExecutablePath, serverPort);
                         LOGGER.log(MULTILANG.translateText(mainConfig.language, "{{console.serverCreatedSuccess}}", colors.cyan(serverName)));
                         cb(true);

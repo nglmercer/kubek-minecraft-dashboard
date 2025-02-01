@@ -1,11 +1,11 @@
 import PREDEFINED from "./predefined.js";
 import * as SECURITY from "./security.js";
-import * as CONFIGURATION from "./configuration.js";
+import { configManager, mainConfig } from "./configuration.js";
 import sha256 from 'crypto-js/sha256.js';
 const SHA256 = sha256;
 let usersConfig = globalThis.usersConfig
 export const createNewAccount = (login, password, permissions = [], email = "", servers = []) => {
-    CONFIGURATION.reloadAllConfigurations();
+    configManager.reloadAllConfigurations();
     if (login !== "kubek" && !SECURITY.isUserExists(login)) {
         if (login.match(PREDEFINED.LOGIN_REGEX) != null && password.match(PREDEFINED.PASSWORD_REGEX) != null) {
             if (email === "" || email.match(PREDEFINED.EMAIL_REGEX) != null) {
@@ -27,7 +27,7 @@ export const createNewAccount = (login, password, permissions = [], email = "", 
                     serversAccessRestricted: serversRestricted,
                     serversAllowed: servers
                 }
-                CONFIGURATION.writeUsersConfig(usersConfig);
+                configManager.writeUsersConfig(usersConfig);
                 return true;
             }
         }
@@ -35,7 +35,7 @@ export const createNewAccount = (login, password, permissions = [], email = "", 
     return false;
 };
 export const updateAccount = (login, password = "", permissions = [], email = "", servers = []) => {    
-    CONFIGURATION.reloadAllConfigurations();
+    configManager.reloadAllConfigurations();
     if (login.match(PREDEFINED.LOGIN_REGEX) != null && SECURITY.isUserExists(login)) {
         if (email === "" || email.match(PREDEFINED.EMAIL_REGEX) != null) {
             if (password === "" || password.match(PREDEFINED.PASSWORD_REGEX) != null) {
@@ -55,7 +55,7 @@ export const updateAccount = (login, password = "", permissions = [], email = ""
                     usersConfig[login].password = SHA256(password).toString();
                     usersConfig[login].secret = SECURITY.generateSecureID();
                 }
-                CONFIGURATION.writeUsersConfig(usersConfig);
+                configManager.writeUsersConfig(usersConfig);
                 return true;
             }
         }
@@ -63,30 +63,30 @@ export const updateAccount = (login, password = "", permissions = [], email = ""
     return false;
 }
 export const regenUserHash = (login) => {
-    CONFIGURATION.reloadAllConfigurations();
+    configManager.reloadAllConfigurations();
     if (SECURITY.isUserExists(login)) {
         usersConfig[login].secret = SECURITY.generateSecureID();
-        CONFIGURATION.writeUsersConfig(usersConfig);
+        configManager.writeUsersConfig(usersConfig);
         return true;
     }
     return false;
 };
 export const changePassword = (login, password) => {
-    CONFIGURATION.reloadAllConfigurations();
+    configManager.reloadAllConfigurations();
     if (SECURITY.isUserExists(login)) {
         usersConfig[login].password = SHA256(password).toString();
         regenUserHash(login);
-        CONFIGURATION.writeUsersConfig(usersConfig);
+        configManager.writeUsersConfig(usersConfig);
         return true;
     }
     return false;
 };
 export const deleteUser = (login) => {
-    CONFIGURATION.reloadAllConfigurations();
+    configManager.reloadAllConfigurations();
     if (login !== "kubek" && SECURITY.isUserExists(login)) {
         usersConfig[login] = null;
         delete usersConfig[login];
-        CONFIGURATION.writeUsersConfig(usersConfig);
+        configManager.writeUsersConfig(usersConfig);
         return true;
     }
     return false;
@@ -98,7 +98,7 @@ export const getUserData = (login) => {
     return false;
 };
 export const getUsersList = () => {
-    CONFIGURATION.reloadAllConfigurations();
+    configManager.reloadAllConfigurations();
     return Object.keys(usersConfig);
 };
 

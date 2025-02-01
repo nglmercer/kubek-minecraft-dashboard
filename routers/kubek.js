@@ -1,5 +1,5 @@
 import * as HARDWARE_MANAGER from "./../modules/hardwareManager.js"; // Módulo para gestionar hardware
-import * as CONFIGURATION from "./../modules/configuration.js";     // Módulo para gestionar configuraciones
+import { configManager, mainConfig } from "./../modules/configuration.js";     // Módulo para gestionar configuraciones
 import * as COMMONS from "./../modules/commons.js";                 // Funciones comunes
 import * as FTP_DAEMON from "./../modules/ftpDaemon.js";            // Módulo para gestionar el servidor FTP
 import * as MULTILANG from "./../modules/multiLanguage.js";         // Módulo para gestión de idiomas
@@ -41,25 +41,19 @@ function initializeWebServer() {
         res.json({ version: packageJSON.version });
     });
 
-    // Endpoint para obtener la configuración actual de Kubek
     router.get("/settings", function (req, res) {
         res.send(mainConfig); // Envía la configuración principal
     });
 
-    // Endpoint para guardar la configuración de Kubek
     router.put("/settings", function (req, res) {
         let q = req.query;
-        // Verifica si la configuración proporcionada es válida
         if (COMMONS.isObjectsValid(q.config)) {
             // Detiene el servidor FTP si está en ejecución
             if (FTP_DAEMON.isFTPStarted()) {
                 FTP_DAEMON.stopFTP();
             }
-            // Escribe la nueva configuración (decodificada desde Base64)
-            let writeResult = CONFIGURATION.writeMainConfig(Base64.decode(q.config));
-            // Recarga todas las configuraciones
-            CONFIGURATION.reloadAllConfigurations();
-            // Actualiza el idioma actual
+            let writeResult = configManager.writeMainConfig(Base64.decode(q.config));
+            configManager.reloadAllConfigurations();
             globalThis.currentLanguage = mainConfig.language;
             // Reinicia el servidor FTP
             FTP_DAEMON.startFTP();
@@ -73,8 +67,8 @@ function initializeWebServer() {
     // Endpoint para aceptar el acuerdo EULA
     router.get("/eula/accept", function (req, res) {
         mainConfig.eulaAccepted = true; // Marca el EULA como aceptado
-        CONFIGURATION.writeMainConfig(mainConfig); // Guarda la configuración actualizada
-        CONFIGURATION.reloadAllConfigurations();   // Recarga las configuraciones
+        configManager.writeMainConfig(mainConfig); // Guarda la configuración actualizada
+        configManager.reloadAllConfigurations();   // Recarga las configuraciones
         res.send(true); // Confirma que el EULA fue aceptado
     });
 

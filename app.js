@@ -1,14 +1,12 @@
 // Cargamos los módulos personalizados necesarios
 import * as COMMONS from "./modules/commons.js";
-import * as CONFIGURATION from "./modules/configuration.js";    
-
+import { configManager, mainConfig }from "./modules/configuration.js";   
 // Creamos las carpetas necesarias (si no existen)
 COMMONS.makeBaseDirs();
-
 // Cargamos los archivos de configuración en variables globales
-CONFIGURATION.reloadAllConfigurations();
-CONFIGURATION.migrateOldMainConfig();
-CONFIGURATION.migrateOldServersConfig();
+configManager.reloadAllConfigurations();
+configManager.migrateOldMainConfig();
+configManager.migrateOldServersConfig();
 import LOGGER from "./modules/logger.js";
 import * as MULTI_LANGUAGE from "./modules/multiLanguage.js";
 import * as WEBSERVER from "./modules/webserver.js";
@@ -34,4 +32,4 @@ globalThis.ftpDaemon = null;
 FTP_DAEMON.startFTP();
 
 // Iniciamos automáticamente los servidores que estaban en ejecución cuando se cerró Kubek
-CONFIGURATION.autoStartServers();
+configManager.autoStartServers();
