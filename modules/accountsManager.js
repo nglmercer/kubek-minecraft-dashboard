@@ -1,4 +1,4 @@
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import * as SECURITY from "./security.js";
 import * as CONFIGURATION from "./configuration.js";
 import sha256 from 'crypto-js/sha256.js';

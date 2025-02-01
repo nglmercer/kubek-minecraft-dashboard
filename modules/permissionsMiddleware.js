@@ -1,4 +1,4 @@
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import * as SECURITY from "./security.js";
 import * as COMMONS from "./commons.js";
 // Проверка permissions для управления аккаунтами

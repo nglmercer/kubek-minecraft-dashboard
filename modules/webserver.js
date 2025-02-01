@@ -7,7 +7,7 @@
  */
 
 import LOGGER from './logger.js';
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
 import * as SECURITY from "./security.js";
 import * as FILE_MANAGER from "./fileManager.js";

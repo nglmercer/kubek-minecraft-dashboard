@@ -1,4 +1,4 @@
-import * as PREDEFINED from "./../modules/predefined.js";
+import PREDEFINED from "./../modules/predefined.js";
 import * as CORES_MANAGER from "./../modules/coresManager.js";
 import * as COMMONS from "./../modules/commons.js";
 import * as WEBSERVER from "./../modules/webserver.js";

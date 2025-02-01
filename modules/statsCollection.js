@@ -3,7 +3,7 @@ const require = createRequire(import.meta.url);
 const packageJSON = require("./../package.json");
 import LOGGER from './logger.js';
 import * as COMMONS from "./commons.js";
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import pkg from 'node-machine-id';
 const { machineIdSync } = pkg;
 import fs from "fs";

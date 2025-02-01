@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import colors from "colors";
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
 import * as SECURITY from "./security.js";
 import * as SERVERS_CONTROLLER from "./serversController.js";

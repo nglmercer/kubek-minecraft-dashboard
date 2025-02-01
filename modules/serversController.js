@@ -1,4 +1,4 @@
-import * as PREDEFINED from "./predefined.js";          // Importa constantes predefinidas
+import PREDEFINED from "./predefined.js";          // Importa constantes predefinidas
 import * as COMMONS from "./commons.js";               // Funciones comunes
 import * as SERVERS_MANAGER from "./serversManager.js"; // Módulo para gestionar servidores
 import * as FILE_MANAGER from "./fileManager.js";      // Módulo para gestión de archivos

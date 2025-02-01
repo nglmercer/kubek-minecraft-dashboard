@@ -1,4 +1,4 @@
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import fs from "fs";
 import axios from "axios";
 import path from "path";

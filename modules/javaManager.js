@@ -1,5 +1,5 @@
 import * as COMMONS from './commons.js';
-import * as PREDEFINED from './predefined.js';
+import PREDEFINED from './predefined.js';
 import path from "path";    
 import fs from "fs";            
 import { execSync } from 'child_process';

@@ -1,4 +1,4 @@
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import * as CONFIGURATION from "./configuration.js";
 import * as COMMONS from "./commons.js";
 import fs from "fs";

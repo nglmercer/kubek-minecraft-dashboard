@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import colors from "colors";
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);

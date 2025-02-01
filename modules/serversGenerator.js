@@ -3,7 +3,7 @@ import * as CORES_MANAGER from "./coresManager.js";
 import * as JAVA_MANAGER from "./javaManager.js";
 import * as DOWNLOADS_MANAGER from "./downloadsManager.js";
 import * as SERVERS_MANAGER from "./serversManager.js";
-import * as PREDEFINED from "./predefined.js";
+import PREDEFINED from "./predefined.js";
 import * as CONFIGURATION from "./configuration.js";
 import LOGGER from './logger.js';
 import * as MULTILANG from "./multiLanguage.js";
