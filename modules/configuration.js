@@ -5,6 +5,7 @@ import PREDEFINED from "./predefined.js";
 import * as COMMONS from "./commons.js";
 import * as SECURITY from "./security.js";
 import * as SERVERS_CONTROLLER from "./serversController.js";
+globalThis.autoStartedServers = [];
 
 class ConfigManager {
     constructor() {
@@ -158,12 +159,20 @@ class ConfigManager {
             }
         }
     }
+    static autoStartServers1 () {
+        for (const [key, value] of Object.entries(serversConfig)) {
+            if(serversConfig[key].status !== PREDEFINED.SERVER_STATUSES.STOPPED && !autoStartedServers.includes(key)){
+                serversConfig[key].status = PREDEFINED.SERVER_STATUSES.STOPPED;
+                SERVERS_CONTROLLER.startServer(key);
+                autoStartedServers.push(key);
+            }
+        }
+    };
 }
 
 // Export an instance of ConfigManager
 export const configManager = new ConfigManager();
 
-globalThis.autoStartedServers = [];
 
 // Helper functions without 'this'
 const readAnyConfig = (filePath) => {

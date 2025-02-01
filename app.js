@@ -1,6 +1,7 @@
 // Cargamos los módulos personalizados necesarios
 import * as COMMONS from "./modules/commons.js";
-import { configManager, mainConfig }from "./modules/configuration.js";   
+import { configManager, mainConfig } from "./modules/configuration.js";   
+import * as CONFIGURATION from "./modules/configuration.js";
 // Creamos las carpetas necesarias (si no existen)
 COMMONS.makeBaseDirs();
 // Cargamos los archivos de configuración en variables globales
@@ -33,3 +34,4 @@ FTP_DAEMON.startFTP();
 
 // Iniciamos automáticamente los servidores que estaban en ejecución cuando se cerró Kubek
 configManager.autoStartServers();
+CONFIGURATION.autoStartServers(); // FIX THIS
